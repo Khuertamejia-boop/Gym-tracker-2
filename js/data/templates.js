@@ -1,0 +1,135 @@
+// Rutinas clásicas predefinidas. La semana va de lunes (0) a domingo (6);
+// cada posición guarda el índice del día de entrenamiento o null si es descanso.
+const ex = (exId, sets, reps) => ({ exId, sets, reps });
+
+export const TEMPLATES = [
+  {
+    key: 'ppl',
+    name: 'Push / Pull / Legs',
+    description: 'Empuje, tracción y pierna dos veces por semana. 6 días.',
+    days: [
+      { name: 'Push (empuje)', exercises: [
+        ex('press-banca', 4, '6-8'),
+        ex('press-inclinado-mancuernas', 3, '8-10'),
+        ex('press-hombro-mancuernas', 3, '8-10'),
+        ex('elevaciones-laterales', 4, '12-15'),
+        ex('cruce-poleas', 3, '12-15'),
+        ex('extension-polea', 3, '10-12'),
+        ex('extension-sobre-cabeza-polea', 3, '10-12'),
+      ] },
+      { name: 'Pull (tracción)', exercises: [
+        ex('dominadas', 4, '6-10'),
+        ex('remo-barra', 4, '8-10'),
+        ex('remo-sentado-polea', 3, '10-12'),
+        ex('face-pull', 3, '12-15'),
+        ex('curl-barra', 3, '8-10'),
+        ex('curl-martillo', 3, '10-12'),
+      ] },
+      { name: 'Legs (pierna)', exercises: [
+        ex('sentadilla', 4, '6-8'),
+        ex('peso-muerto-rumano', 3, '8-10'),
+        ex('prensa', 3, '10-12'),
+        ex('curl-femoral-tumbado', 3, '10-12'),
+        ex('extension-cuadriceps', 3, '12-15'),
+        ex('elevacion-talones-pie', 4, '10-15'),
+      ] },
+    ],
+    week: [0, 1, 2, 0, 1, 2, null],
+  },
+  {
+    key: 'arnold',
+    name: 'Arnold Split',
+    description: 'Pecho y espalda, hombros y brazos, pierna. Dos veces por semana. 6 días.',
+    days: [
+      { name: 'Pecho y espalda', exercises: [
+        ex('press-banca', 4, '6-10'),
+        ex('press-inclinado-mancuernas', 3, '8-10'),
+        ex('aperturas-mancuernas', 3, '10-12'),
+        ex('dominadas', 4, '6-10'),
+        ex('remo-barra', 4, '8-10'),
+        ex('pullover', 3, '10-12'),
+      ] },
+      { name: 'Hombros y brazos', exercises: [
+        ex('press-militar', 4, '6-10'),
+        ex('press-arnold', 3, '8-10'),
+        ex('elevaciones-laterales', 4, '12-15'),
+        ex('curl-barra', 4, '8-10'),
+        ex('press-frances', 4, '8-10'),
+        ex('curl-inclinado', 3, '10-12'),
+        ex('extension-polea', 3, '10-12'),
+      ] },
+      { name: 'Pierna', exercises: [
+        ex('sentadilla', 4, '6-10'),
+        ex('prensa', 3, '10-12'),
+        ex('peso-muerto-piernas-rigidas', 3, '8-10'),
+        ex('curl-femoral-tumbado', 3, '10-12'),
+        ex('zancadas', 3, '10-12'),
+        ex('elevacion-talones-pie', 4, '12-15'),
+        ex('crunch-polea', 3, '12-15'),
+      ] },
+    ],
+    week: [0, 1, 2, 0, 1, 2, null],
+  },
+  {
+    key: 'torso-pierna',
+    name: 'Torso / Pierna',
+    description: 'Dos días de torso y dos de pierna, con variantes A y B. 4 días.',
+    days: [
+      { name: 'Torso A', exercises: [
+        ex('press-banca', 4, '6-8'),
+        ex('remo-barra', 4, '6-8'),
+        ex('press-hombro-mancuernas', 3, '8-10'),
+        ex('jalon-pecho', 3, '8-10'),
+        ex('curl-barra-z', 3, '10-12'),
+        ex('extension-polea', 3, '10-12'),
+      ] },
+      { name: 'Pierna A', exercises: [
+        ex('sentadilla', 4, '6-8'),
+        ex('peso-muerto-rumano', 3, '8-10'),
+        ex('prensa', 3, '10-12'),
+        ex('curl-femoral-sentado', 3, '10-12'),
+        ex('elevacion-talones-pie', 4, '10-15'),
+      ] },
+      { name: 'Torso B', exercises: [
+        ex('press-inclinado-mancuernas', 4, '8-10'),
+        ex('dominadas', 4, '6-10'),
+        ex('press-pecho-maquina', 3, '10-12'),
+        ex('remo-mancuerna', 3, '10-12'),
+        ex('elevaciones-laterales', 4, '12-15'),
+        ex('curl-martillo', 3, '10-12'),
+        ex('extension-sobre-cabeza-polea', 3, '10-12'),
+      ] },
+      { name: 'Pierna B', exercises: [
+        ex('peso-muerto', 3, '4-6'),
+        ex('sentadilla-bulgara', 3, '8-10'),
+        ex('hip-thrust', 3, '8-12'),
+        ex('extension-cuadriceps', 3, '12-15'),
+        ex('curl-femoral-tumbado', 3, '10-12'),
+        ex('elevacion-talones-sentado', 4, '12-15'),
+      ] },
+    ],
+    week: [0, 1, null, 2, 3, null, null],
+  },
+  {
+    key: 'full-body',
+    name: 'Full Body',
+    description: 'Cuerpo completo tres días por semana. Ideal si tienes poco tiempo.',
+    days: [
+      { name: 'Full Body A', exercises: [
+        ex('sentadilla', 3, '6-8'),
+        ex('press-banca', 3, '6-8'),
+        ex('remo-barra', 3, '8-10'),
+        ex('elevaciones-laterales', 3, '12-15'),
+        ex('curl-mancuernas', 2, '10-12'),
+      ] },
+      { name: 'Full Body B', exercises: [
+        ex('peso-muerto', 3, '4-6'),
+        ex('press-militar', 3, '6-8'),
+        ex('dominadas', 3, '6-10'),
+        ex('prensa', 3, '10-12'),
+        ex('extension-polea', 2, '10-12'),
+      ] },
+    ],
+    week: [0, null, 1, null, 0, null, null],
+  },
+];

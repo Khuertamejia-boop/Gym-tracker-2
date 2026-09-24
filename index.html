@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mi Gym Tracker</title>
+  <meta name="description" content="Arma tu rutina semanal, registra tus entrenamientos y mide tu progreso.">
+  <meta name="theme-color" content="#101112">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1 id="view-title">Entrenar</h1>
+    <button class="icon-btn" data-action="open-settings" aria-label="Ajustes">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Zm7.4-2.6.1-.9-.1-.9 2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.6-.9L15 3.7h-4l-.4 2.5c-.6.2-1.1.5-1.6.9l-2.4-1-2 3.4 2 1.6-.1.9.1.9-2 1.6 2 3.4 2.4-1c.5.4 1 .7 1.6.9l.4 2.5h4l.4-2.5c.6-.2 1.1-.5 1.6-.9l2.4 1 2-3.4-2-1.6Z"/></svg>
+    </button>
+  </header>
+
+  <main id="view" tabindex="-1"></main>
+
+  <nav class="tabbar" aria-label="Secciones">
+    <button data-tab="train" class="active">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h2V7h2v10H5v-3H3v-4Zm16-3h2v3h2v4h-2v3h-2V7ZM9 5h2v14H9V5Zm4 0h2v14h-2V5Zm-2 6h2v2h-2v-2Z"/></svg>
+      <span>Entrenar</span>
+    </button>
+    <button data-tab="routines">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7Zm-2 8h14v10H5V10Zm2 2v2h2v-2H7Zm4 0v2h2v-2h-2Zm4 0v2h2v-2h-2Zm-8 4v2h2v-2H7Zm4 0v2h2v-2h-2Z"/></svg>
+      <span>Rutinas</span>
+    </button>
+    <button data-tab="exercises">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3Zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z"/></svg>
+      <span>Ejercicios</span>
+    </button>
+    <button data-tab="progress">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h2v16h16v2H3V3Zm4 10h3v4H7v-4Zm5-5h3v9h-3V8Zm5-3h3v12h-3V5Z"/></svg>
+      <span>Progreso</span>
+    </button>
+  </nav>
+
+  <dialog id="sheet" class="sheet"></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
