@@ -1,6 +1,7 @@
 // Rutinas clásicas predefinidas. La semana va de lunes (0) a domingo (6);
 // cada posición guarda el índice del día de entrenamiento o null si es descanso.
-const ex = (exId, sets, reps) => ({ exId, sets, reps });
+// `last` (opcional) guarda el último peso y reps de cada serie para importarlos al historial.
+const ex = (exId, sets, reps, kg, reps_) => ({ exId, sets, reps, ...(reps_ ? { last: { kg, reps: reps_ } } : {}) });
 
 export const TEMPLATES = [
   {
@@ -131,5 +132,47 @@ export const TEMPLATES = [
       ] },
     ],
     week: [0, null, 1, null, 0, null, null],
+  },
+  {
+    key: 'excel-4-dias',
+    mine: true,
+    name: 'Rutina 4 días',
+    description: 'Tu rutina del Excel: torso y pierna, variantes A y B. Incluye tus últimos pesos y repeticiones.',
+    days: [
+      { name: 'Torso A (Pecho / Espalda)', exercises: [
+        ex('press-inclinado-mancuernas', 3, '6-8', 75, [8, 8, 8]),
+        ex('jalon-agarre-neutro', 4, '6-8', 40, [8, 8, 8, 8]),
+        ex('remo-barra', 3, '6-8', 22, [8, 8, 8]),
+        ex('press-hombro-maquina', 3, '8-10', 25, [10, 9, 5]),
+        ex('pec-deck', 3, '12-15', 33, [12, 9, 8]),
+        ex('curl-martillo', 3, '10-12', 8, [12, 11, 8]),
+        ex('extension-polea', 2, '10-12', 32.5, [12, 10, 9]),
+      ] },
+      { name: 'Pierna A (Cuádriceps)', exercises: [
+        ex('sentadilla-hack', 4, '8-10', 145, [10, 10, 10, 10]),
+        ex('prensa', 3, '8-10'),
+        ex('extension-cuadriceps', 3, '10-12', 85, [12, 12, 12]),
+        ex('curl-femoral-sentado', 2, '10-12', 40, [12, 12, 12]),
+        ex('elevacion-talones-smith', 4, '12-15'),
+      ] },
+      { name: 'Torso B (Hombro / Tríceps + Espalda)', exercises: [
+        ex('press-pecho-maquina', 4, '6-8', 85, [8, 8, 6, 4]),
+        ex('jalon-agarre-neutro', 3, '8-10', 40, [10, 10, 10]),
+        ex('elevaciones-laterales', 4, '12-15', 8, [12, 12, 9]),
+        ex('face-pull', 3, '12-15', 17.5, [15, 15, 15]),
+        ex('press-frances', 3, '6-8', 14, [8, 8, 8]),
+        ex('extension-polea-barra', 3, '10-12', 32.5, [12, 12, 12]),
+        ex('curl-barra-z', 3, '8-10', 32.5, [10, 10]),
+      ] },
+      { name: 'Pierna B (Glúteos / Femorales)', exercises: [
+        ex('sentadilla-bulgara', 3, '8-10'),
+        ex('hip-thrust', 4, '8-10'),
+        ex('curl-femoral-sentado', 3, '10-12'),
+        ex('prensa-gluteos', 2, '10-12'),
+        ex('elevacion-talones-sentado', 4, '12-15'),
+        ex('crunch', 3, ''),
+      ] },
+    ],
+    week: [0, 1, null, 2, 3, null, null],
   },
 ];

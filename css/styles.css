@@ -279,3 +279,26 @@ details.table-view td:first-child, details.table-view th:first-child { text-alig
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+/* ---------- v2: sugerencias, notas, fichas, cuenta ---------- */
+.hint {
+  margin: 0 0 6px; padding: 8px 10px; border-radius: 10px;
+  background: var(--surface-2); color: var(--text-2); font-size: 0.82rem; line-height: 1.35;
+}
+.hint.hint-up { background: var(--good-soft); color: var(--text); }
+.link-btn { border: 0; background: none; padding: 0; text-align: left; color: inherit; }
+.link-btn h3 { text-decoration: underline dotted var(--text-3); text-underline-offset: 3px; }
+textarea.note {
+  width: 100%; margin-top: 8px; padding: 8px 12px; resize: vertical;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface); font-size: 0.9rem;
+}
+.segmented.tabs { display: grid; grid-auto-columns: 1fr; width: 100%; }
+.segmented.tabs button { padding: 7px 4px; font-size: 0.8rem; }
+.banner {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  background: var(--accent-soft); border-color: transparent; font-size: 0.9rem;
+}
+input[type="email"], input[type="password"] {
+  width: 100%; min-height: 44px; padding: 8px 12px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+}

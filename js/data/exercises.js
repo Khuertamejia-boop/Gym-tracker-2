@@ -1,4 +1,4 @@
-// Catálogo base de ejercicios: [id, nombre, grupo muscular, equipo]
+// Catálogo base de ejercicios: [id, nombre, grupo muscular, equipo, alias de búsqueda]
 export const MUSCLES = [
   'Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps', 'Antebrazo',
   'Cuádriceps', 'Isquios', 'Glúteos', 'Pantorrillas', 'Abdomen',
@@ -11,13 +11,13 @@ const RAW = [
   ['press-inclinado-barra', 'Press inclinado con barra', 'Pecho', 'Barra'],
   ['press-inclinado-mancuernas', 'Press inclinado con mancuernas', 'Pecho', 'Mancuernas'],
   ['press-declinado', 'Press declinado con barra', 'Pecho', 'Barra'],
-  ['press-pecho-maquina', 'Press de pecho en máquina', 'Pecho', 'Máquina'],
+  ['press-pecho-maquina', 'Press de pecho en máquina', 'Pecho', 'Máquina', 'press en maquina'],
   ['press-inclinado-smith', 'Press inclinado en Smith', 'Pecho', 'Smith'],
   ['aperturas-mancuernas', 'Aperturas con mancuernas', 'Pecho', 'Mancuernas'],
   ['aperturas-inclinadas', 'Aperturas inclinadas con mancuernas', 'Pecho', 'Mancuernas'],
   ['cruce-poleas', 'Cruce de poleas', 'Pecho', 'Polea'],
   ['cruce-poleas-bajo', 'Cruce de poleas de abajo hacia arriba', 'Pecho', 'Polea'],
-  ['pec-deck', 'Pec deck (contractor)', 'Pecho', 'Máquina'],
+  ['pec-deck', 'Pec deck (contractor)', 'Pecho', 'Máquina', 'peck deck mariposa'],
   ['fondos-pecho', 'Fondos en paralelas (pecho)', 'Pecho', 'Peso corporal'],
   ['flexiones', 'Flexiones de brazos', 'Pecho', 'Peso corporal'],
   ['pullover', 'Pullover con mancuerna', 'Pecho', 'Mancuernas'],
@@ -28,6 +28,7 @@ const RAW = [
   ['dominadas-lastradas', 'Dominadas lastradas', 'Espalda', 'Peso corporal'],
   ['jalon-pecho', 'Jalón al pecho', 'Espalda', 'Polea'],
   ['jalon-agarre-cerrado', 'Jalón con agarre cerrado', 'Espalda', 'Polea'],
+  ['jalon-agarre-neutro', 'Jalón al pecho con agarre neutro', 'Espalda', 'Polea', 'jalon neutro'],
   ['remo-barra', 'Remo con barra', 'Espalda', 'Barra'],
   ['remo-pendlay', 'Remo Pendlay', 'Espalda', 'Barra'],
   ['remo-mancuerna', 'Remo con mancuerna a una mano', 'Espalda', 'Mancuernas'],
@@ -46,7 +47,7 @@ const RAW = [
   ['press-militar', 'Press militar con barra', 'Hombros', 'Barra'],
   ['press-hombro-mancuernas', 'Press de hombro con mancuernas', 'Hombros', 'Mancuernas'],
   ['press-arnold', 'Press Arnold', 'Hombros', 'Mancuernas'],
-  ['press-hombro-maquina', 'Press de hombro en máquina', 'Hombros', 'Máquina'],
+  ['press-hombro-maquina', 'Press de hombro en máquina', 'Hombros', 'Máquina', 'press militar en maquina'],
   ['elevaciones-laterales', 'Elevaciones laterales con mancuernas', 'Hombros', 'Mancuernas'],
   ['elevaciones-laterales-polea', 'Elevaciones laterales en polea', 'Hombros', 'Polea'],
   ['elevaciones-laterales-maquina', 'Elevaciones laterales en máquina', 'Hombros', 'Máquina'],
@@ -69,9 +70,9 @@ const RAW = [
   ['curl-maquina', 'Curl de bíceps en máquina', 'Bíceps', 'Máquina'],
 
   // Tríceps
-  ['press-frances', 'Press francés', 'Tríceps', 'Barra'],
+  ['press-frances', 'Press francés', 'Tríceps', 'Barra', 'skull crusher rompecraneos'],
   ['extension-polea', 'Extensión de tríceps en polea (cuerda)', 'Tríceps', 'Polea'],
-  ['extension-polea-barra', 'Extensión de tríceps en polea (barra)', 'Tríceps', 'Polea'],
+  ['extension-polea-barra', 'Extensión de tríceps en polea (barra)', 'Tríceps', 'Polea', 'jalon de triceps con barra'],
   ['extension-sobre-cabeza', 'Extensión sobre la cabeza con mancuerna', 'Tríceps', 'Mancuernas'],
   ['extension-sobre-cabeza-polea', 'Extensión sobre la cabeza en polea', 'Tríceps', 'Polea'],
   ['press-cerrado', 'Press de banca agarre cerrado', 'Tríceps', 'Barra'],
@@ -89,7 +90,7 @@ const RAW = [
   // Cuádriceps
   ['sentadilla', 'Sentadilla con barra', 'Cuádriceps', 'Barra'],
   ['sentadilla-frontal', 'Sentadilla frontal', 'Cuádriceps', 'Barra'],
-  ['sentadilla-hack', 'Sentadilla hack', 'Cuádriceps', 'Máquina'],
+  ['sentadilla-hack', 'Sentadilla hack', 'Cuádriceps', 'Máquina', 'sentadilla lat'],
   ['sentadilla-smith', 'Sentadilla en Smith', 'Cuádriceps', 'Smith'],
   ['sentadilla-goblet', 'Sentadilla goblet', 'Cuádriceps', 'Mancuernas'],
   ['sentadilla-bulgara', 'Sentadilla búlgara', 'Cuádriceps', 'Mancuernas'],
@@ -112,6 +113,7 @@ const RAW = [
   // Glúteos
   ['hip-thrust', 'Hip thrust con barra', 'Glúteos', 'Barra'],
   ['hip-thrust-maquina', 'Hip thrust en máquina', 'Glúteos', 'Máquina'],
+  ['prensa-gluteos', 'Prensa enfocada en glúteos', 'Glúteos', 'Máquina', 'prensa pies altos'],
   ['puente-gluteo', 'Puente de glúteo', 'Glúteos', 'Peso corporal'],
   ['patada-gluteo-polea', 'Patada de glúteo en polea', 'Glúteos', 'Polea'],
   ['abductores-maquina', 'Abducción de cadera en máquina', 'Glúteos', 'Máquina'],
@@ -119,13 +121,13 @@ const RAW = [
   ['peso-muerto-sumo', 'Peso muerto sumo', 'Glúteos', 'Barra'],
 
   // Pantorrillas
-  ['elevacion-talones-pie', 'Elevación de talones de pie', 'Pantorrillas', 'Máquina'],
-  ['elevacion-talones-sentado', 'Elevación de talones sentado', 'Pantorrillas', 'Máquina'],
-  ['elevacion-talones-prensa', 'Elevación de talones en prensa', 'Pantorrillas', 'Máquina'],
-  ['elevacion-talones-smith', 'Elevación de talones en Smith', 'Pantorrillas', 'Smith'],
+  ['elevacion-talones-pie', 'Elevación de talones de pie', 'Pantorrillas', 'Máquina', 'gemelos'],
+  ['elevacion-talones-sentado', 'Elevación de talones sentado', 'Pantorrillas', 'Máquina', 'gemelos sentado'],
+  ['elevacion-talones-prensa', 'Elevación de talones en prensa', 'Pantorrillas', 'Máquina', 'gemelos'],
+  ['elevacion-talones-smith', 'Elevación de talones en Smith', 'Pantorrillas', 'Smith', 'gemelos'],
 
   // Abdomen
-  ['crunch', 'Crunch abdominal', 'Abdomen', 'Peso corporal'],
+  ['crunch', 'Crunch abdominal', 'Abdomen', 'Peso corporal', 'abdominales'],
   ['crunch-polea', 'Crunch en polea', 'Abdomen', 'Polea'],
   ['crunch-maquina', 'Crunch en máquina', 'Abdomen', 'Máquina'],
   ['plancha', 'Plancha', 'Abdomen', 'Peso corporal'],
@@ -138,4 +140,4 @@ const RAW = [
   ['woodchopper', 'Leñador en polea', 'Abdomen', 'Polea'],
 ];
 
-export const BASE_EXERCISES = RAW.map(([id, name, muscle, equipment]) => ({ id, name, muscle, equipment }));
+export const BASE_EXERCISES = RAW.map(([id, name, muscle, equipment, aliases = '']) => ({ id, name, muscle, equipment, aliases }));
