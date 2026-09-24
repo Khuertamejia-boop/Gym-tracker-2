@@ -5,7 +5,7 @@
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 import * as S from './store.js';
 
-const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
+const SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm';
 
 let client = null;
 let user = null;
@@ -117,13 +117,19 @@ const MSG = {
 };
 const translate = (e) => MSG[e?.message] || e?.message || 'Algo salió mal.';
 
+function ensureClient() {
+  if (!client) throw new Error('No se pudo conectar con el servidor. Revisa tu conexión y vuelve a abrir la app.');
+}
+
 export async function signIn(email, password) {
+  ensureClient();
   const { error: e } = await client.auth.signInWithPassword({ email, password });
   if (e) throw new Error(translate(e));
 }
 
 // Devuelve true si hay que confirmar el correo antes de entrar.
 export async function signUp(email, password) {
+  ensureClient();
   const { data, error: e } = await client.auth.signUp({
     email, password, options: { emailRedirectTo: location.origin + location.pathname },
   });
@@ -132,6 +138,7 @@ export async function signUp(email, password) {
 }
 
 export async function resetPassword(email) {
+  ensureClient();
   const { error: e } = await client.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
   if (e) throw new Error(translate(e));
 }
