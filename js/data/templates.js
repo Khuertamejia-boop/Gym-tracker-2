@@ -7,7 +7,8 @@ export const TEMPLATES = [
   {
     key: 'ppl',
     name: 'Push / Pull / Legs',
-    description: 'Empuje, tracción y pierna dos veces por semana. 6 días.',
+    description: 'Empuje, tracción y pierna. Ideal para 5-6 días por semana.',
+    daysPerWeek: 6,
     days: [
       { name: 'Push (empuje)', exercises: [
         ex('press-banca', 4, '6-8'),
@@ -40,7 +41,8 @@ export const TEMPLATES = [
   {
     key: 'arnold',
     name: 'Arnold Split',
-    description: 'Pecho y espalda, hombros y brazos, pierna. Dos veces por semana. 6 días.',
+    description: 'Pecho y espalda, hombros y brazos, pierna. Exigente: para 6 días y experiencia previa.',
+    daysPerWeek: 6,
     days: [
       { name: 'Pecho y espalda', exercises: [
         ex('press-banca', 4, '6-10'),
@@ -74,7 +76,8 @@ export const TEMPLATES = [
   {
     key: 'torso-pierna',
     name: 'Torso / Pierna',
-    description: 'Dos días de torso y dos de pierna, con variantes A y B. 4 días.',
+    description: 'Dos días de torso y dos de pierna, con variantes A y B. Ideal para 4 días.',
+    daysPerWeek: 4,
     days: [
       { name: 'Torso A', exercises: [
         ex('press-banca', 4, '6-8'),
@@ -114,7 +117,8 @@ export const TEMPLATES = [
   {
     key: 'full-body',
     name: 'Full Body',
-    description: 'Cuerpo completo tres días por semana. Ideal si tienes poco tiempo.',
+    description: 'Todo el cuerpo en cada sesión. La mejor opción para empezar o si vas 2-3 días.',
+    daysPerWeek: 3,
     days: [
       { name: 'Full Body A', exercises: [
         ex('sentadilla', 3, '6-8'),
@@ -134,10 +138,11 @@ export const TEMPLATES = [
     week: [0, null, 1, null, 0, null, null],
   },
   {
+    // `last` guarda pesos de referencia que solo se importan con ?importar=excel.
     key: 'excel-4-dias',
-    mine: true,
-    name: 'Rutina 4 días',
-    description: 'Tu rutina del Excel: torso y pierna, variantes A y B. Incluye tus últimos pesos y repeticiones.',
+    name: 'Torso / Pierna · glúteo',
+    description: 'Torso y pierna en 4 días, con un día de pierna centrado en glúteos y femorales.',
+    daysPerWeek: 4,
     days: [
       { name: 'Torso A (Pecho / Espalda)', exercises: [
         ex('press-inclinado-mancuernas', 3, '6-8', 75, [8, 8, 8]),

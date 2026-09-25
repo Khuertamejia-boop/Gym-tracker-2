@@ -5,19 +5,24 @@ Está pensada para usarse desde el celular en el gym.
 
 ## Funciones
 
-- **Entrenar**: muestra lo que toca hoy según tu rutina. Por cada serie anotas kg, reps y RIR/RPE, y ves lo que hiciste la vez anterior.
-  - Sugerencias de progresión: sube el peso cuando llegas al tope del rango de reps.
-  - Notas por ejercicio y aviso 🏆 al batir un récord personal.
-  - Resumen al terminar: duración, volumen, comparación con la sesión anterior y récords.
-  - Los entrenamientos terminados se pueden editar (series, reps, fecha y notas).
-- **Rutinas**: incluye plantillas clásicas (Push/Pull/Legs, Arnold Split, Torso/Pierna y Full Body) y un editor para crear o personalizar las tuyas. Puedes asignar un día de entrenamiento a cada día de la semana.
-- **Ejercicios**: catálogo de más de 110 ejercicios con buscador (no distingue acentos) y filtro por grupo muscular. También puedes crear ejercicios propios.
-  Cada ejercicio tiene una ficha con pestañas: Acerca de, Historial, Gráficos (1RM estimado, peso máximo, volumen) y Récords.
-- **Progreso**: vista semanal o mensual con:
-  - volumen total
-  - series o volumen por grupo muscular
-  - calendario de constancia y racha de semanas
-  - peso corporal y medidas
+**Configuración inicial.** Un usuario nuevo responde cuánto tiempo lleva entrenando y qué días puede ir:
+- Principiante: recibe una rutina recomendada (Full Body con 2-3 días, Torso/Pierna con 4 o más).
+- Intermedio o avanzado: elige entre Push/Pull/Legs, Arnold Split, Torso/Pierna, Full Body, Torso/Pierna · glúteo, o crea la suya desde cero.
+- Después revisa y personaliza ejercicios, series y días, y puede crear una cuenta para guardar su progreso.
+- Quien ya tiene cuenta toca **Ya tengo cuenta** y recupera todo.
+
+La app tiene solo **dos pestañas**:
+- **Entrenar**: lo que toca hoy, tu rutina (con **Editar**) y otros días.
+  - Por cada serie anotas kg y reps (y RIR/RPE fuera del modo simple).
+  - Sugerencias de progresión, notas por ejercicio y aviso 🏆 de récord personal.
+  - Resumen al terminar la sesión; los entrenamientos terminados se pueden editar.
+- **Progreso**: entrenamientos, racha, constancia, tus ejercicios (peso y mejora), peso corporal y medidas, historial y estadísticas de volumen.
+
+Al tocar un ejercicio se abre su ficha: Acerca de, Historial, Gráficos y Récords. El catálogo tiene más de 110 ejercicios con buscador, y puedes crear los tuyos.
+
+**Modo simple** (activado por defecto para principiantes, se cambia en Ajustes ⚙): oculta RIR/RPE y el 1RM, usa frases sencillas y deja el volumen en "Más estadísticas".
+
+**Cambiar de rutina o de días**: Ajustes ⚙ → *Cambiar de rutina o de días*.
 
 ## Datos y cuenta en la nube
 
@@ -34,6 +39,10 @@ Al sincronizar se fusionan las copias: no se pierde ningún entrenamiento de nin
 
 La clave *anon* es pública por diseño. La seguridad la dan las políticas de `setup.sql`, que solo permiten a cada usuario leer y escribir su propia fila.
 Los proyectos gratuitos de Supabase se pausan tras 7 días sin uso; se reactivan desde el panel de Supabase.
+
+### Importar la rutina del Excel
+
+Abrir la app con `?importar=excel` al final de la dirección añade la rutina *Torso / Pierna · glúteo* con los últimos pesos del Excel original al historial (solo una vez por cuenta).
 
 También puedes descargar un respaldo `.json` desde **Ajustes**.
 

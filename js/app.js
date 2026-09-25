@@ -10,19 +10,19 @@ const $sheet = document.getElementById('sheet');
 const $toast = document.getElementById('toast');
 
 const ui = {
-  tab: 'train',
+  tab: 'train', // 'train' | 'progress'
+  ob: null, // configuración inicial en curso: { step, level, days, fromSettings }
   editRoutineId: null,
-  exQuery: '',
-  exMuscle: '',
   period: 'week', // 'week' | 'month'
   muscleMetric: 'sets', // 'sets' | 'volume'
   bodyField: 'weight',
   openNotes: new Set(),
+  historyLimit: 10,
   exTab: 'about',
   exMetric: 'e1rm',
 };
 
-const TITLES = { train: 'Entrenar', routines: 'Rutinas', exercises: 'Ejercicios', progress: 'Progreso' };
+const TITLES = { train: 'Entrenar', progress: 'Progreso' };
 
 // ---------- Utilidades ----------
 
@@ -62,7 +62,7 @@ $sheet.addEventListener('click', (e) => { if (e.target === $sheet) closeSheet();
 
 function setTab(tab) {
   ui.tab = tab;
-  if (tab !== 'routines') ui.editRoutineId = null;
+  ui.editRoutineId = null;
   document.querySelectorAll('.tabbar button').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
   render();
   window.scrollTo(0, 0);
@@ -71,9 +71,11 @@ function setTab(tab) {
 function render() {
   destroyCharts();
   clearInterval(render.timer);
-  $title.textContent = TITLES[ui.tab];
-  const views = { train: renderTrain, routines: renderRoutines, exercises: renderExercises, progress: renderProgress };
-  views[ui.tab]();
+  if (!ui.ob && S.needsOnboarding()) ui.ob = { step: 'welcome', days: [] };
+  document.body.classList.toggle('onboarding', Boolean(ui.ob));
+  if (ui.ob) return renderOnboarding();
+  $title.textContent = ui.editRoutineId ? 'Mi rutina' : TITLES[ui.tab];
+  ({ train: renderTrain, progress: renderProgress })[ui.tab]();
 }
 
 // =====================================================================
@@ -83,6 +85,12 @@ function render() {
 function renderTrain() {
   const st = S.getState();
   if (st.draft) return renderSession();
+  const editing = ui.editRoutineId && S.routineById(ui.editRoutineId);
+  if (editing) {
+    $view.innerHTML = `<button class="btn ghost" data-action="close-editor" style="padding-left:0">‹ Volver</button>
+      ${routineEditorHTML(editing)}`;
+    return;
+  }
 
   const routine = S.activeRoutine();
   const wd = S.weekdayIndex();
@@ -94,19 +102,25 @@ function renderTrain() {
     html += `<button class="card banner" data-action="open-settings">☁️ <span class="grow"><b>Inicia sesión</b> para guardar tus datos en la nube y no perderlos.</span> ›</button>`;
   }
   if (!routine) {
-    html += `<div class="card empty"><p>Aún no tienes una rutina activa.</p>
-      <button class="btn primary" data-action="goto" data-tab="routines">Elegir rutina</button></div>`;
+    html += `<div class="card empty"><p>Aún no tienes una rutina.</p>
+      <button class="btn primary" data-action="change-routine">Elegir rutina</button></div>`;
   } else {
     html += `<div class="card">
-      <div class="muted small">${S.DAY_NAMES[wd]} · ${esc(routine.name)}</div>
+      <div class="muted small">${S.DAY_NAMES[wd]}</div>
       ${todayDay
         ? `<h2 style="font-size:1.35rem;margin:2px 0 6px">${esc(todayDay.name)}</h2>
            <p class="muted small" style="margin:0 0 12px">${todayDay.exercises.length} ejercicios · ${todayDay.exercises.map((e) => esc(S.exById(e.exId).name)).slice(0, 3).join(', ')}${todayDay.exercises.length > 3 ? '…' : ''}</p>
            <button class="btn primary block" data-action="start" data-day="${todayDay.id}">${doneToday ? 'Entrenar otra vez' : 'Empezar entrenamiento'}</button>`
         : `<h2 style="font-size:1.35rem;margin:2px 0 6px">Hoy toca descanso</h2>
-           <p class="muted small" style="margin:0">Recupérate. Si quieres entrenar igual, elige un día abajo.</p>`}
+           <p class="muted small" style="margin:0">Recuperarse también es parte del progreso. Si quieres entrenar igual, elige un día abajo.</p>`}
     </div>`;
-    html += `<div class="section-title">Esta semana</div><div class="card">${weekStrip(routine, true)}</div>`;
+    html += `<div class="section-title">Mi rutina</div>
+      <div class="card">
+        <div class="row between" style="margin-bottom:10px"><h3 style="margin:0">${esc(routine.name)}</h3>
+          <button class="btn sm" data-action="edit-routine" data-id="${routine.id}">Editar</button></div>
+        ${weekStrip(routine, true)}
+        <p class="muted small" style="margin:10px 0 0">Toca <b>Editar</b> para cambiar tus días o ejercicios.</p>
+      </div>`;
     html += `<div class="section-title">Otro día de la rutina</div><div class="card"><div class="list">
       ${routine.days.map((d) => `<button class="list-item" data-action="start" data-day="${d.id}">
         <div class="grow"><div><b>${esc(d.name)}</b></div><div class="muted small">${d.exercises.length} ejercicios</div></div>
@@ -114,18 +128,17 @@ function renderTrain() {
     </div></div>`;
   }
   html += `<button class="btn block" data-action="start-free">+ Entrenamiento libre</button>`;
-
-  const recent = st.sessions.slice(-15).reverse();
-  html += `<div class="section-title">Historial</div>`;
-  html += recent.length
-    ? `<div class="card"><div class="list">${recent.map((s) => `
-        <button class="list-item" data-action="session-detail" data-id="${s.id}">
-          <div class="grow"><div><b>${esc(s.dayName)}</b></div>
-          <div class="muted small">${S.formatDate(s.date)} · ${S.doneSets(s)} series · ${kg(S.sessionVolume(s))}</div></div>
-          <span class="muted">›</span>
-        </button>`).join('')}</div></div>`
-    : `<div class="card empty small">Tus entrenamientos terminados aparecerán aquí.</div>`;
   $view.innerHTML = html;
+}
+
+// Nombre corto para la tira de la semana: "Torso A (Pecho / Espalda)" → "Torso A".
+const shortName = (name) => name.replace(/\s*\(.*\)\s*/g, ' ').trim();
+
+// Código de 2-4 letras para la tira de la semana: "Full Body A" → "FBA", "Torso A" → "TA", "Push" → "Push".
+function dayCode(name) {
+  const words = shortName(name).split(/\s+/).filter((w) => w && !['y', 'de', 'con', '/', '·'].includes(w.toLowerCase()));
+  if (words.length === 1) return words[0].slice(0, 4);
+  return words.map((w) => (w.length <= 2 || /^\d+$/.test(w) ? w.toUpperCase() : w[0].toUpperCase())).join('').slice(0, 4);
 }
 
 function weekStrip(routine, withDone) {
@@ -137,14 +150,15 @@ function weekStrip(routine, withDone) {
     const iso = S.todayISO(date);
     const day = routine.days.find((d) => d.id === routine.week[i]);
     const done = withDone && st.sessions.some((s) => s.date === iso);
-    return `<div class="week-day ${i === today && withDone ? 'today' : ''} ${done ? 'done' : ''} ${day ? '' : 'rest'}">
-      <b>${short}</b><span class="dot"></span><span>${day ? esc(day.name) : 'Descanso'}</span></div>`;
-  }).join('')}</div>`;
+    return `<div class="week-day ${i === today && withDone ? 'today' : ''} ${done ? 'done' : ''} ${day ? '' : 'rest'}" title="${S.DAY_NAMES[i]}: ${day ? esc(day.name) : 'descanso'}">
+      <b>${short}</b><span class="dot"></span><span>${day ? esc(dayCode(day.name)) : '—'}</span></div>`;
+  }).join('')}</div>
+  <div class="week-legend muted small">${routine.days.filter((d) => routine.week.includes(d.id)).map((d) => `<span><b>${esc(dayCode(d.name))}</b> ${esc(shortName(d.name))}</span>`).join('')}</div>`;
 }
 
 function renderSession() {
   const d = S.getState().draft;
-  const effort = S.getState().settings.effort;
+  const effort = S.isSimple() ? null : S.getState().settings.effort;
   $view.innerHTML = `
     <div class="card session-head">
       <div class="row between">
@@ -195,8 +209,9 @@ function exerciseCard(e, i, effort, d) {
     </div>
     ${hint ? `<div class="hint hint-${hint.type}">${hint.type === 'up' ? '📈' : '💡'} ${esc(hint.text)}</div>` : ''}
     ${last?.note ? `<div class="hint">📝 Nota anterior: ${esc(last.note)}</div>` : ''}
+    ${!last && !d.editing && S.isSimple() ? `<div class="hint">👋 Primera vez: elige un peso con el que puedas hacer ${esc(S.parseRange(e.target)?.hi || 10)} repeticiones con buena técnica, sin llegar al límite.</div>` : ''}
     <table class="sets">
-      <thead><tr><th>#</th><th>Anterior</th><th>kg</th><th>Reps</th><th>${effort}</th><th></th></tr></thead>
+      <thead><tr><th>#</th><th>${effort ? 'Anterior' : 'Última vez'}</th><th>kg</th><th>Reps</th>${effort ? `<th>${effort}</th>` : ''}<th></th></tr></thead>
       <tbody>${e.sets.map((s, j) => {
         const p = last?.sets[j];
         const repsPh = p?.reps || (e.target ? String(e.target).split('-')[0] : '');
@@ -205,7 +220,7 @@ function exerciseCard(e, i, effort, d) {
           <td class="prev">${p ? `${fmtN(p.kg)}×${p.reps}` : '—'}</td>
           <td><input type="number" inputmode="decimal" step="0.5" min="0" value="${esc(s.kg)}" placeholder="${p ? esc(p.kg) : '0'}" data-set="kg" data-i="${i}" data-j="${j}" aria-label="Kilos serie ${j + 1}"></td>
           <td><input type="number" inputmode="numeric" min="0" value="${esc(s.reps)}" placeholder="${esc(repsPh)}" data-set="reps" data-i="${i}" data-j="${j}" aria-label="Repeticiones serie ${j + 1}"></td>
-          <td><input type="number" inputmode="decimal" step="0.5" min="0" max="10" value="${esc(s.effort)}" placeholder="–" data-set="effort" data-i="${i}" data-j="${j}" aria-label="${effort} serie ${j + 1}"></td>
+          ${effort ? `<td><input type="number" inputmode="decimal" step="0.5" min="0" max="10" value="${esc(s.effort)}" placeholder="–" data-set="effort" data-i="${i}" data-j="${j}" aria-label="${effort} serie ${j + 1}"></td>` : ''}
           <td><button class="check" data-action="toggle-set" data-i="${i}" data-j="${j}" aria-label="Marcar serie ${j + 1} como hecha">${ICON_CHECK}</button></td>
         </tr>`;
       }).join('')}</tbody>
@@ -223,48 +238,9 @@ function exerciseCard(e, i, effort, d) {
 // RUTINAS
 // =====================================================================
 
-function renderRoutines() {
-  if (ui.editRoutineId && S.routineById(ui.editRoutineId)) return renderRoutineEditor(S.routineById(ui.editRoutineId));
-  const st = S.getState();
-  const active = S.activeRoutine();
-  let html = '';
-  if (active) {
-    html += `<div class="section-title">Rutina activa</div>
-      <div class="card">
-        <div class="row between" style="margin-bottom:10px"><h2 style="margin:0">${esc(active.name)}</h2>
-        <button class="btn sm" data-action="edit-routine" data-id="${active.id}">Editar</button></div>
-        ${weekStrip(active, false)}
-      </div>`;
-  }
-  const others = st.routines.filter((r) => r.id !== st.activeRoutineId);
-  if (others.length) {
-    html += `<div class="section-title">Mis rutinas</div><div class="card"><div class="list">
-      ${others.map((r) => `<div class="list-item">
-        <div class="grow"><b>${esc(r.name)}</b><div class="muted small">${r.days.length} días · ${r.week.filter(Boolean).length} entrenamientos/semana</div></div>
-        <button class="btn sm" data-action="activate-routine" data-id="${r.id}">Activar</button>
-        <button class="btn sm ghost" data-action="edit-routine" data-id="${r.id}">Editar</button>
-      </div>`).join('')}</div></div>`;
-  }
-  html += `<button class="btn primary block" data-action="new-routine" style="margin-top:12px">+ Crear rutina personalizada</button>`;
-  const tplCard = (t) => `<div class="card">
-      <h3>${esc(t.name)} ${t.mine ? '<span class="tag accent">Tu Excel</span>' : ''}</h3>
-      <p class="muted small" style="margin:2px 0 10px">${esc(t.description)}</p>
-      <div class="row wrap" style="gap:6px;margin-bottom:12px">${t.days.map((d) => `<span class="tag">${esc(d.name)}</span>`).join('')}</div>
-      <div class="row">
-        <button class="btn sm" data-action="preview-template" data-key="${t.key}">Ver ejercicios</button>
-        <button class="btn sm primary" data-action="use-template" data-key="${t.key}">Usar esta rutina</button>
-      </div>
-    </div>`;
-  const mine = TEMPLATES.filter((t) => t.mine && !st.routines.some((r) => r.fromTemplate === t.key));
-  if (mine.length) html += `<div class="section-title">Tu rutina</div>${mine.map(tplCard).join('')}`;
-  html += `<div class="section-title">Rutinas clásicas</div>${TEMPLATES.filter((t) => !t.mine).map(tplCard).join('')}`;
-  $view.innerHTML = html;
-}
-
-function renderRoutineEditor(r) {
-  const isActive = S.getState().activeRoutineId === r.id;
-  $view.innerHTML = `
-    <button class="btn ghost" data-action="close-editor" style="padding-left:0">‹ Rutinas</button>
+// embedded: dentro de la configuración inicial (sin botones de gestión).
+function routineEditorHTML(r, { embedded = false } = {}) {
+  return `
     <div class="card">
       <label class="field"><span>Nombre de la rutina</span>
         <input type="text" value="${esc(r.name)}" data-rfield="name" maxlength="60"></label>
@@ -302,12 +278,10 @@ function renderRoutineEditor(r) {
       <button class="btn sm" data-action="day-add-ex" data-di="${di}" style="margin-top:8px">+ Añadir ejercicio</button>
     </div>`).join('')}
     <button class="btn block" data-action="day-add">+ Añadir día</button>
-
-    <div class="stack" style="margin-top:20px">
-      ${isActive ? '' : `<button class="btn primary block" data-action="activate-routine" data-id="${r.id}">Usar como rutina activa</button>`}
-      <button class="btn block" data-action="close-editor">Listo</button>
-      <button class="btn block ghost danger" data-action="delete-routine" data-id="${r.id}">Eliminar rutina</button>
-    </div>`;
+    ${embedded ? '' : `<div class="stack" style="margin-top:20px">
+      <button class="btn primary block" data-action="close-editor">Listo</button>
+      <button class="btn block ghost" data-action="change-routine">Cambiar a otra rutina</button>
+    </div>`}`;
 }
 
 // =====================================================================
@@ -328,20 +302,6 @@ function exerciseListHTML(list, action) {
       <div class="grow"><div>${esc(e.name)}</div><div class="muted small">${esc(e.muscle)} · ${esc(e.equipment)}${e.custom ? ' · propio' : ''}</div></div>
       <span class="muted">›</span>
     </button>`).join('')}</div>`;
-}
-
-function renderExercises() {
-  $view.innerHTML = `
-    <input type="search" id="ex-search" placeholder="Buscar ejercicio (p. ej. press, remo, cuádriceps)" value="${esc(ui.exQuery)}" aria-label="Buscar ejercicio" style="margin-bottom:8px">
-    ${muscleChips(ui.exMuscle, 'ex-filter')}
-    <div class="card" id="ex-results" style="padding:4px 12px"></div>
-    <button class="btn block" data-action="new-exercise">+ Crear ejercicio propio</button>`;
-  updateExerciseResults();
-}
-
-function updateExerciseResults() {
-  const box = document.getElementById('ex-results');
-  if (box) box.innerHTML = exerciseListHTML(S.searchExercises(ui.exQuery, ui.exMuscle), 'ex-detail');
 }
 
 function showExerciseDetail(id, tab = ui.exTab) {
@@ -370,7 +330,8 @@ function showExerciseDetail(id, tab = ui.exTab) {
             ${h.note ? `<div class="muted">📝 ${esc(h.note)}</div>` : ''}</div></div>`).join('')}</div>`
       : '<div class="empty small">Sin historial todavía.</div>';
   } else if (tab === 'charts') {
-    const metrics = [['e1rm', '1RM est.'], ['max', 'Peso máx.'], ['volume', 'Volumen']];
+    const metrics = S.isSimple() ? [['max', 'Peso máx.'], ['volume', 'Volumen']] : [['e1rm', '1RM est.'], ['max', 'Peso máx.'], ['volume', 'Volumen']];
+    if (!metrics.some(([k]) => k === ui.exMetric)) ui.exMetric = metrics[0][0];
     body = `<div class="segmented" style="margin-bottom:8px">${metrics.map(([k, l]) => `<button class="${ui.exMetric === k ? 'active' : ''}" data-action="ex-metric" data-m="${k}" data-id="${id}">${l}</button>`).join('')}</div>
       <div class="muted small">${ui.exMetric === 'e1rm' ? 'Máximo estimado para 1 repetición (fórmula de Epley), mejor serie de cada sesión' : ui.exMetric === 'max' ? 'Peso más alto usado en cada sesión' : 'kg × reps totales de cada sesión'}</div>
       ${hist.length >= 2 ? '<div class="chart-box"><canvas id="c-exercise" role="img" aria-label="Evolución del ejercicio"></canvas></div>'
@@ -379,7 +340,7 @@ function showExerciseDetail(id, tab = ui.exTab) {
     const tile = (label, value, sub) => `<div class="stat"><div class="label">${label}</div><div class="value">${value}</div><div class="delta">${sub}</div></div>`;
     body = rec.sets ? `<div class="grid-2">
         ${tile('Peso máximo', `${fmtN(rec.maxKg.kg)} kg`, `× ${rec.maxKg.reps} · ${S.formatDate(rec.maxKg.date)}`)}
-        ${tile('1RM estimado', `${fmtN(rec.bestE1rm.value)} kg`, `${fmtN(rec.bestE1rm.kg)}×${rec.bestE1rm.reps} · ${S.formatDate(rec.bestE1rm.date)}`)}
+        ${S.isSimple() ? '' : tile('1RM estimado', `${fmtN(rec.bestE1rm.value)} kg`, `${fmtN(rec.bestE1rm.kg)}×${rec.bestE1rm.reps} · ${S.formatDate(rec.bestE1rm.date)}`)}
         ${tile('Más repeticiones', rec.maxReps.reps, `con ${fmtN(rec.maxReps.kg)} kg · ${S.formatDate(rec.maxReps.date)}`)}
         ${tile('Mejor sesión', kg(rec.bestVolume.value), `volumen · ${S.formatDate(rec.bestVolume.date)}`)}
       </div>` : '<div class="empty small">Aún no hay récords. ¡Registra tu primera sesión!</div>';
@@ -408,7 +369,8 @@ function openPicker(onPick) {
   openSheet('Añadir ejercicio', `
     <input type="search" id="pick-search" placeholder="Buscar ejercicio" aria-label="Buscar ejercicio" style="margin-bottom:8px">
     <div id="pick-chips"></div>
-    <div id="pick-results" style="max-height:50vh;overflow:auto"></div>`, (root) => {
+    <div id="pick-results" style="max-height:50vh;overflow:auto"></div>
+    <button class="btn block" data-action="pick-new" style="margin-top:10px">+ Crear ejercicio propio</button>`, (root) => {
     const input = root.querySelector('#pick-search');
     const draw = () => {
       root.querySelector('#pick-chips').innerHTML = muscleChips(muscle, 'pick-filter');
@@ -420,13 +382,14 @@ function openPicker(onPick) {
       if (!b) return;
       if (b.dataset.action === 'pick-filter') { muscle = b.dataset.muscle; draw(); }
       if (b.dataset.action === 'pick') { root.onclick = null; closeSheet(); onPick(b.dataset.id); }
+      if (b.dataset.action === 'pick-new') { root.onclick = null; newExerciseForm(query, onPick); }
     };
     draw();
     setTimeout(() => input.focus(), 50);
   });
 }
 
-function newExerciseForm(prefill = '') {
+function newExerciseForm(prefill = '', onCreated) {
   openSheet('Nuevo ejercicio', `
     <form id="new-ex" class="stack">
       <label class="field"><span>Nombre</span><input type="text" name="name" required maxlength="60" value="${esc(prefill)}"></label>
@@ -441,8 +404,9 @@ function newExerciseForm(prefill = '') {
       const f = new FormData(e.target);
       const ex = S.addCustomExercise(f.get('name'), f.get('muscle'), f.get('equipment'));
       closeSheet();
-      toast(`“${ex.name}” añadido`);
-      render();
+      toast(`“${ex.name}” creado`);
+      if (onCreated) onCreated(ex.id);
+      else render();
     });
   });
 }
@@ -511,12 +475,14 @@ function tableView(headers, rows) {
 
 function renderProgress() {
   const st = S.getState();
+  const simple = S.isSimple();
   const p = ui.period;
   const count = 12;
   const agg = aggregate(p, count);
   const last = count - 1;
   const prevLabel = p === 'week' ? 'semana pasada' : 'mes pasado';
-  const nowLabel = p === 'week' ? 'Esta semana' : 'Este mes';
+  const nowLabel = p === 'week' ? 'esta semana' : 'este mes';
+  const tile = (label, value, sub) => `<div class="stat"><div class="label">${label}</div><div class="value">${value}</div><div class="delta">${sub}</div></div>`;
 
   let html = `<div class="row between" style="margin-bottom:12px">
       <div class="segmented" role="tablist">
@@ -526,51 +492,132 @@ function renderProgress() {
     </div>`;
 
   if (!st.sessions.length && !st.body.length) {
-    html += `<div class="card empty"><p><b>Todavía no hay datos.</b></p><p class="small">Termina tu primer entrenamiento para ver aquí tu volumen, tu constancia y tu evolución.</p></div>`;
+    html += `<div class="card empty"><p><b>Todavía no hay datos.</b></p><p class="small">Termina tu primer entrenamiento y aquí verás cuántos días entrenas, tus récords y cómo mejoras.</p></div>`;
   }
 
   html += `<div class="stats">
-    <div class="stat"><div class="label">Entrenos · ${nowLabel.toLowerCase()}</div><div class="value">${agg.sessions[last]}</div><div class="delta">${agg.sets[last]} series</div></div>
-    <div class="stat"><div class="label">Volumen · ${nowLabel.toLowerCase()}</div><div class="value">${fmtN(agg.volume[last] / 1000)} t</div><div class="delta">${deltaText(agg.volume[last - 1], prevLabel)}</div></div>
-    <div class="stat"><div class="label">Racha</div><div class="value">${weekStreak()}</div><div class="delta">semanas seguidas</div></div>
+    ${tile(`Entrenos · ${nowLabel}`, agg.sessions[last], `${agg.sets[last]} series`)}
+    ${simple
+      ? tile(`Récords · ${nowLabel}`, prCount(agg.buckets[last].key, p), 'marcas superadas')
+      : tile(`Volumen · ${nowLabel}`, `${fmtN(agg.volume[last] / 1000)} t`, deltaText(agg.volume[last - 1], prevLabel))}
+    ${tile('Racha', weekStreak(), 'semanas seguidas')}
   </div>`;
 
-  // Volumen total
-  html += `<div class="card">
-    <h3>Volumen total ${p === 'week' ? 'por semana' : 'por mes'}</h3>
-    <div class="muted small">kg levantados (kg × reps de las series hechas)</div>
-    <div class="chart-box"><canvas id="c-volume" role="img" aria-label="Gráfico de volumen"></canvas></div>
-    ${tableView(['Periodo', 'Volumen', 'Series'], agg.buckets.map((b, i) => [b.title, kg(agg.volume[i]), agg.sets[i]]).reverse())}
-  </div>`;
+  const volumeCards = `<div class="card">
+      <h3>Volumen total ${p === 'week' ? 'por semana' : 'por mes'}</h3>
+      <div class="muted small">Kilos levantados en total (peso × repeticiones de cada serie)</div>
+      <div class="chart-box"><canvas id="c-volume" role="img" aria-label="Gráfico de volumen"></canvas></div>
+      ${tableView(['Periodo', 'Volumen', 'Series'], agg.buckets.map((b, i) => [b.title, kg(agg.volume[i]), agg.sets[i]]).reverse())}
+    </div>
+    <div class="card">
+      <div class="row between wrap"><h3>Por grupo muscular</h3>
+        <div class="segmented">
+          <button class="${ui.muscleMetric === 'sets' ? 'active' : ''}" data-action="muscle-metric" data-m="sets">Series</button>
+          <button class="${ui.muscleMetric === 'volume' ? 'active' : ''}" data-action="muscle-metric" data-m="volume">Volumen</button>
+        </div></div>
+      <div class="muted small">${ui.muscleMetric === 'sets' ? 'Series hechas' : 'Kilos levantados'} por semana, promedio de ${p === 'week' ? 'las últimas 4 semanas' : 'los últimos 3 meses'}</div>
+      <div class="chart-box tall"><canvas id="c-muscle" role="img" aria-label="Gráfico por grupo muscular"></canvas></div>
+      <div id="t-muscle"></div>
+    </div>`;
 
-  // Por grupo muscular
-  const muscleRange = p === 'week' ? 4 : 3;
-  html += `<div class="card">
-    <div class="row between wrap"><h3>Por grupo muscular</h3>
-      <div class="segmented">
-        <button class="${ui.muscleMetric === 'sets' ? 'active' : ''}" data-action="muscle-metric" data-m="sets">Series</button>
-        <button class="${ui.muscleMetric === 'volume' ? 'active' : ''}" data-action="muscle-metric" data-m="volume">Volumen</button>
-      </div></div>
-    <div class="muted small">${ui.muscleMetric === 'sets' ? 'Series efectivas' : 'kg levantados'} por semana, promedio de ${p === 'week' ? 'las últimas 4 semanas' : 'los últimos 3 meses'}</div>
-    <div class="chart-box tall"><canvas id="c-muscle" role="img" aria-label="Gráfico por grupo muscular"></canvas></div>
-    <div id="t-muscle"></div>
-  </div>`;
+  if (!simple) html += volumeCards;
 
-  // Constancia
   html += `<div class="card">
     <h3>Constancia</h3>
-    <div class="muted small">Días entrenados en las últimas 20 semanas (más oscuro = más volumen)</div>
+    <div class="muted small">Días que entrenaste en las últimas 20 semanas</div>
     ${heatmapHTML(20)}
     <div class="chart-box" style="height:170px"><canvas id="c-sessions" role="img" aria-label="Entrenamientos por periodo"></canvas></div>
     <div class="muted small" style="text-align:center">Entrenamientos ${p === 'week' ? 'por semana' : 'por mes'}</div>
   </div>`;
 
-  // Cuerpo
+  html += exercisesProgressHTML();
+  html += bodyCardHTML();
+  html += historyHTML();
+
+  if (simple) {
+    html += `<details class="more" id="more-stats"><summary>Más estadísticas (volumen y grupos musculares)</summary>${volumeCards}</details>`;
+  }
+
+  $view.innerHTML = html;
+
+  const titleOf = (i) => agg.buckets[i].title;
+  const drawVolume = () => {
+    barChart(document.getElementById('c-volume'), {
+      labels: agg.buckets.map((b) => b.label), data: agg.volume, unit: 'kg', highlightLast: true, tooltipTitle: titleOf,
+    });
+    drawMuscleChart(p === 'week' ? 4 : 3);
+  };
+  if (simple) {
+    document.getElementById('more-stats').addEventListener('toggle', (e) => { if (e.target.open) drawVolume(); });
+  } else {
+    drawVolume();
+  }
+  barChart(document.getElementById('c-sessions'), {
+    labels: agg.buckets.map((b) => b.label), data: agg.sessions, unit: '', tooltipTitle: titleOf,
+  });
   const field = S.BODY_FIELDS.find((f) => f.key === ui.bodyField);
-  const bodyData = st.body.filter((b) => b[field.key] !== undefined && b[field.key] !== '' && b[field.key] !== null);
+  const bodyData = bodySeries(field);
+  if (bodyData.length) {
+    lineChart(document.getElementById('c-body'), {
+      labels: bodyData.map((b) => S.formatDate(b.date)),
+      data: bodyData.map((b) => Number(b[field.key])),
+      unit: field.unit,
+    });
+  }
+}
+
+function prCount(key, period) {
+  let n = 0;
+  for (const s of S.getState().sessions) {
+    if (periodKey(s.date, period) !== key) continue;
+    for (const e of s.exercises) for (const x of e.sets) if (x.pr) n++;
+  }
+  return n;
+}
+
+// Peso máximo reciente de cada ejercicio y cuánto ha subido desde la primera vez.
+function exercisesProgressHTML() {
+  const map = new Map();
+  for (const s of S.getState().sessions) {
+    for (const e of s.exercises) {
+      const sets = e.sets.filter((x) => x.done);
+      if (!sets.length) continue;
+      const top = Math.max(...sets.map((x) => Number(x.kg) || 0));
+      const entry = map.get(e.exId) || { first: top, last: top, lastDate: s.date, best: sets[0] };
+      entry.last = top;
+      entry.lastDate = s.date;
+      entry.best = sets.reduce((a, x) => (Number(x.kg) > Number(a.kg) ? x : a), sets[0]);
+      map.set(e.exId, entry);
+    }
+  }
+  if (!map.size) return '';
+  const rows = [...map.entries()].sort((a, b) => (a[1].lastDate < b[1].lastDate ? 1 : -1));
+  const item = ([id, v]) => {
+    const diff = v.last - v.first;
+    return `<button class="list-item" data-action="ex-detail" data-id="${id}">
+      <div class="grow"><div>${esc(S.exById(id).name)}</div>
+        <div class="muted small">Última vez: ${fmtN(v.best.kg)} kg × ${v.best.reps}${diff ? ` · ${diff > 0 ? '▲ +' : '▼ '}${fmtN(diff)} kg desde el inicio` : ''}</div></div>
+      <span class="muted">›</span></button>`;
+  };
+  return `<div class="card">
+    <h3>Tus ejercicios</h3>
+    <div class="muted small">Toca uno para ver su evolución y tus récords</div>
+    <div class="list">${rows.slice(0, 6).map(item).join('')}</div>
+    ${rows.length > 6 ? `<details class="more-inline"><summary>Ver los ${rows.length} ejercicios</summary><div class="list">${rows.slice(6).map(item).join('')}</div></details>` : ''}
+  </div>`;
+}
+
+function bodySeries(field) {
+  return S.getState().body.filter((b) => b[field.key] !== undefined && b[field.key] !== '' && b[field.key] !== null);
+}
+
+function bodyCardHTML() {
+  const st = S.getState();
+  const field = S.BODY_FIELDS.find((f) => f.key === ui.bodyField);
+  const bodyData = bodySeries(field);
   const lastBody = bodyData[bodyData.length - 1];
   const firstBody = bodyData[0];
-  html += `<div class="card">
+  return `<div class="card">
     <div class="row between"><h3>Peso corporal y medidas</h3>
       <button class="btn sm primary" data-action="body-add" style="white-space:nowrap">+ Registrar</button></div>
     <div class="chips" style="margin-top:8px">${S.BODY_FIELDS.map((f) => `<button class="chip ${f.key === ui.bodyField ? 'active' : ''}" data-action="body-field" data-f="${f.key}">${f.label}</button>`).join('')}</div>
@@ -584,24 +631,22 @@ function renderProgress() {
       <tbody>${[...st.body].reverse().map((b) => `<tr><td>${S.formatDate(b.date)}</td>${S.BODY_FIELDS.map((f) => `<td>${b[f.key] !== undefined && b[f.key] !== '' ? fmtN(b[f.key]) : '–'}</td>`).join('')}
         <td><button class="btn sm ghost" data-action="body-edit" data-date="${b.date}">Editar</button></td></tr>`).join('')}</tbody></table></details>` : ''}
   </div>`;
+}
 
-  $view.innerHTML = html;
-
-  const titleOf = (i) => agg.buckets[i].title;
-  barChart(document.getElementById('c-volume'), {
-    labels: agg.buckets.map((b) => b.label), data: agg.volume, unit: 'kg', highlightLast: true, tooltipTitle: titleOf,
-  });
-  barChart(document.getElementById('c-sessions'), {
-    labels: agg.buckets.map((b) => b.label), data: agg.sessions, unit: '', tooltipTitle: titleOf,
-  });
-  drawMuscleChart(muscleRange);
-  if (bodyData.length) {
-    lineChart(document.getElementById('c-body'), {
-      labels: bodyData.map((b) => S.formatDate(b.date)),
-      data: bodyData.map((b) => Number(b[field.key])),
-      unit: field.unit,
-    });
-  }
+function historyHTML() {
+  const all = [...S.getState().sessions].reverse();
+  const shown = all.slice(0, ui.historyLimit);
+  return `<div class="card">
+    <h3>Historial</h3>
+    ${shown.length ? `<div class="list">${shown.map((s) => `
+      <button class="list-item" data-action="session-detail" data-id="${s.id}">
+        <div class="grow"><div><b>${esc(s.dayName)}</b></div>
+        <div class="muted small">${S.formatDate(s.date)} · ${S.doneSets(s)} series${S.isSimple() ? '' : ` · ${kg(S.sessionVolume(s))}`}</div></div>
+        <span class="muted">›</span>
+      </button>`).join('')}</div>
+      ${all.length > shown.length ? `<button class="btn sm ghost" data-action="history-more">Ver más</button>` : ''}`
+    : '<div class="empty small">Tus entrenamientos terminados aparecerán aquí.</div>'}
+  </div>`;
 }
 
 function drawMuscleChart(range) {
@@ -685,6 +730,159 @@ function bodyForm(date = S.todayISO()) {
 }
 
 // =====================================================================
+// CONFIGURACIÓN INICIAL
+// =====================================================================
+
+const LEVELS = [
+  ['beginner', 'Menos de 6 meses', 'Estoy empezando o volviendo después de mucho tiempo'],
+  ['intermediate', 'De 6 meses a 2 años', 'Conozco los ejercicios básicos'],
+  ['advanced', 'Más de 2 años', 'Tengo experiencia y sé qué rutina quiero'],
+];
+
+const WHY = {
+  'full-body': 'Trabajas todo el cuerpo en cada sesión: aprendes los ejercicios básicos más rápido y progresas aunque vayas pocos días.',
+  'torso-pierna': 'Alternas torso y pierna, así cada músculo descansa entre sesiones. Ideal para 4 días.',
+  ppl: 'Separa empuje, tracción y pierna para entrenar con más volumen. Pensada para 5-6 días.',
+};
+
+function renderOnboarding() {
+  const ob = ui.ob;
+  const back = (step) => `<button class="btn ghost" data-action="ob-go" data-step="${step}" style="padding-left:0">‹ Atrás</button>`;
+  const cancel = ob.fromSettings ? `<button class="btn ghost" data-action="ob-cancel" style="padding-left:0">Cancelar</button>` : '';
+  const progress = (n) => `<div class="ob-progress" aria-label="Paso ${n} de 4">${[1, 2, 3, 4].map((i) => `<span class="${i <= n ? 'on' : ''}"></span>`).join('')}</div>`;
+  let html = '';
+  $title.textContent = ob.fromSettings ? 'Cambiar rutina' : 'Bienvenido';
+
+  if (ob.step === 'welcome') {
+    $title.textContent = '';
+    html = `<div class="ob-hero">
+        <img src="icons/icon.svg" alt="" width="72" height="72">
+        <h1>Tu rutina y tu progreso, en un solo lugar</h1>
+        <p class="muted">Responde 3 preguntas y te armamos una rutina. Luego solo anota tus series y mira cómo mejoras.</p>
+      </div>
+      <div class="stack">
+        <button class="btn primary block" data-action="ob-go" data-step="experience">Empezar</button>
+        ${Cloud.isConfigured() ? '<button class="btn block" data-action="ob-go" data-step="login">Ya tengo cuenta</button>' : ''}
+      </div>`;
+  } else if (ob.step === 'login') {
+    html = `${back('welcome')}
+      <h2 class="ob-q">Entra a tu cuenta</h2>
+      <p class="muted">Recuperaremos tu rutina y tu historial.</p>
+      <form class="card stack" id="login-form">
+        <input type="email" name="email" placeholder="Correo" autocomplete="email" required>
+        <input type="password" name="password" placeholder="Contraseña" autocomplete="current-password" minlength="6" required>
+        <button class="btn primary block" name="mode" value="login">Entrar</button>
+        <button type="button" class="btn sm ghost" data-action="cloud-reset">¿Olvidaste tu contraseña?</button>
+        <p class="small" id="login-msg" style="margin:0" role="status"></p>
+      </form>`;
+  } else if (ob.step === 'experience') {
+    html = `${ob.fromSettings ? cancel : back('welcome')}${progress(1)}
+      <h2 class="ob-q">¿Cuánto tiempo llevas entrenando?</h2>
+      <div class="stack">${LEVELS.map(([k, t, d]) => `<button class="option ${ob.level === k ? 'selected' : ''}" data-action="ob-level" data-v="${k}">
+        <b>${t}</b><span class="muted small">${d}</span></button>`).join('')}</div>`;
+  } else if (ob.step === 'days') {
+    const n = ob.days.length;
+    const rec = n ? S.templateByKey(S.recommendTemplate(ob.level, n)) : null;
+    html = `${back('experience')}${progress(2)}
+      <h2 class="ob-q">¿Qué días puedes entrenar?</h2>
+      <p class="muted" style="margin-top:0">Toca los días. Puedes cambiarlos cuando quieras.</p>
+      <div class="day-picker">${S.DAY_NAMES.map((name, i) => `<button class="day-toggle ${ob.days.includes(i) ? 'on' : ''}" data-action="ob-day" data-d="${i}" aria-pressed="${ob.days.includes(i)}">
+        <b>${S.DAY_SHORT[i]}</b><span>${name.slice(0, 3)}</span></button>`).join('')}</div>
+      <p class="small" style="min-height:2.6em">${n ? `<b>${n} ${n === 1 ? 'día' : 'días'} por semana.</b> ${n === 1 ? 'Con 2 o 3 días progresarás más rápido.' : ''}
+        ${ob.level === 'beginner' && n > 4 ? 'Para empezar, 3-4 días bastan: el descanso también hace crecer el músculo.' : ''}` : 'Elige al menos un día.'}</p>
+      <button class="btn primary block" data-action="ob-go" data-step="choose" ${n ? '' : 'disabled'}>Continuar</button>`;
+    void rec;
+  } else if (ob.step === 'choose') {
+    const recKey = S.recommendTemplate(ob.level, ob.days.length);
+    const rec = S.templateByKey(recKey);
+    const tplCard = (t, recommended) => `<div class="card ${recommended ? 'recommended' : ''}">
+        ${recommended ? '<span class="tag accent" style="margin-bottom:6px">⭐ Recomendada para ti</span>' : ''}
+        <h3>${esc(t.name)}</h3>
+        <p class="muted small" style="margin:2px 0 8px">${esc(t.description)}</p>
+        ${recommended && WHY[t.key] ? `<p class="small" style="margin:0 0 10px">${WHY[t.key]}</p>` : ''}
+        <div class="row wrap" style="gap:6px;margin-bottom:12px">${t.days.map((d) => `<span class="tag">${esc(shortName(d.name))}</span>`).join('')}</div>
+        <div class="row">
+          <button class="btn sm" data-action="preview-template" data-key="${t.key}">Ver ejercicios</button>
+          <button class="btn sm ${recommended ? 'primary' : ''}" data-action="ob-pick" data-key="${t.key}">Elegir esta</button>
+        </div>
+      </div>`;
+    const others = TEMPLATES.filter((t) => t.key !== recKey);
+    const saved = S.getState().routines.filter((r) => !r.seeded && r.id !== S.getState().activeRoutineId);
+    html = `${back('days')}${progress(3)}
+      <h2 class="ob-q">${ob.level === 'beginner' ? 'Esta es tu rutina recomendada' : '¿Qué rutina quieres seguir?'}</h2>
+      ${tplCard(rec, true)}`;
+    if (ob.level === 'beginner' && !ob.showAll) {
+      html += `<button class="btn block ghost" data-action="ob-show-all">Ver otras opciones</button>`;
+    } else {
+      html += `<div class="section-title">Otras rutinas</div>${others.map((t) => tplCard(t, false)).join('')}
+        <button class="card option" data-action="ob-pick" data-key="custom">
+          <b>✏️ Crear la mía desde cero</b><span class="muted small">Eliges tú los ejercicios de cada día</span></button>`;
+    }
+    if (saved.length) {
+      html += `<div class="section-title">Tus rutinas guardadas</div><div class="card"><div class="list">${saved.map((r) => `<div class="list-item">
+        <div class="grow"><b>${esc(r.name)}</b><div class="muted small">${r.days.length} días</div></div>
+        <button class="btn sm" data-action="ob-activate" data-id="${r.id}">Usar</button></div>`).join('')}</div></div>`;
+    }
+  } else if (ob.step === 'review') {
+    const r = S.routineById(ob.routineId);
+    ui.editRoutineId = r.id;
+    const empty = r.days.every((d) => !d.exercises.length);
+    html = `${back('choose')}${progress(4)}
+      <h2 class="ob-q">${empty ? 'Arma tu rutina' : 'Revisa tu rutina'}</h2>
+      <p class="muted" style="margin-top:0">${empty
+        ? 'Añade los ejercicios de cada día. Abajo puedes cambiar qué día entrenas cada uno.'
+        : 'Estos son los ejercicios recomendados. Puedes cambiar ejercicios, series y días ahora o cuando quieras desde <b>Entrenar → Mi rutina</b>.'}</p>
+      ${routineEditorHTML(r, { embedded: true })}
+      <button class="btn primary block" data-action="ob-review-done" style="margin-top:16px">Continuar</button>`;
+  } else if (ob.step === 'account') {
+    html = `<div class="ob-hero" style="padding-top:8px">
+        <div style="font-size:3rem">☁️</div>
+        <h1>Guarda tu progreso</h1>
+        <p class="muted">Crea una cuenta para no perder tus entrenamientos y verlos en cualquier dispositivo.</p>
+      </div>
+      <form class="card stack" id="login-form">
+        <input type="email" name="email" placeholder="Correo" autocomplete="email" required>
+        <input type="password" name="password" placeholder="Contraseña (mín. 6 caracteres)" autocomplete="new-password" minlength="6" required>
+        <button class="btn primary block" name="mode" value="signup">Crear cuenta</button>
+        <p class="small" id="login-msg" style="margin:0" role="status"></p>
+      </form>
+      <button class="btn block ghost" data-action="ob-finish">Ahora no</button>`;
+  }
+  $view.innerHTML = `<div class="ob">${html}</div>`;
+  if (ob.step === 'login') {
+    bindAccountForm($view, async () => {
+      await Cloud.sync();
+      if (S.needsOnboarding()) {
+        ui.ob = { step: 'experience', days: [] };
+        toast('Tu cuenta aún no tiene rutina: vamos a crearla');
+      } else {
+        S.ensureProfile();
+        ui.ob = null;
+        toast('¡Bienvenido de vuelta!');
+      }
+      render();
+    });
+  }
+  if (ob.step === 'account') bindAccountForm($view, () => actions['ob-finish']());
+}
+
+function finishOnboarding() {
+  const ob = ui.ob;
+  S.setProfile({
+    level: ob.level,
+    days: ob.days,
+    simple: ob.fromSettings ? S.isSimple() : ob.level === 'beginner',
+    auto: false,
+  });
+  ui.ob = null;
+  ui.editRoutineId = null;
+  ui.tab = 'train';
+  document.querySelectorAll('.tabbar button').forEach((b) => b.classList.toggle('active', b.dataset.tab === 'train'));
+  render();
+  window.scrollTo(0, 0);
+}
+
+// =====================================================================
 // RESUMEN AL TERMINAR
 // =====================================================================
 
@@ -758,7 +956,7 @@ function accountHTML() {
     </form>`;
 }
 
-function bindAccountForm(root) {
+function bindAccountForm(root, onDone) {
   const form = root.querySelector('#login-form');
   if (!form) return;
   form.addEventListener('submit', async (e) => {
@@ -773,12 +971,15 @@ function bindAccountForm(root) {
       if (mode === 'signup') {
         const needsConfirm = await Cloud.signUp(f.get('email'), f.get('password'));
         if (needsConfirm) {
-          msg.textContent = '📧 Te enviamos un correo. Abre el enlace para confirmar tu cuenta y luego entra aquí.';
+          msg.textContent = '📧 Te enviamos un correo. Abre el enlace para confirmar tu cuenta y luego entra desde Ajustes ⚙.';
+          const next = document.querySelector('[data-action="ob-finish"]');
+          if (next) { next.textContent = 'Continuar'; next.classList.add('primary'); next.classList.remove('ghost'); }
           return;
         }
       } else {
         await Cloud.signIn(f.get('email'), f.get('password'));
       }
+      if (onDone) return onDone();
       closeSheet();
       toast('Sesión iniciada · sincronizando tus datos');
     } catch (err) {
@@ -796,11 +997,19 @@ function openSettings() {
   openSheet('Ajustes', `
     <div class="stack">
       ${accountHTML()}
-      <div class="row between"><div><b>Esfuerzo por serie</b><div class="muted small">RIR = reps en reserva · RPE = esfuerzo 1-10</div></div>
+      <div class="section-title">Mi rutina</div>
+      <button class="btn block" data-action="change-routine">Cambiar de rutina o de días</button>
+      <div class="section-title">Preferencias</div>
+      <div class="row between"><div class="grow"><b>Modo simple</b><div class="muted small">Oculta RIR/RPE y las estadísticas avanzadas</div></div>
+        <div class="segmented">
+          <button class="${S.isSimple() ? 'active' : ''}" data-action="set-simple" data-v="1">Sí</button>
+          <button class="${S.isSimple() ? '' : 'active'}" data-action="set-simple" data-v="0">No</button>
+        </div></div>
+      ${S.isSimple() ? '' : `<div class="row between"><div class="grow"><b>Esfuerzo por serie</b><div class="muted small">RIR = reps en reserva · RPE = esfuerzo 1-10</div></div>
         <div class="segmented">
           <button class="${st.settings.effort === 'RIR' ? 'active' : ''}" data-action="set-effort" data-v="RIR">RIR</button>
           <button class="${st.settings.effort === 'RPE' ? 'active' : ''}" data-action="set-effort" data-v="RPE">RPE</button>
-        </div></div>
+        </div></div>`}
       <div class="row between"><b>Tema</b>
         <div class="segmented">
           ${[['auto', 'Auto'], ['light', 'Claro'], ['dark', 'Oscuro']].map(([v, l]) => `<button class="${theme === v ? 'active' : ''}" data-action="set-theme" data-v="${v}">${l}</button>`).join('')}
@@ -821,6 +1030,8 @@ function openSettings() {
         if (!Array.isArray(data.sessions) || !Array.isArray(data.routines)) throw new Error('formato');
         if (!confirm('Esto reemplazará los datos actuales por los del respaldo. ¿Continuar?')) return;
         S.replaceState(data);
+        S.ensureProfile();
+        ui.ob = null;
         closeSheet();
         toast('Respaldo restaurado');
         render();
@@ -876,7 +1087,8 @@ const actions = {
       const pr = S.prType(e.exId, s, d.editing ? d.id : null, others);
       if (pr) {
         s.pr = pr;
-        toast(pr === 'peso' ? `🏆 ¡Récord de peso! ${fmtN(s.kg)} kg` : `🏆 ¡Récord personal! 1RM estimado ${fmtN(S.e1rm(s))} kg`);
+        toast(pr === 'peso' ? `🏆 ¡Récord de peso! ${fmtN(s.kg)} kg`
+          : S.isSimple() ? '🏆 ¡Tu mejor serie hasta ahora en este ejercicio!' : `🏆 ¡Récord personal! 1RM estimado ${fmtN(S.e1rm(s))} kg`);
         if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
       }
     }
@@ -969,42 +1181,84 @@ const actions = {
     S.deleteSession(b.dataset.id); closeSheet(); render();
   },
 
-  // Rutinas
-  'use-template': (b) => {
-    const tpl = TEMPLATES.find((t) => t.key === b.dataset.key);
-    const r = S.addRoutine(S.routineFromTemplate(tpl));
-    const hasHistory = tpl.days.some((d) => d.exercises.some((e) => e.last));
-    let msg = `“${r.name}” es ahora tu rutina activa`;
-    if (hasHistory && confirm('¿Importar también tus últimos pesos y repeticiones al historial? Así la app sabrá desde dónde empiezas.')) {
-      const n = S.importTemplateHistory(tpl, r);
-      msg += ` · ${n} entrenamientos importados`;
+  // Configuración inicial
+  'ob-go': (b) => {
+    const step = b.dataset.step;
+    // Al volver desde la revisión se descarta la rutina recién creada.
+    if (ui.ob.step === 'review' && step === 'choose' && ui.ob.routineId) {
+      S.deleteRoutine(ui.ob.routineId);
+      if (ui.ob.prevActive) { S.getState().activeRoutineId = ui.ob.prevActive; S.save(); }
+      ui.ob.routineId = null;
+      ui.editRoutineId = null;
     }
-    closeSheet();
-    toast(msg);
+    ui.ob.step = step;
     render(); window.scrollTo(0, 0);
   },
+  'ob-cancel': () => { ui.ob = null; ui.editRoutineId = null; render(); window.scrollTo(0, 0); },
+  'ob-level': (b) => {
+    ui.ob.level = b.dataset.v;
+    ui.ob.step = 'days';
+    render(); window.scrollTo(0, 0);
+  },
+  'ob-day': (b) => {
+    const d = Number(b.dataset.d);
+    const days = ui.ob.days;
+    ui.ob.days = days.includes(d) ? days.filter((x) => x !== d) : [...days, d].sort((a, c) => a - c);
+    render();
+  },
+  'ob-show-all': () => { ui.ob.showAll = true; render(); },
+  'ob-pick': (b) => {
+    closeSheet();
+    const key = b.dataset.key;
+    const st = S.getState();
+    ui.ob.prevActive = st.activeRoutineId;
+    // La rutina de ejemplo de versiones anteriores ya no hace falta.
+    st.routines.filter((r) => r.seeded).forEach((r) => S.deleteRoutine(r.id));
+    const r = key === 'custom'
+      ? S.routineForDays(ui.ob.days)
+      : S.routineFromTemplate(S.templateByKey(key), ui.ob.days);
+    S.addRoutine(r, true);
+    ui.ob.routineId = r.id;
+    ui.ob.step = 'review';
+    render(); window.scrollTo(0, 0);
+  },
+  'ob-activate': (b) => {
+    S.getState().activeRoutineId = b.dataset.id;
+    S.save();
+    toast('Rutina activada');
+    finishOnboarding();
+  },
+  'ob-review-done': () => {
+    const r = S.routineById(ui.ob.routineId);
+    if (r.days.every((d) => !d.exercises.length)) return toast('Añade al menos un ejercicio a tu rutina');
+    if (!r.week.some(Boolean)) return toast('Asigna al menos un día de la semana a tu rutina');
+    const needsAccount = Cloud.isConfigured() && !Cloud.getUser() && !ui.ob.fromSettings;
+    if (needsAccount) { ui.ob.step = 'account'; render(); window.scrollTo(0, 0); return; }
+    toast(ui.ob.fromSettings ? 'Rutina actualizada' : '¡Listo! Tu rutina te espera en Entrenar');
+    finishOnboarding();
+  },
+  'ob-finish': () => {
+    toast('¡Listo! Tu rutina te espera en Entrenar');
+    finishOnboarding();
+  },
+  'change-routine': () => {
+    closeSheet();
+    const pr = S.getState().profile || {};
+    ui.editRoutineId = null;
+    ui.ob = { step: 'experience', level: pr.level, days: pr.days?.length ? [...pr.days] : [], fromSettings: true };
+    render(); window.scrollTo(0, 0);
+  },
+
+  // Rutinas
   'preview-template': (b) => {
     const tpl = TEMPLATES.find((t) => t.key === b.dataset.key);
     openSheet(tpl.name, `${tpl.days.map((d) => `<div style="margin-bottom:14px"><b>${esc(d.name)}</b>
       <div class="list small">${d.exercises.map((e) => `<div class="list-item" style="padding:6px 0"><span class="grow">${esc(S.exById(e.exId).name)}</span><span class="muted">${e.sets} × ${esc(e.reps)}</span></div>`).join('')}</div></div>`).join('')}
-      <p class="muted small">Semana: ${tpl.week.map((i, wd) => `${S.DAY_SHORT[wd]} ${i === null ? '—' : esc(tpl.days[i].name)}`).join(' · ')}</p>
-      <button class="btn primary block" data-action="use-template" data-key="${tpl.key}">Usar esta rutina</button>`);
-  },
-  'new-routine': () => {
-    const r = S.addRoutine(S.newEmptyRoutine(), false);
-    ui.editRoutineId = r.id; render(); window.scrollTo(0, 0);
+      <p class="muted small">Los días se repartirán entre los días que elegiste; podrás cambiarlos en el siguiente paso.</p>
+      <button class="btn primary block" data-action="ob-pick" data-key="${tpl.key}">Elegir esta rutina</button>`);
   },
   'edit-routine': (b) => { ui.editRoutineId = b.dataset.id; render(); window.scrollTo(0, 0); },
-  'close-editor': () => { ui.editRoutineId = null; render(); window.scrollTo(0, 0); },
-  'activate-routine': (b) => {
-    S.getState().activeRoutineId = b.dataset.id; S.save();
-    toast('Rutina activada'); render();
-  },
-  'delete-routine': (b) => {
-    const r = S.routineById(b.dataset.id);
-    if (!confirm(`¿Eliminar la rutina “${r.name}”? Tu historial de entrenamientos no se borra.`)) return;
-    S.deleteRoutine(r.id); ui.editRoutineId = null; render();
-  },
+  'close-editor': () => { ui.editRoutineId = null; toast('Rutina guardada'); render(); window.scrollTo(0, 0); },
   'day-add': () => {
     const r = S.routineById(ui.editRoutineId);
     r.days.push({ id: S.uid(), name: `Día ${r.days.length + 1}`, exercises: [] });
@@ -1031,13 +1285,7 @@ const actions = {
   },
 
   // Ejercicios
-  'ex-filter': (b) => {
-    ui.exMuscle = b.dataset.muscle;
-    document.querySelectorAll('#view .chip').forEach((c) => c.classList.toggle('active', c.dataset.muscle === ui.exMuscle));
-    updateExerciseResults();
-  },
   'ex-detail': (b) => showExerciseDetail(b.dataset.id, 'about'),
-  'new-exercise': () => newExerciseForm(ui.exQuery),
   'add-ex-to-day': (b) => {
     const r = S.activeRoutine();
     const d = r.days.find((x) => x.id === b.dataset.day);
@@ -1048,6 +1296,7 @@ const actions = {
 
   // Progreso
   period: (b) => { ui.period = b.dataset.p; render(); },
+  'history-more': () => { ui.historyLimit += 20; render(); },
   'muscle-metric': (b) => { ui.muscleMetric = b.dataset.m; render(); },
   'body-field': (b) => { ui.bodyField = b.dataset.f; render(); },
   'body-add': () => bodyForm(),
@@ -1069,6 +1318,11 @@ const actions = {
     try { await Cloud.resetPassword(email); toast('Te enviamos un correo para cambiar la contraseña'); }
     catch (err) { toast(err.message); }
   },
+  'set-simple': (b) => {
+    S.setProfile({ simple: b.dataset.v === '1' });
+    closeSheet(); render();
+    toast(S.isSimple() ? 'Modo simple activado' : 'Modo simple desactivado');
+  },
   'set-effort': (b) => { S.getState().settings.effort = b.dataset.v; S.save(); closeSheet(); render(); },
   'set-theme': (b) => {
     try { localStorage.setItem('gymtrack.theme', b.dataset.v); } catch {}
@@ -1084,7 +1338,7 @@ const actions = {
   },
   reset: () => {
     if (!confirm('¿Borrar TODOS tus datos? Esta acción no se puede deshacer.')) return;
-    S.resetState(); closeSheet(); render();
+    S.resetState(); ui.ob = null; ui.editRoutineId = null; closeSheet(); render();
   },
 };
 
@@ -1107,7 +1361,6 @@ document.addEventListener('click', (e) => {
 
 document.addEventListener('input', (e) => {
   const t = e.target;
-  if (t.id === 'ex-search') { ui.exQuery = t.value; updateExerciseResults(); return; }
   if (t.dataset.note !== undefined) {
     S.getState().draft.exercises[t.dataset.note].note = t.value;
     S.save();
@@ -1150,13 +1403,32 @@ document.addEventListener('change', (e) => {
 });
 
 // Vuelve a dibujar los gráficos si cambia el tema del sistema.
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => ui.tab === 'progress' && render());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => ui.tab === 'progress' && !ui.ob && render());
 
 // ---------- Inicio ----------
 
 applyTheme();
-S.seedIfEmpty();
+S.ensureProfile();
+importFromLink();
 render();
+
+// Enlace personal ?importar=excel: añade la rutina del Excel con sus últimos pesos al historial.
+function importFromLink() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('importar') !== 'excel') return;
+  history.replaceState(null, '', location.pathname);
+  const tpl = S.templateByKey('excel-4-dias');
+  const st = S.getState();
+  if (st.importedHistory?.includes(tpl.key)) return setTimeout(() => toast('Tus datos del Excel ya estaban importados'), 300);
+  let r = st.routines.find((x) => x.fromTemplate === tpl.key);
+  if (!r) {
+    st.routines.filter((x) => x.seeded).forEach((x) => S.deleteRoutine(x.id));
+    r = S.addRoutine(S.routineFromTemplate(tpl), true);
+  }
+  const n = S.importTemplateHistory(tpl, r);
+  if (!st.profile) S.setProfile({ level: 'advanced', days: tpl.week.flatMap((v, i) => (v === null ? [] : [i])), simple: false });
+  setTimeout(() => toast(`Excel importado: ${n} entrenamientos y la rutina “${r.name}”`), 300);
+}
 
 // Cuando llegan datos de otro dispositivo, redibuja salvo que el usuario esté escribiendo.
 let pendingRender = false;

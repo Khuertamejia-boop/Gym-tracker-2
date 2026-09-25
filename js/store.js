@@ -15,6 +15,7 @@ function emptyState() {
     sessions: [],
     body: [],
     customExercises: [],
+    profile: null, // { level: 'beginner' | 'intermediate' | 'advanced', days: [0..6], simple: bool }
     deletedIds: [], // marcas de borrado para que la sincronización no "resucite" datos
     updatedAt: 0,
     draft: null,
@@ -103,6 +104,7 @@ export function mergeStates(local, remote) {
 
   return {
     ...emptyState(),
+    profile: (remoteNewer ? remote.profile || local.profile : local.profile || remote.profile) || null,
     settings: { ...local.settings, ...(remoteNewer ? remote.settings : {}) },
     routines,
     activeRoutineId,
@@ -110,6 +112,7 @@ export function mergeStates(local, remote) {
     body,
     customExercises,
     deletedIds: [...deleted],
+    importedHistory: [...new Set([...(local.importedHistory || []), ...(remote.importedHistory || [])])],
     updatedAt: Math.max(local.updatedAt || 0, remote.updatedAt || 0),
     draft: local.draft || null,
   };
@@ -153,24 +156,38 @@ export function searchExercises(query, muscle) {
 
 // ---------- Rutinas ----------
 
-export function routineFromTemplate(tpl) {
+// weekdays (opcional): días de la semana elegidos (0 = lunes). Los días de la
+// rutina se reparten en orden sobre ellos, repitiendo el ciclo si hace falta.
+export function routineFromTemplate(tpl, weekdays) {
   const days = tpl.days.map((d) => ({
     id: uid(),
     name: d.name,
     exercises: d.exercises.map(({ exId, sets, reps }) => ({ exId, sets, reps })),
   }));
-  return {
-    id: uid(),
-    name: tpl.name,
-    fromTemplate: tpl.key,
-    days,
-    week: tpl.week.map((i) => (i === null ? null : days[i].id)),
-  };
+  const week = weekdays?.length
+    ? assignWeek(days, weekdays)
+    : tpl.week.map((i) => (i === null ? null : days[i].id));
+  return { id: uid(), name: tpl.name, fromTemplate: tpl.key, days, week };
+}
+
+function assignWeek(days, weekdays) {
+  const week = [null, null, null, null, null, null, null];
+  [...weekdays].sort((a, b) => a - b).forEach((wd, i) => { week[wd] = days[i % days.length].id; });
+  return week;
+}
+
+// Rutina vacía con un día de entrenamiento por cada día elegido.
+export function routineForDays(weekdays, name = 'Mi rutina') {
+  const sorted = [...weekdays].sort((a, b) => a - b);
+  const days = sorted.map((wd, i) => ({ id: uid(), name: `Día ${i + 1}`, exercises: [] }));
+  return { id: uid(), name, days, week: assignWeek(days, sorted) };
 }
 
 // Convierte los últimos pesos/reps que trae una plantilla (p. ej. la del Excel)
 // en entrenamientos del historial, fechados la semana pasada.
 export function importTemplateHistory(tpl, routine) {
+  if (state.importedHistory?.includes(tpl.key)) return 0;
+  state.importedHistory = [...(state.importedHistory || []), tpl.key];
   const monday = startOfWeek(new Date());
   monday.setDate(monday.getDate() - 7);
   let added = 0;
@@ -221,11 +238,35 @@ export function deleteRoutine(id) {
   save();
 }
 
-export function seedIfEmpty() {
-  if (state.routines.length === 0 && !localStorage.getItem(KEY)) {
-    addRoutine({ ...routineFromTemplate(TEMPLATES[0]), seeded: true });
-  }
+// ---------- Perfil y configuración inicial ----------
+
+// Un usuario nuevo (sin entrenamientos ni rutinas propias) pasa por la configuración inicial.
+export function needsOnboarding() {
+  return !state.profile && !state.sessions.length && state.routines.every((r) => r.seeded);
 }
+
+// Quien ya usaba la app antes de existir el perfil no repite la configuración.
+export function ensureProfile() {
+  if (state.profile || needsOnboarding()) return;
+  state.profile = { level: 'advanced', days: [], simple: false, auto: true };
+  save({ silent: true });
+}
+
+export function setProfile(profile) {
+  state.profile = { ...state.profile, ...profile };
+  save();
+}
+
+export const isSimple = () => Boolean(state.profile?.simple);
+
+// Recomendación según experiencia y días disponibles.
+export function recommendTemplate(level, dayCount) {
+  if (dayCount <= 3) return 'full-body';
+  if (level === 'beginner' || dayCount === 4) return 'torso-pierna';
+  return 'ppl';
+}
+
+export const templateByKey = (key) => TEMPLATES.find((t) => t.key === key);
 
 // ---------- Fechas ----------
 
@@ -372,16 +413,23 @@ export function progressionHint(exId, target, excludeId) {
   const top = last.sets.reduce((a, s) => (Number(s.kg) > Number(a.kg) ? s : a), last.sets[0]);
   const kg = Number(top.kg) || 0;
   const working = last.sets.filter((s) => Number(s.kg) === kg);
-  if (!range || !kg) return { type: 'reps', kg, text: 'Intenta superar las reps de la última vez' };
+  const simple = isSimple();
+  if (!range || !kg) return { type: 'reps', kg, text: 'Intenta hacer 1 repetición más que la vez pasada' };
   const minReps = Math.min(...working.map((s) => Number(s.reps) || 0));
   if (minReps >= range.hi) {
     const step = kg < 20 ? 1 : 2.5;
-    return { type: 'up', kg: kg + step, text: `Llegaste a ${range.hi} reps en todas las series: sube a ${fmt(kg + step)} kg` };
+    return { type: 'up', kg: kg + step, text: simple
+      ? `¡Lo dominas! Hoy sube a ${fmt(kg + step)} kg (ya te lo puse)`
+      : `Llegaste a ${range.hi} reps en todas las series: sube a ${fmt(kg + step)} kg` };
   }
   if (minReps < range.lo) {
-    return { type: 'hold', kg, text: `Mantén ${fmt(kg)} kg hasta llegar a ${range.lo} reps en todas las series` };
+    return { type: 'hold', kg, text: simple
+      ? `Repite ${fmt(kg)} kg e intenta llegar a ${range.lo} repeticiones en cada serie`
+      : `Mantén ${fmt(kg)} kg hasta llegar a ${range.lo} reps en todas las series` };
   }
-  return { type: 'reps', kg, text: `Mantén ${fmt(kg)} kg y suma reps hasta llegar a ${range.hi}` };
+  return { type: 'reps', kg, text: simple
+    ? `Usa ${fmt(kg)} kg e intenta hacer 1 repetición más que la vez pasada`
+    : `Mantén ${fmt(kg)} kg y suma reps hasta llegar a ${range.hi}` };
 }
 
 const fmt = (n) => Number(n).toLocaleString('es', { maximumFractionDigits: 1 });
