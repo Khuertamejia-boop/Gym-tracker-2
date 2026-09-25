@@ -240,7 +240,7 @@ function renderSession() {
     </div>
     <div class="rail" id="rail" role="tablist" aria-label="Ejercicios">
       ${d.exercises.map((x, k) => `<button class="rail-item ${k === i ? 'active' : ''} ${exDone(x) ? 'done' : ''}" role="tab" aria-selected="${k === i}" data-action="go-ex" data-i="${k}" aria-label="${esc(S.exById(x.exId).name)}${exDone(x) ? ' (hecho)' : ''}">
-        <span data-muscle-map="${x.exId}" data-thumb></span>${exDone(x) ? '<span class="rail-check" aria-hidden="true">✓</span>' : ''}</button>`).join('')}
+        <span data-muscle-map="${x.exId}" data-thumb="tall"></span>${exDone(x) ? '<span class="rail-check" aria-hidden="true">✓</span>' : ''}</button>`).join('')}
       <button class="rail-item rail-add" data-action="session-add-ex" aria-label="Añadir ejercicio">+</button>
     </div>
     ${e ? exerciseStage(e, i, effort, d) : `<div class="empty">Este entrenamiento no tiene ejercicios.<br><br><button class="btn primary" data-action="session-add-ex">+ Añadir ejercicio</button></div>`}
@@ -285,6 +285,18 @@ function goToExercise(k) {
 function updateLiveStats() {}
 
 // Valores sugeridos de una serie: los de la última vez o el mínimo del objetivo.
+// "Última vez" compacto: agrupa series seguidas con el mismo peso → "80 kg × 6 · 6 · 5".
+function lastSummary(sets, u) {
+  const groups = [];
+  for (const x of sets) {
+    const kgText = wn(x.kg, u);
+    const g = groups[groups.length - 1];
+    if (g && g.kg === kgText) g.reps.push(`${sideTag(x)}${x.reps}`);
+    else groups.push({ kg: kgText, reps: [`${sideTag(x)}${x.reps}`] });
+  }
+  return groups.map((g) => `<b>${g.kg} ${u}</b> × ${g.reps.join(' · ')}`).join('<span class="muted"> | </span>');
+}
+
 // Texto corto de una serie: "I 20×10" en ejercicios por lado.
 const sideTag = (x) => (x.side ? `${x.side === 'L' ? 'I' : 'D'} ` : '');
 
@@ -304,7 +316,6 @@ function exerciseStage(e, i, effort, d) {
   const ex = S.exById(e.exId);
   const excludeId = d.editing ? d.id : null;
   const last = S.lastPerformance(e.exId, excludeId);
-  const hint = d.editing ? null : S.progressionHint(e.exId, e.target, excludeId);
   const noteOpen = e.note || ui.openNotes.has(i);
   const u = S.unitFor(e.exId);
   const nextSet = e.sets.findIndex((x) => !x.done);
@@ -320,9 +331,8 @@ function exerciseStage(e, i, effort, d) {
       <button class="icon-btn" data-action="ex-menu" data-i="${i}" aria-label="Opciones del ejercicio">${ICON_MORE}</button>
     </div>
     <div class="stage-sub">${nextSet === -1 ? '✓ Ejercicio completado' : pos}${e.target ? ` · objetivo ${esc(e.target)} reps` : ''}</div>
-    ${last ? `<div class="last-line">Última vez: ${last.sets.map((x) => `${sideTag(x)}${wn(x.kg, u)}×${x.reps}`).join(' · ')} <span class="muted">${u}</span></div>` : ''}
-    ${hint ? `<div class="hint hint-${hint.type}">${hint.type === 'up' ? '📈' : '💡'} ${esc(hint.text)}</div>` : ''}
-    ${last?.note ? `<div class="hint">📝 Nota anterior: ${esc(last.note)}</div>` : ''}
+    ${last ? `<div class="last-line"><span class="last-label">Última vez</span> ${lastSummary(last.sets, u)}</div>` : ''}
+    ${last?.note ? `<div class="last-line">📝 ${esc(last.note)}</div>` : ''}
     ${!last && !d.editing && S.isSimple() ? `<div class="hint">👋 Primera vez: elige un peso con el que puedas hacer ${esc(S.parseRange(e.target)?.hi || 10)} repeticiones con buena técnica, sin llegar al límite.</div>` : ''}
     <div class="toggles">
       ${S.canUnilateral(e.exId) ? `<button class="toggle-chip ${perSide ? 'on' : ''}" data-action="uni-toggle" data-i="${i}" role="switch" aria-checked="${perSide}" title="Registra cada serie para la izquierda (I) y la derecha (D)">

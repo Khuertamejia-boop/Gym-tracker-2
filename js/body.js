@@ -9,6 +9,8 @@ const PRIMARY = 85;
 const SECONDARY = 35;
 // Zonas de la ilustración (viewBox 361 × 542) para las miniaturas.
 const CROPS = { upper: '55 55 250 250', lower: '75 245 210 210', calves: '85 370 190 190' };
+// Miniaturas verticales 2:3 para el carrusel del entrenamiento.
+const TALL_CROPS = { upper: '78 22 205 308', lower: '86 238 190 285', calves: '104 318 152 228' };
 
 export const bodyGender = () => (getState().profile?.gender === 'female' ? 'female' : 'male');
 
@@ -25,7 +27,7 @@ export function musclesFor(exId) {
 
 export const muscleNames = (groups) => groups.map((g) => MUSCLE_NAMES[g]);
 
-function render(el, { view, primary, secondary, width, crop }) {
+function render(el, { view, primary, secondary, width, crop, tall }) {
   const highlights = [
     ...secondary.map((group) => ({ group, intensity: SECONDARY, color: RED })),
     ...primary.map((group) => ({ group, intensity: PRIMARY, color: RED })),
@@ -33,7 +35,7 @@ function render(el, { view, primary, secondary, width, crop }) {
   new MuscleMap(el, { gender: bodyGender(), view, theme: theme(), width, highlights, hoverHighlight: false });
   const svg = el.querySelector('svg');
   if (svg) {
-    if (crop) svg.setAttribute('viewBox', CROPS[crop]);
+    if (crop) svg.setAttribute('viewBox', (tall ? TALL_CROPS : CROPS)[crop]);
     svg.setAttribute('aria-hidden', 'true');
   }
 }
@@ -64,7 +66,7 @@ export function mountMuscleMaps(root = document) {
       const main = primary[0];
       const view = BACK_GROUPS.includes(main) && !primary.includes('chest') ? 'back' : 'front';
       const crop = main === 'calves' ? 'calves' : primary.some((g) => LOWER_GROUPS.includes(g)) ? 'lower' : 'upper';
-      render(el, { view, primary, secondary, width: el.clientWidth || 64, crop });
+      render(el, { view, primary, secondary, width: el.clientWidth || 64, crop, tall: el.dataset.thumb === 'tall' });
     } else {
       render(el, { view: el.dataset.view || 'front', primary, secondary, width: '100%' });
     }

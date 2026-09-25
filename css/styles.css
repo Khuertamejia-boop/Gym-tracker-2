@@ -628,3 +628,15 @@ body.in-session .toast.show { transform: translateX(-50%) translateY(0); }
 .rail-item:not(.active) [data-muscle-map] { opacity: 0.45; filter: grayscale(1); }
 .rail-item:not(.active):not(.rail-add) { transform: scale(0.86); }
 .rail-check { z-index: 2; }
+
+/* v9: carrusel vertical 2:3, atenuado intermedio y "última vez" compacto */
+.rail-item { width: 70px; height: 105px; border-radius: 16px; }
+.rail-item:not(.active):not(.rail-add)::after { background: color-mix(in srgb, var(--bg) 45%, transparent); }
+.rail-item:not(.active) [data-muscle-map] { opacity: 0.7; filter: grayscale(0.6); }
+.rail-item:not(.active):not(.rail-add) { transform: scale(0.92); }
+.last-line { font-size: 0.85rem; color: var(--text-2); margin: 0 0 4px; }
+.last-line b { color: var(--text); font-weight: 600; }
+.last-label {
+  display: inline-block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text-3); margin-right: 4px;
+}
