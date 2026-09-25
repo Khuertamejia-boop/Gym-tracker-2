@@ -114,8 +114,13 @@ const MSG = {
   'Invalid login credentials': 'Correo o contraseña incorrectos.',
   'Email not confirmed': 'Confirma tu correo antes de entrar (revisa tu bandeja de entrada).',
   'User already registered': 'Ya existe una cuenta con ese correo. Inicia sesión.',
+  'Token has expired or is invalid': 'El código no es válido o ya caducó. Pide uno nuevo.',
 };
-const translate = (e) => MSG[e?.message] || e?.message || 'Algo salió mal.';
+const translate = (e) => {
+  if (MSG[e?.message]) return MSG[e.message];
+  if (/rate limit|security purposes/i.test(e?.message || '')) return 'Espera un minuto antes de pedir otro código.';
+  return e?.message || 'Algo salió mal.';
+};
 
 function ensureClient() {
   if (!client) throw new Error('No se pudo conectar con el servidor. Revisa tu conexión y vuelve a abrir la app.');
@@ -135,6 +140,21 @@ export async function signUp(email, password) {
   });
   if (e) throw new Error(translate(e));
   return !data.session;
+}
+
+// Entrar sin contraseña: se envía un código de 6 dígitos al correo (crea la cuenta si no existe).
+export async function sendCode(email) {
+  ensureClient();
+  const { error: e } = await client.auth.signInWithOtp({
+    email, options: { shouldCreateUser: true, emailRedirectTo: location.origin + location.pathname },
+  });
+  if (e) throw new Error(translate(e));
+}
+
+export async function verifyCode(email, token) {
+  ensureClient();
+  const { error: e } = await client.auth.verifyOtp({ email, token, type: 'email' });
+  if (e) throw new Error(translate(e));
 }
 
 export async function resetPassword(email) {

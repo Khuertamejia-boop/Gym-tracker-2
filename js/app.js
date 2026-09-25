@@ -265,7 +265,7 @@ function renderTrain() {
   const week = routine ? S.weekPlan(routine) : [];
   const todayDay = routine ? routine.days.find((d) => d.id === week[wd]) : null;
 
-  let html = '';
+  let html = installCardHTML();
   if (st.profile && !st.profile.gender) {
     html += `<div class="card"><b>¿Eres hombre o mujer?</b>
       <p class="muted small" style="margin:2px 0 10px">Lo usamos para mostrarte el cuerpo correcto en la guía de músculos.</p>
@@ -973,8 +973,18 @@ function renderProgress() {
   let html = `<div class="segmented range-tabs" role="tablist">${RANGES.map(([k, l]) =>
     `<button class="${ui.range === k ? 'active' : ''}" data-action="range" data-r="${k}" role="tab" aria-selected="${ui.range === k}">${l}</button>`).join('')}</div>`;
 
-  if (!st.sessions.length && !st.body.length) {
-    html += `<div class="card empty"><p><b>Todavía no hay datos.</b></p><p class="small">Termina tu primer entrenamiento y aquí verás cuántos días entrenas, tus récords y cómo mejoras.</p></div>`;
+  if (!st.sessions.length) {
+    $view.innerHTML = `<div class="card empty-progress">
+        <div class="ep-icon" aria-hidden="true">📈</div>
+        <b>Aquí verás cómo mejoras</b>
+        <p class="muted small">Cuando termines tu primer entrenamiento aparecerán tus entrenos, los músculos que trabajas y la evolución de cada ejercicio.</p>
+        <button class="btn primary" data-action="go-train">Ir a entrenar</button>
+      </div>${bodyCardHTML()}`;
+    drawBodyChart();
+    return;
+  }
+  if (!sessions.length) {
+    html += `<div class="card empty small">No hay entrenamientos en este periodo. Prueba con un periodo más largo.</div>`;
   }
 
   html += `<div class="an-grid">
@@ -1031,6 +1041,10 @@ function renderProgress() {
     const u = isVol ? du : S.unitFor(id);
     sparkArea(document.getElementById(`c-ex-${i}`), { points: pts.map((p) => ({ x: p.x, y: S.toUnit(p.y, u) })), unit: u });
   });
+  drawBodyChart();
+}
+
+function drawBodyChart() {
   const field = S.BODY_FIELDS.find((f) => f.key === ui.bodyField);
   const bodyData = bodySeries(field);
   if (bodyData.length) {
@@ -1164,7 +1178,7 @@ function renderOnboarding() {
   const ob = ui.ob;
   const back = (step) => `<button class="btn ghost" data-action="ob-go" data-step="${step}" style="padding-left:0">‹ Atrás</button>`;
   const cancel = ob.fromSettings ? `<button class="btn ghost" data-action="ob-cancel" style="padding-left:0">Cancelar</button>` : '';
-  const progress = (n) => `<div class="ob-progress" aria-label="Paso ${n} de 5">${[1, 2, 3, 4, 5].map((i) => `<span class="${i <= n ? 'on' : ''}"></span>`).join('')}</div>`;
+  const progress = (n) => `<div class="ob-progress" aria-label="Paso ${n} de 3">${[1, 2, 3].map((i) => `<span class="${i <= n ? 'on' : ''}"></span>`).join('')}</div>`;
   let html = '';
   $title.textContent = ob.fromSettings ? 'Cambiar rutina' : 'Bienvenido';
 
@@ -1173,10 +1187,10 @@ function renderOnboarding() {
     html = `<div class="ob-hero">
         <img src="icons/icon.svg" alt="" width="72" height="72">
         <h1>Tu rutina y tu progreso, en un solo lugar</h1>
-        <p class="muted">Responde 4 preguntas y te armamos una rutina. Luego solo anota tus series y mira cómo mejoras.</p>
+        <p class="muted">Responde 3 preguntas y te armamos una rutina en un minuto. Luego solo anota tus series y mira cómo mejoras.</p>
       </div>
       <div class="stack">
-        <button class="btn primary block" data-action="ob-go" data-step="gender">Empezar</button>
+        <button class="btn primary block" data-action="ob-go" data-step="experience">Empezar</button>
         ${Cloud.isConfigured() ? '<button class="btn block" data-action="ob-go" data-step="login">Ya tengo cuenta</button>' : ''}
       </div>`;
   } else if (ob.step === 'login') {
@@ -1187,23 +1201,24 @@ function renderOnboarding() {
         <input type="email" name="email" placeholder="Correo" autocomplete="email" required>
         <input type="password" name="password" placeholder="Contraseña" autocomplete="current-password" minlength="6" required>
         <button class="btn primary block" name="mode" value="login">Entrar</button>
+        <button type="button" class="btn block code-btn" data-action="code-login">✉️ Entrar con un código por correo</button>
         <button type="button" class="btn sm ghost" data-action="cloud-reset">¿Olvidaste tu contraseña?</button>
         <p class="small" id="login-msg" style="margin:0" role="status"></p>
       </form>`;
-  } else if (ob.step === 'gender') {
-    html = `${back('welcome')}${progress(1)}
-      <h2 class="ob-q">¿Eres hombre o mujer?</h2>
-      <p class="muted" style="margin-top:0">Lo usamos para mostrarte el cuerpo correcto en la guía de músculos de cada ejercicio.</p>
-      <div class="stack">${[['male', 'Hombre'], ['female', 'Mujer']].map(([k, t]) => `<button class="option ${ob.gender === k ? 'selected' : ''}" data-action="ob-gender" data-v="${k}"><b>${t}</b></button>`).join('')}</div>`;
   } else if (ob.step === 'experience') {
-    html = `${ob.fromSettings ? cancel : back('gender')}${progress(2)}
+    // Al configurar por primera vez, el cuerpo de la guía se elige en esta misma pantalla.
+    const askGender = !ob.fromSettings && !S.getState().profile?.gender;
+    html = `${ob.fromSettings ? cancel : back('welcome')}${progress(1)}
+      ${askGender ? `<h2 class="ob-q">Tu cuerpo en la guía de músculos</h2>
+      <div class="segmented ob-gender" role="group" aria-label="Cuerpo en la guía">${[['male', 'Hombre'], ['female', 'Mujer']].map(([k, t]) =>
+        `<button class="${ob.gender === k ? 'active' : ''}" data-action="ob-gender" data-v="${k}" aria-pressed="${ob.gender === k}">${t}</button>`).join('')}</div>` : ''}
       <h2 class="ob-q">¿Cuánto tiempo llevas entrenando?</h2>
       <div class="stack">${LEVELS.map(([k, t, d]) => `<button class="option ${ob.level === k ? 'selected' : ''}" data-action="ob-level" data-v="${k}">
         <b>${t}</b><span class="muted small">${d}</span></button>`).join('')}</div>`;
   } else if (ob.step === 'days') {
     const n = ob.days.length;
     const rec = n ? S.templateByKey(S.recommendTemplate(ob.level, n)) : null;
-    html = `${back('experience')}${progress(3)}
+    html = `${back('experience')}${progress(2)}
       <h2 class="ob-q">¿Qué días puedes entrenar?</h2>
       <p class="muted" style="margin-top:0">Toca los días. Puedes cambiarlos cuando quieras.</p>
       <div class="day-picker">${S.DAY_NAMES.map((name, i) => `<button class="day-toggle ${ob.days.includes(i) ? 'on' : ''}" data-action="ob-day" data-d="${i}" aria-pressed="${ob.days.includes(i)}">
@@ -1228,9 +1243,10 @@ function renderOnboarding() {
       </div>`;
     const others = TEMPLATES.filter((t) => t.key !== recKey);
     const saved = S.getState().routines.filter((r) => !r.seeded && r.id !== S.getState().activeRoutineId);
-    html = `${back('days')}${progress(4)}
+    html = `${back('days')}${progress(3)}
       <h2 class="ob-q">${ob.level === 'beginner' ? 'Esta es tu rutina recomendada' : '¿Qué rutina quieres seguir?'}</h2>
-      ${tplCard(rec, true)}`;
+      ${tplCard(rec, true)}
+      <p class="muted small ob-note">Podrás cambiar ejercicios, series y días cuando quieras desde <b>Mi plan → Editar</b>.</p>`;
     if (ob.level === 'beginner' && !ob.showAll) {
       html += `<button class="btn block ghost" data-action="ob-show-all">Ver otras opciones</button>`;
     } else {
@@ -1247,7 +1263,7 @@ function renderOnboarding() {
     const r = S.routineById(ob.routineId);
     ui.editRoutineId = r.id;
     const empty = r.days.every((d) => !d.exercises.length);
-    html = `${back('choose')}${progress(5)}
+    html = `${back('choose')}${progress(3)}
       <h2 class="ob-q">${empty ? 'Arma tu rutina' : 'Revisa tu rutina'}</h2>
       <p class="muted" style="margin-top:0">${empty
         ? 'Añade los ejercicios de cada día. Abajo puedes cambiar qué día entrenas cada uno.'
@@ -1269,21 +1285,93 @@ function renderOnboarding() {
       <button class="btn block ghost" data-action="ob-finish">Ahora no</button>`;
   }
   $view.innerHTML = `<div class="ob">${html}</div>`;
-  if (ob.step === 'login') {
-    bindAccountForm($view, async () => {
-      await Cloud.sync();
-      if (S.needsOnboarding()) {
-        ui.ob = { step: 'experience', days: [] };
-        toast('Tu cuenta aún no tiene rutina: vamos a crearla');
-      } else {
-        S.ensureProfile();
-        ui.ob = null;
-        toast('¡Bienvenido de vuelta!');
-      }
-      render();
-    });
-  }
+  if (ob.step === 'login') bindAccountForm($view, obLoggedIn);
   if (ob.step === 'account') bindAccountForm($view, () => actions['ob-finish']());
+}
+
+// Tras entrar desde la bienvenida: recupera la rutina o sigue con la configuración.
+async function obLoggedIn() {
+  closeSheet();
+  await Cloud.sync();
+  if (!ui.ob) { toast('Sesión iniciada · sincronizando tus datos'); render(); return; }
+  if (S.needsOnboarding()) {
+    ui.ob = { step: 'experience', days: [] };
+    toast('Tu cuenta aún no tiene rutina: vamos a crearla');
+  } else {
+    S.ensureProfile();
+    ui.ob = null;
+    toast('¡Bienvenido de vuelta!');
+  }
+  render();
+}
+
+// Entrar con un código de 6 dígitos enviado al correo (sin contraseña).
+function openCodeLogin(onDone) {
+  const back = ui.ob ? null : 'open-menu';
+  openSheet('Entrar con código', `
+    <form id="code-form" class="stack">
+      <p class="muted small" style="margin:0">Te enviamos un código de 6 dígitos a tu correo. Si no tienes cuenta, se crea sola.</p>
+      <input type="email" name="email" placeholder="Correo" autocomplete="email" required>
+      <div id="code-step" hidden>
+        <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,8}" maxlength="8" placeholder="Código de 6 dígitos" class="code-input">
+      </div>
+      <button class="btn primary block" id="code-btn">Enviarme el código</button>
+      <p class="small" id="code-msg" style="margin:0" role="status"></p>
+    </form>`, (root) => {
+    const form = root.querySelector('#code-form');
+    const btn = form.querySelector('#code-btn');
+    const msg = form.querySelector('#code-msg');
+    let sent = false;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = form.email.value.trim();
+      btn.disabled = true;
+      try {
+        if (!sent) {
+          msg.textContent = 'Enviando…';
+          await Cloud.sendCode(email);
+          sent = true;
+          form.querySelector('#code-step').hidden = false;
+          form.email.readOnly = true;
+          btn.textContent = 'Entrar';
+          msg.textContent = `📧 Revisa ${email} (también la carpeta de spam) y escribe el código.`;
+          form.code.focus();
+        } else {
+          msg.textContent = 'Comprobando…';
+          await Cloud.verifyCode(email, form.code.value.trim());
+          if (onDone) return onDone();
+          closeSheet(); toast('Sesión iniciada · sincronizando tus datos'); render();
+        }
+      } catch (err) {
+        msg.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }, back);
+}
+
+// Aviso único para instalar la app en la pantalla de inicio (iPhone: Safari no lo ofrece solo).
+let installEvent = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; if (ui.tab === 'train') safeRender(); });
+function installCardHTML() {
+  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  let dismissed = false;
+  try { dismissed = Boolean(localStorage.getItem('gymtrack.installDismissed')); } catch {}
+  if (standalone || dismissed) return '';
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!ios && !installEvent) return '';
+  const SHARE = '<svg class="inline-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 7.5 7.5l1.4 1.4L11 6.8V15h2V6.8l2.1 2.1 1.4-1.4L12 3ZM5 11v9h14v-9h-3v2h1v5H7v-5h1v-2H5Z"/></svg>';
+  return `<div class="card install-card">
+    <button class="icon-btn install-x" data-action="install-dismiss" aria-label="Cerrar">${ICON_X}</button>
+    <b>Instala la app en tu teléfono</b>
+    <p class="muted small">Se abre a pantalla completa, más rápido y funciona sin señal en el gym.</p>
+    ${ios ? `<ol class="install-steps small">
+      <li>Toca <b>Compartir</b> ${SHARE} en la barra de Safari.</li>
+      <li>Elige <b>Añadir a pantalla de inicio</b>.</li>
+      <li>Abre la app desde el nuevo ícono.</li></ol>`
+      : '<button class="btn primary block" data-action="install-app">Instalar</button>'}
+  </div>`;
 }
 
 function finishOnboarding() {
@@ -1459,7 +1547,8 @@ function openLogin(mode = 'login') {
     </form>
     <div class="login-links">
       ${login
-        ? `<button class="link" data-action="cloud-reset">¿Olvidaste tu contraseña?</button>
+        ? `<button class="btn block code-btn" data-action="code-login">✉️ Entrar con un código por correo</button>
+           <button class="link" data-action="cloud-reset">¿Olvidaste tu contraseña?</button>
            <p>¿No tienes cuenta? <button class="link" data-action="open-signup">Créala aquí</button></p>`
         : '<p>¿Ya tienes cuenta? <button class="link" data-action="open-login">Inicia sesión</button></p>'}
     </div>`, (root) => bindAccountForm(root, () => {
@@ -1961,12 +2050,9 @@ const actions = {
     render(); window.scrollTo(0, 0);
   },
   'ob-cancel': () => { ui.ob = null; ui.editRoutineId = null; render(); window.scrollTo(0, 0); },
-  'ob-gender': (b) => {
-    ui.ob.gender = b.dataset.v;
-    ui.ob.step = 'experience';
-    render(); window.scrollTo(0, 0);
-  },
+  'ob-gender': (b) => { ui.ob.gender = b.dataset.v; render(); },
   'ob-level': (b) => {
+    if (!ui.ob.fromSettings && !S.getState().profile?.gender && !ui.ob.gender) return toast('Elige primero hombre o mujer');
     ui.ob.level = b.dataset.v;
     ui.ob.step = 'days';
     render(); window.scrollTo(0, 0);
@@ -1990,6 +2076,7 @@ const actions = {
       : S.routineFromTemplate(S.templateByKey(key), ui.ob.days);
     S.addRoutine(r, true);
     ui.ob.routineId = r.id;
+    if (key !== 'custom') return actions['ob-review-done']();
     ui.ob.step = 'review';
     render(); window.scrollTo(0, 0);
   },
@@ -2008,6 +2095,16 @@ const actions = {
     toast(ui.ob.fromSettings ? 'Rutina actualizada' : '¡Listo! Tu rutina te espera en Entrenar');
     finishOnboarding();
   },
+  'install-dismiss': () => { try { localStorage.setItem('gymtrack.installDismissed', '1'); } catch {} render(); },
+  'install-app': async () => {
+    if (!installEvent) return;
+    installEvent.prompt();
+    await installEvent.userChoice.catch(() => {});
+    installEvent = null;
+    render();
+  },
+  'go-train': () => setTab('train'),
+  'code-login': () => openCodeLogin(ui.ob ? obLoggedIn : null),
   'ob-finish': () => {
     toast('¡Listo! Tu rutina te espera en Entrenar');
     finishOnboarding();

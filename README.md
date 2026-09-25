@@ -5,13 +5,14 @@ Está pensada para usarse desde el celular en el gym.
 
 ## Funciones
 
-**Configuración inicial.** Un usuario nuevo indica si es hombre o mujer (para la guía muscular), cuánto tiempo lleva entrenando y qué días puede ir:
+**Configuración inicial (3 pasos, ~9 toques).** Un usuario nuevo indica en una sola pantalla si es hombre o mujer (para la guía muscular) y cuánto tiempo lleva entrenando, luego qué días puede ir:
 - Principiante: recibe una rutina recomendada (Full Body con 2-3 días, Torso/Pierna con 4 o más).
 - Intermedio o avanzado: elige entre Push/Pull/Legs, Arnold Split, Torso/Pierna, Full Body, Torso/Pierna · glúteo, o crea la suya desde cero.
-- Después revisa y personaliza ejercicios, series y días, y puede crear una cuenta para guardar su progreso.
-- Quien ya tiene cuenta toca **Ya tengo cuenta** y recupera todo.
+- Al elegir una rutina hecha empieza directamente (se personaliza cuando quiera en **Mi plan → Editar**); solo la rutina propia pasa por el editor. Después puede crear una cuenta para guardar su progreso.
+- Quien ya tiene cuenta toca **Ya tengo cuenta** y recupera todo, con contraseña o con un **código de 6 dígitos por correo** (sin contraseña).
+- En el iPhone aparece una vez una guía para **añadir la app a la pantalla de inicio** (en Android, un botón Instalar).
 
-Arriba a la derecha está tu **perfil**: iniciar sesión o ver tu cuenta, *Mi rutina*, *Ajustes* (cuerpo de la guía, unidad de peso, modo simple, esfuerzo y tema) y *Respaldo de datos*.
+Arriba a la derecha está tu **perfil**: iniciar sesión o ver tu cuenta, *Ajustes* (cuerpo de la guía, unidad de peso, modo simple, temporizador de descanso, esfuerzo y tema) y, sin sesión, *Respaldo de datos*.
 
 La app tiene **tres pestañas**:
 - **Mi plan**: tu rutina y los 7 días de la semana (hecho, hoy, descanso). Toca un día para **moverlo solo esta semana** (se intercambia con otro día o se salta) y vuelve al plan original cuando quieras. Incluye el **volumen semanal** por músculo (series hechas frente a las del plan, con la zona de 10–20 series recomendada para hipertrofia; los secundarios cuentan como media serie) y los botones **Editar** y **Cambiar de rutina**.
@@ -94,3 +95,6 @@ js/body.js            guía muscular (usa js/vendor/muscle-map)
 js/vendor/muscle-map  js-rich-body-highlighter 0.1.1 (MIT): ilustraciones del cuerpo
 sw.js                 caché sin conexión
 ```
+
+### Entrar con código por correo (Supabase)
+Para que el correo traiga el código de 6 dígitos: en Supabase → **Authentication → Emails → Magic Link**, añade `{{ .Token }}` al cuerpo del mensaje (por ejemplo: `Tu código para entrar: {{ .Token }}`). El servicio de correo incluido en Supabase tiene un límite bajo de envíos por hora; para muchos usuarios conviene configurar un SMTP propio (Authentication → Emails → SMTP).

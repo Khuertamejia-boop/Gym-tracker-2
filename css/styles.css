@@ -785,3 +785,18 @@ button.plan-day:active { background: var(--surface-2); }
 .rest-skip { height: 44px; padding: 0 16px; border-radius: 999px; border: 0; background: none; color: var(--accent); font-weight: 700; }
 .up-line { font-size: 0.85rem; font-weight: 700; color: var(--good); margin: 2px 0 4px; }
 .up-line span { font-weight: 500; color: var(--text-3); }
+
+/* ---------- Fase 2: configuración rápida ---------- */
+.ob-gender { display: grid; grid-template-columns: 1fr 1fr; width: 100%; margin-bottom: 8px; }
+.ob-gender button { padding: 12px; font-size: 1rem; }
+.ob-note { margin: 4px 4px 12px; }
+.code-btn { margin-top: 4px; }
+.code-input { text-align: center; font-size: 1.4rem; letter-spacing: 0.3em; font-variant-numeric: tabular-nums; }
+.install-card { position: relative; padding-right: 44px; }
+.install-card p { margin: 4px 0 8px; }
+.install-x { position: absolute; top: 6px; right: 6px; }
+.install-steps { margin: 0; padding-left: 20px; line-height: 1.7; }
+.inline-ico { width: 18px; height: 18px; vertical-align: -3px; fill: var(--accent); }
+.empty-progress { text-align: center; padding: 28px 20px; }
+.empty-progress .ep-icon { font-size: 2.4rem; }
+.empty-progress p { margin: 6px 0 16px; }
