@@ -43,6 +43,8 @@ const ICON_CHECK = '<svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 
 const ICON_X = '<svg viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12 19 6.4Z"/></svg>';
 const ICON_UP = '<svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5H7Z"/></svg>';
 const ICON_DOWN = '<svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5H7Z"/></svg>';
+const ICON_BACK = '<svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12l4.6-4.6Z"/></svg>';
+const ICON_PERSON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.4 0-8 2.2-8 5v2h16v-2c0-2.8-3.6-5-8-5Z"/></svg>';
 
 function toast(msg) {
   $toast.textContent = msg;
@@ -51,10 +53,11 @@ function toast(msg) {
   toast.t = setTimeout(() => $toast.classList.remove('show'), 2200);
 }
 
-function openSheet(title, body, onMount) {
+// back: acción del botón "atrás" (para las pantallas del menú de cuenta).
+function openSheet(title, body, onMount, back) {
   $sheet.innerHTML = `
     <div class="sheet-inner">
-      <div class="sheet-head"><h2>${esc(title)}</h2>
+      <div class="sheet-head">${back ? `<button class="icon-btn back-btn" data-action="${back}" aria-label="Atrás">${ICON_BACK}</button>` : ''}<h2 class="grow">${esc(title)}</h2>
         <button class="icon-btn" data-action="close-sheet" aria-label="Cerrar">${ICON_X}</button>
       </div>
       <div class="sheet-body">${body}</div>
@@ -107,9 +110,6 @@ function renderTrain() {
   const todayDay = routine ? routine.days.find((d) => d.id === routine.week[wd]) : null;
 
   let html = '';
-  if (Cloud.isConfigured() && !Cloud.getUser()) {
-    html += `<button class="card banner" data-action="open-settings">☁️ <span class="grow"><b>Inicia sesión</b> para guardar tus datos en la nube y no perderlos.</span> ›</button>`;
-  }
   if (st.profile && !st.profile.gender) {
     html += `<div class="card"><b>¿Eres hombre o mujer?</b>
       <p class="muted small" style="margin:2px 0 10px">Lo usamos para mostrarte el cuerpo correcto en la guía de músculos.</p>
@@ -1010,31 +1010,170 @@ function syncLabel() {
   return '';
 }
 
-function accountHTML() {
-  if (!Cloud.isConfigured()) {
-    return `<div class="card" style="margin:0"><b>Cuenta en la nube</b>
-      <p class="muted small" style="margin:4px 0 0">La sincronización aún no está configurada (falta conectar Supabase en js/config.js). Mientras tanto, los datos se guardan en este dispositivo.</p></div>`;
-  }
+// ---------- Menú de cuenta (botón de perfil) ----------
+
+const menuRow = (action, label, value = '', extra = '') =>
+  `<button class="menu-row" data-action="${action}" ${extra}><span class="grow">${label}</span>${value ? `<span class="muted">${value}</span>` : ''}<span class="chev" aria-hidden="true">›</span></button>`;
+
+function updateAvatar() {
+  const btn = document.getElementById('profile-btn');
+  if (!btn) return;
   const user = Cloud.getUser();
+  btn.innerHTML = user
+    ? `<span class="avatar">${esc((user.email || '?')[0].toUpperCase())}</span>`
+    : `${ICON_PERSON}${Cloud.isConfigured() ? '<span class="dot" aria-hidden="true"></span>' : ''}`;
+  btn.setAttribute('aria-label', user ? `Tu cuenta (${user.email})` : 'Tu cuenta y ajustes');
+}
+
+function openMenu() {
+  const user = Cloud.getUser();
+  const routine = S.activeRoutine();
+  let top = '';
   if (user) {
-    return `<div class="card" style="margin:0">
-      <div class="row between"><div class="grow"><b>Cuenta</b><div class="muted small" style="overflow-wrap:anywhere">${esc(user.email)}</div></div>
-        <button class="btn sm" data-action="cloud-sync">Sincronizar</button></div>
-      <p class="small muted" id="sync-status" style="margin:8px 0">${syncLabel()}</p>
-      <button class="btn sm ghost danger" data-action="cloud-logout" style="padding-left:0">Cerrar sesión</button>
-    </div>`;
+    const { status } = Cloud.getInfo();
+    top = `<div class="account-head">
+        <span class="avatar lg">${esc((user.email || '?')[0].toUpperCase())}</span>
+        <div class="grow" style="min-width:0"><b class="ellipsis">${esc(user.email)}</b>
+          <div class="muted small" id="sync-status">${syncLabel() || 'Conectado'}</div></div>
+        ${status === 'error' || status === 'offline' ? '<button class="btn sm" data-action="cloud-sync">Reintentar</button>' : ''}
+      </div>`;
+  } else if (Cloud.isConfigured()) {
+    top = `<div class="cloud-card">
+        <b>Guarda tu progreso en la nube</b>
+        <p class="muted small">Para no perder tus entrenamientos y verlos en cualquier dispositivo.</p>
+        <button class="btn primary block" data-action="open-login">Iniciar sesión</button>
+      </div>`;
   }
-  return `<form class="card stack" id="login-form" style="margin:0">
-      <div><b>Inicia sesión</b><div class="muted small">Guarda tus datos en la nube y úsalos en cualquier dispositivo.</div></div>
+  openSheet(user ? 'Tu cuenta' : 'Menú', `${top}
+    <div class="menu-list">
+      ${menuRow('open-routine-menu', 'Mi rutina', routine ? esc(routine.name) : '')}
+      ${menuRow('open-settings', 'Ajustes')}
+      ${menuRow('open-backup', 'Respaldo de datos')}
+    </div>
+    ${user ? '<button class="btn block ghost danger" data-action="cloud-logout">Cerrar sesión</button>' : ''}`);
+}
+
+function openLogin(mode = 'login') {
+  const login = mode === 'login';
+  openSheet(login ? 'Iniciar sesión' : 'Crear cuenta', `
+    <form id="login-form" class="stack">
       <input type="email" name="email" placeholder="Correo" autocomplete="email" required>
-      <input type="password" name="password" placeholder="Contraseña (mín. 6 caracteres)" autocomplete="current-password" minlength="6" required>
-      <div class="grid-2">
-        <button class="btn primary" name="mode" value="login">Entrar</button>
-        <button class="btn" name="mode" value="signup">Crear cuenta</button>
-      </div>
-      <button type="button" class="btn sm ghost" data-action="cloud-reset">¿Olvidaste tu contraseña?</button>
+      <input type="password" name="password" placeholder="Contraseña${login ? '' : ' (mín. 6 caracteres)'}" autocomplete="${login ? 'current-password' : 'new-password'}" minlength="6" required>
+      <button class="btn primary block" name="mode" value="${mode}">${login ? 'Entrar' : 'Crear cuenta'}</button>
       <p class="small" id="login-msg" style="margin:0" role="status"></p>
-    </form>`;
+    </form>
+    <div class="login-links">
+      ${login
+        ? `<button class="link" data-action="cloud-reset">¿Olvidaste tu contraseña?</button>
+           <p>¿No tienes cuenta? <button class="link" data-action="open-signup">Créala aquí</button></p>`
+        : '<p>¿Ya tienes cuenta? <button class="link" data-action="open-login">Inicia sesión</button></p>'}
+    </div>`, (root) => bindAccountForm(root, () => {
+    closeSheet();
+    toast('Sesión iniciada · sincronizando tus datos');
+    render();
+  }), 'open-menu');
+}
+
+function openRoutineMenu() {
+  const routine = S.activeRoutine();
+  openSheet('Mi rutina', `
+    ${routine ? `<p class="muted small" style="margin:0 0 8px">Rutina activa: <b>${esc(routine.name)}</b></p>` : ''}
+    <div class="menu-list">
+      ${routine ? menuRow('menu-edit-routine', 'Editar ejercicios y días') : ''}
+      ${menuRow('change-routine', 'Cambiar de rutina')}
+    </div>`, null, 'open-menu');
+}
+
+const themePref = () => { try { return localStorage.getItem('gymtrack.theme') || 'auto'; } catch { return 'auto'; } };
+
+// Opciones de Ajustes: cada una se elige en su propia pantalla.
+const CHOICES = {
+  gender: {
+    title: 'Cuerpo en la guía', help: 'Se usa en el mapa de músculos de cada ejercicio.',
+    options: [['male', 'Hombre'], ['female', 'Mujer']],
+    get: () => S.getState().profile?.gender || 'male',
+    set: (v) => S.setProfile({ gender: v }),
+  },
+  unit: {
+    title: 'Unidad de peso', help: 'Es la unidad por defecto. Cada ejercicio puede tener la suya (por ejemplo, máquinas en libras) desde su ficha.',
+    options: [['kg', 'Kilos (kg)'], ['lb', 'Libras (lb)']],
+    get: () => S.defaultUnit(),
+    set: (v) => S.setDefaultUnit(v),
+  },
+  effort: {
+    title: 'Esfuerzo por serie', help: 'Cómo anotas lo cerca que quedaste del fallo en cada serie.',
+    options: [['RIR', 'RIR · repeticiones en reserva'], ['RPE', 'RPE · esfuerzo del 1 al 10']],
+    get: () => S.getState().settings.effort,
+    set: (v) => { S.getState().settings.effort = v; S.save(); },
+  },
+  theme: {
+    title: 'Tema',
+    options: [['auto', 'Automático (como el teléfono)'], ['light', 'Claro'], ['dark', 'Oscuro']],
+    get: themePref,
+    set: (v) => { try { localStorage.setItem('gymtrack.theme', v); } catch {} applyTheme(); },
+  },
+};
+const choiceLabel = (key) => {
+  const c = CHOICES[key];
+  const label = (c.options.find(([v]) => v === c.get()) || c.options[0])[1];
+  return key === 'unit' ? c.get() : key === 'effort' ? c.get() : label.replace(/ \(.*\)$/, '');
+};
+
+function openSettings() {
+  const simple = S.isSimple();
+  openSheet('Ajustes', `
+    <div class="menu-list">
+      ${menuRow('open-choice', 'Cuerpo en la guía', choiceLabel('gender'), 'data-key="gender"')}
+      ${menuRow('open-choice', 'Unidad de peso', choiceLabel('unit'), 'data-key="unit"')}
+      <button class="menu-row" data-action="toggle-simple" role="switch" aria-checked="${simple}">
+        <span class="grow">Modo simple<span class="muted small row-help">Oculta RIR/RPE y las estadísticas avanzadas</span></span>
+        <span class="switch ${simple ? 'on' : ''}" aria-hidden="true"></span>
+      </button>
+      ${simple ? '' : menuRow('open-choice', 'Esfuerzo por serie', choiceLabel('effort'), 'data-key="effort"')}
+      ${menuRow('open-choice', 'Tema', choiceLabel('theme'), 'data-key="theme"')}
+    </div>`, null, 'open-menu');
+}
+
+function openChoice(key) {
+  const c = CHOICES[key];
+  const current = c.get();
+  openSheet(c.title, `
+    ${c.help ? `<p class="muted small" style="margin:0 0 8px">${c.help}</p>` : ''}
+    <div class="menu-list">${c.options.map(([v, l]) => `<button class="menu-row" data-action="choose" data-key="${key}" data-v="${v}" aria-pressed="${v === current}">
+      <span class="grow">${l}</span>${v === current ? '<span class="check-mark" aria-hidden="true">✓</span>' : ''}</button>`).join('')}</div>`, null, 'open-settings');
+}
+
+function openBackup() {
+  const st = S.getState();
+  openSheet('Respaldo de datos', `
+    <p class="muted small" style="margin:0 0 10px">${Cloud.getUser()
+      ? 'Tus datos ya se guardan en la nube. Aun así puedes descargar una copia.'
+      : 'Sin sesión iniciada, tus datos se guardan solo en este teléfono. Descarga una copia de vez en cuando.'}</p>
+    <div class="menu-list">
+      ${menuRow('export', 'Descargar copia (.json)')}
+      <label class="menu-row"><span class="grow">Restaurar desde una copia</span><span class="chev" aria-hidden="true">›</span>
+        <input type="file" accept="application/json,.json" id="import-file" hidden></label>
+    </div>
+    <p class="muted small" style="text-align:center">${st.sessions.length} entrenamientos · ${st.routines.length} rutinas · ${st.body.length} registros corporales</p>
+    <button class="btn block ghost danger" data-action="reset">Borrar todos los datos</button>`, (root) => {
+    root.querySelector('#import-file').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const data = JSON.parse(await file.text());
+        if (!Array.isArray(data.sessions) || !Array.isArray(data.routines)) throw new Error('formato');
+        if (!confirm('Esto reemplazará los datos actuales por los de la copia. ¿Continuar?')) return;
+        S.replaceState(data);
+        S.ensureProfile();
+        ui.ob = null;
+        closeSheet();
+        toast('Copia restaurada');
+        render();
+      } catch {
+        toast('El archivo no es una copia válida');
+      }
+    });
+  }, 'open-menu');
 }
 
 function bindAccountForm(root, onDone) {
@@ -1052,7 +1191,7 @@ function bindAccountForm(root, onDone) {
       if (mode === 'signup') {
         const needsConfirm = await Cloud.signUp(f.get('email'), f.get('password'));
         if (needsConfirm) {
-          msg.textContent = '📧 Te enviamos un correo. Abre el enlace para confirmar tu cuenta y luego entra desde Ajustes ⚙.';
+          msg.textContent = '📧 Te enviamos un correo. Abre el enlace para confirmar tu cuenta y luego inicia sesión desde tu perfil (arriba a la derecha).';
           const next = document.querySelector('[data-action="ob-finish"]');
           if (next) { next.textContent = 'Continuar'; next.classList.add('primary'); next.classList.remove('ghost'); }
           return;
@@ -1071,66 +1210,6 @@ function bindAccountForm(root, onDone) {
   });
 }
 
-function openSettings() {
-  const st = S.getState();
-  let theme = 'auto';
-  try { theme = localStorage.getItem('gymtrack.theme') || 'auto'; } catch {}
-  openSheet('Ajustes', `
-    <div class="stack">
-      ${accountHTML()}
-      <div class="section-title">Mi rutina</div>
-      <button class="btn block" data-action="change-routine">Cambiar de rutina o de días</button>
-      <div class="section-title">Preferencias</div>
-      <div class="row between"><div class="grow"><b>Cuerpo en la guía</b><div class="muted small">Para el mapa de músculos</div></div>
-        <div class="segmented">
-          ${[['male', 'Hombre'], ['female', 'Mujer']].map(([v, l]) => `<button class="${(st.profile?.gender || 'male') === v ? 'active' : ''}" data-action="set-gender" data-v="${v}">${l}</button>`).join('')}
-        </div></div>
-      <div class="row between"><div class="grow"><b>Unidad de peso</b><div class="muted small">Cada ejercicio puede tener la suya (máquinas en libras)</div></div>
-        <div class="segmented">
-          ${['kg', 'lb'].map((v) => `<button class="${S.defaultUnit() === v ? 'active' : ''}" data-action="set-unit" data-v="${v}">${v}</button>`).join('')}
-        </div></div>
-      <div class="row between"><div class="grow"><b>Modo simple</b><div class="muted small">Oculta RIR/RPE y las estadísticas avanzadas</div></div>
-        <div class="segmented">
-          <button class="${S.isSimple() ? 'active' : ''}" data-action="set-simple" data-v="1">Sí</button>
-          <button class="${S.isSimple() ? '' : 'active'}" data-action="set-simple" data-v="0">No</button>
-        </div></div>
-      ${S.isSimple() ? '' : `<div class="row between"><div class="grow"><b>Esfuerzo por serie</b><div class="muted small">RIR = reps en reserva · RPE = esfuerzo 1-10</div></div>
-        <div class="segmented">
-          <button class="${st.settings.effort === 'RIR' ? 'active' : ''}" data-action="set-effort" data-v="RIR">RIR</button>
-          <button class="${st.settings.effort === 'RPE' ? 'active' : ''}" data-action="set-effort" data-v="RPE">RPE</button>
-        </div></div>`}
-      <div class="row between"><b>Tema</b>
-        <div class="segmented">
-          ${[['auto', 'Auto'], ['light', 'Claro'], ['dark', 'Oscuro']].map(([v, l]) => `<button class="${theme === v ? 'active' : ''}" data-action="set-theme" data-v="${v}">${l}</button>`).join('')}
-        </div></div>
-      <div class="section-title">Respaldo</div>
-      <p class="muted small" style="margin:0">${Cloud.getUser() ? 'Tus datos se guardan en la nube. Aun así puedes descargar una copia.' : 'Sin sesión iniciada, los datos se guardan solo en este navegador. Descarga un respaldo de vez en cuando.'}</p>
-      <button class="btn block" data-action="export">Descargar respaldo (.json)</button>
-      <label class="btn block">Restaurar respaldo<input type="file" accept="application/json,.json" id="import-file" hidden></label>
-      <button class="btn block ghost danger" data-action="reset">Borrar todos los datos</button>
-      <p class="muted small" style="text-align:center">${st.sessions.length} entrenamientos · ${st.routines.length} rutinas · ${st.body.length} registros corporales</p>
-    </div>`, (root) => {
-    bindAccountForm(root);
-    root.querySelector('#import-file').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        const data = JSON.parse(await file.text());
-        if (!Array.isArray(data.sessions) || !Array.isArray(data.routines)) throw new Error('formato');
-        if (!confirm('Esto reemplazará los datos actuales por los del respaldo. ¿Continuar?')) return;
-        S.replaceState(data);
-        S.ensureProfile();
-        ui.ob = null;
-        closeSheet();
-        toast('Respaldo restaurado');
-        render();
-      } catch {
-        toast('El archivo no es un respaldo válido');
-      }
-    });
-  });
-}
-
 function applyTheme() {
   let t = 'auto';
   try { t = localStorage.getItem('gymtrack.theme') || 'auto'; } catch {}
@@ -1144,7 +1223,30 @@ function applyTheme() {
 
 const actions = {
   goto: (b) => setTab(b.dataset.tab),
+  'open-menu': openMenu,
   'open-settings': openSettings,
+  'open-login': () => openLogin('login'),
+  'open-signup': () => openLogin('signup'),
+  'open-routine-menu': openRoutineMenu,
+  'open-backup': openBackup,
+  'open-choice': (b) => openChoice(b.dataset.key),
+  choose: (b) => {
+    CHOICES[b.dataset.key].set(b.dataset.v);
+    render();
+    openSettings();
+  },
+  'toggle-simple': () => {
+    S.setProfile({ simple: !S.isSimple() });
+    render();
+    openSettings();
+  },
+  'menu-edit-routine': () => {
+    closeSheet();
+    ui.tab = 'train';
+    document.querySelectorAll('.tabbar button').forEach((x) => x.classList.toggle('active', x.dataset.tab === 'train'));
+    ui.editRoutineId = S.getState().activeRoutineId;
+    render(); window.scrollTo(0, 0);
+  },
   'close-sheet': closeSheet,
 
   // Entrenar
@@ -1261,11 +1363,6 @@ const actions = {
     if ($sheet.open && document.querySelector('#sheet [data-action="ex-tab"]')) showExerciseDetail(b.dataset.id);
     const scroll = window.scrollY;
     render(); window.scrollTo(0, scroll);
-  },
-  'set-unit': (b) => {
-    S.setDefaultUnit(b.dataset.v);
-    closeSheet(); render();
-    toast(`Unidad por defecto: ${b.dataset.v === 'lb' ? 'libras' : 'kilos'}`);
   },
   'ex-tab': (b) => showExerciseDetail(b.dataset.id, b.dataset.tab),
   'ex-metric': (b) => { ui.exMetric = b.dataset.m; showExerciseDetail(b.dataset.id, 'charts'); },
@@ -1422,23 +1519,13 @@ const actions = {
   'cloud-sync': () => Cloud.sync(),
   'cloud-logout': async () => {
     if (!confirm('¿Cerrar sesión? Tus datos seguirán en la nube y en este dispositivo.')) return;
-    await Cloud.signOut(); closeSheet(); toast('Sesión cerrada'); render();
+    await Cloud.signOut(); closeSheet(); updateAvatar(); toast('Sesión cerrada'); render();
   },
   'cloud-reset': async () => {
     const email = document.querySelector('#login-form [name="email"]').value;
     if (!email) return toast('Escribe primero tu correo');
     try { await Cloud.resetPassword(email); toast('Te enviamos un correo para cambiar la contraseña'); }
     catch (err) { toast(err.message); }
-  },
-  'set-simple': (b) => {
-    S.setProfile({ simple: b.dataset.v === '1' });
-    closeSheet(); render();
-    toast(S.isSimple() ? 'Modo simple activado' : 'Modo simple desactivado');
-  },
-  'set-effort': (b) => { S.getState().settings.effort = b.dataset.v; S.save(); closeSheet(); render(); },
-  'set-theme': (b) => {
-    try { localStorage.setItem('gymtrack.theme', b.dataset.v); } catch {}
-    applyTheme(); closeSheet(); render();
   },
   export: () => {
     const blob = new Blob([JSON.stringify(S.getState(), null, 2)], { type: 'application/json' });
@@ -1556,7 +1643,9 @@ function safeRender() {
 }
 $sheet.addEventListener('close', () => { if (pendingRender) safeRender(); });
 let lastUserId;
+updateAvatar();
 Cloud.onChange(() => {
+  updateAvatar();
   const el = document.getElementById('sync-status');
   if (el) el.innerHTML = syncLabel();
   const id = Cloud.getUser()?.id;

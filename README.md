@@ -11,6 +11,8 @@ Está pensada para usarse desde el celular en el gym.
 - Después revisa y personaliza ejercicios, series y días, y puede crear una cuenta para guardar su progreso.
 - Quien ya tiene cuenta toca **Ya tengo cuenta** y recupera todo.
 
+Arriba a la derecha está tu **perfil**: iniciar sesión o ver tu cuenta, *Mi rutina*, *Ajustes* (cuerpo de la guía, unidad de peso, modo simple, esfuerzo y tema) y *Respaldo de datos*.
+
 La app tiene solo **dos pestañas**:
 - **Entrenar**: la vista de tu plan con una pestaña por día (✓ en los hechos esta semana), cada ejercicio con su miniatura de músculos, series, reps y tu último peso, y el botón **Empezar**. Debajo, tu rutina con **Editar**.
   - Por cada serie anotas kg y reps (y RIR/RPE fuera del modo simple).
@@ -18,18 +20,18 @@ La app tiene solo **dos pestañas**:
   - Resumen al terminar la sesión; los entrenamientos terminados se pueden editar.
 - **Progreso**: entrenamientos, racha, constancia, tus ejercicios (peso y mejora), peso corporal y medidas, historial y estadísticas de volumen.
 
-Al tocar un ejercicio se abre su ficha: Acerca de (con la **guía muscular**: cuerpo realista de frente y de espalda con los músculos principales en rojo intenso y los secundarios en rojo suave), Historial, Gráficos y Récords. El cuerpo es de hombre o de mujer según el perfil (se cambia en Ajustes ⚙). El catálogo tiene más de 110 ejercicios con buscador, y puedes crear los tuyos.
+Al tocar un ejercicio se abre su ficha: Acerca de (con la **guía muscular**: cuerpo realista de frente y de espalda con los músculos principales en rojo intenso y los secundarios en rojo suave), Historial, Gráficos y Récords. El cuerpo es de hombre o de mujer según el perfil (se cambia en tu perfil → Ajustes). El catálogo tiene más de 110 ejercicios con buscador, y puedes crear los tuyos.
 
-**Kilos o libras**: en Ajustes ⚙ eliges la unidad por defecto, y cada ejercicio puede tener la suya (por ejemplo, máquinas en libras) con el selector kg/lb de su tarjeta o de su ficha. Los pesos se guardan siempre en kg, así que récords y gráficos no se mezclan.
+**Kilos o libras**: en tu perfil → Ajustes eliges la unidad por defecto, y cada ejercicio puede tener la suya (por ejemplo, máquinas en libras) con el selector kg/lb de su tarjeta o de su ficha. Los pesos se guardan siempre en kg, así que récords y gráficos no se mezclan.
 
-**Modo simple** (activado por defecto para principiantes, se cambia en Ajustes ⚙): oculta RIR/RPE y el 1RM, usa frases sencillas y deja el volumen en "Más estadísticas".
+**Modo simple** (activado por defecto para principiantes, se cambia en tu perfil → Ajustes): oculta RIR/RPE y el 1RM, usa frases sencillas y deja el volumen en "Más estadísticas".
 
-**Cambiar de rutina o de días**: Ajustes ⚙ → *Cambiar de rutina o de días*.
+**Cambiar de rutina o de días**: tu perfil (arriba a la derecha) → *Mi rutina* → *Cambiar de rutina*.
 
 ## Datos y cuenta en la nube
 
 Los datos se guardan siempre en el navegador (`localStorage`), así que la app funciona sin conexión.
-Si inicias sesión (**Ajustes ⚙ → Cuenta**), además se sincronizan con Supabase y puedes usarlos en cualquier dispositivo.
+Si inicias sesión (botón de perfil, arriba a la derecha), además se sincronizan con Supabase y puedes usarlos en cualquier dispositivo.
 Al sincronizar se fusionan las copias: no se pierde ningún entrenamiento de ningún dispositivo, y lo que borras se borra en todos.
 
 ### Configurar Supabase (una sola vez)
@@ -46,7 +48,7 @@ Los proyectos gratuitos de Supabase se pausan tras 7 días sin uso; se reactivan
 
 Abrir la app con `?importar=excel` al final de la dirección añade la rutina *Torso / Pierna · glúteo* con los últimos pesos del Excel original al historial (solo una vez por cuenta).
 
-También puedes descargar un respaldo `.json` desde **Ajustes**.
+También puedes descargar una copia `.json` desde tu perfil → **Respaldo de datos**.
 
 ## Publicar con GitHub Pages
 
