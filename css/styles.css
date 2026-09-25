@@ -7,20 +7,21 @@
   --text: #0b0b0b;
   --text-2: #52514e;
   --text-3: #7a7974;
-  --accent: #2a78d6;
+  --accent: #c8102e;
   --accent-ink: #ffffff;
-  --accent-soft: #dce9f9;
+  --accent-soft: #fbe1e4;
   --good: #0c8a0c;
   --good-soft: #dff2df;
   --danger: #d03b3b;
-  --series-1: #2a78d6;
-  --series-2: #eb6834;
+  --gold: #b8861b;
+  --series-1: #c8102e;
+  --series-2: #c9962e;
   --grid: #e7e6e2;
   --heat-0: #ebeae6;
-  --heat-1: #b7d3f6;
-  --heat-2: #6da7ec;
-  --heat-3: #2a78d6;
-  --heat-4: #184f95;
+  --heat-1: #f6c3ca;
+  --heat-2: #e8758a;
+  --heat-3: #c8102e;
+  --heat-4: #7d0a1d;
   --shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 4px 16px rgb(0 0 0 / 5%);
   --radius: 14px;
   --tabbar-h: 64px;
@@ -36,20 +37,21 @@
     --text: #ffffff;
     --text-2: #c3c2b7;
     --text-3: #8f8e86;
-    --accent: #3987e5;
+    --accent: #d9233a;
     --accent-ink: #ffffff;
-    --accent-soft: #1b2f49;
+    --accent-soft: #361519;
     --good: #0ca30c;
     --good-soft: #15321a;
     --danger: #e66767;
-    --series-1: #3987e5;
-    --series-2: #d95926;
+    --gold: #e0b04a;
+    --series-1: #e0344a;
+    --series-2: #e0b04a;
     --grid: #2a2a28;
     --heat-0: #262624;
-    --heat-1: #184f95;
-    --heat-2: #256abf;
-    --heat-3: #3987e5;
-    --heat-4: #86b6ef;
+    --heat-1: #6b1d27;
+    --heat-2: #a11f33;
+    --heat-3: #d9233a;
+    --heat-4: #ef6a7a;
     --shadow: none;
   }
 }
@@ -62,20 +64,21 @@
   --text: #ffffff;
   --text-2: #c3c2b7;
   --text-3: #8f8e86;
-  --accent: #3987e5;
+  --accent: #d9233a;
   --accent-ink: #ffffff;
-  --accent-soft: #1b2f49;
+  --accent-soft: #361519;
   --good: #0ca30c;
   --good-soft: #15321a;
   --danger: #e66767;
-  --series-1: #3987e5;
-  --series-2: #d95926;
+  --gold: #e0b04a;
+  --series-1: #e0344a;
+  --series-2: #e0b04a;
   --grid: #2a2a28;
   --heat-0: #262624;
-  --heat-1: #184f95;
-  --heat-2: #256abf;
-  --heat-3: #3987e5;
-  --heat-4: #86b6ef;
+  --heat-1: #6b1d27;
+  --heat-2: #a11f33;
+  --heat-3: #d9233a;
+  --heat-4: #ef6a7a;
   --shadow: none;
 }
 
@@ -456,7 +459,7 @@ body.no-scroll { overflow: hidden; }
 }
 .win-week .dots { display: inline-flex; gap: 6px; }
 .win-week .dots i { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
-.win-week .dots i.on { background: #f5821f; }
+.win-week .dots i.on { background: var(--gold); }
 .win-phrase { font-style: italic; color: var(--text-2); margin: 16px 8px 20px; }
 .win-done { min-height: 54px; font-size: 1.05rem; border-radius: 14px; }
 @media (prefers-reduced-motion: reduce) {
@@ -645,7 +648,7 @@ body.in-session .toast.show { transform: translateX(-50%) translateY(0); }
 .plan-card .plan-progress { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 .plan-progress .dots, .win-week .dots { display: inline-flex; gap: 6px; }
 .plan-progress .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
-.plan-progress .dots i.on { background: var(--good); }
+.plan-progress .dots i.on { background: var(--gold); }
 .plan-week { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
 .plan-day {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; min-height: 64px;
@@ -691,15 +694,15 @@ button.plan-day:active { background: var(--surface-2); }
 .celebrate { padding-bottom: calc(env(safe-area-inset-bottom) + 96px); }
 .win-glow {
   position: fixed; left: 0; right: 0; top: 0; height: 55vh; pointer-events: none; z-index: 0;
-  background: radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, #b8e62e 32%, transparent), transparent 70%);
+  background: radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--gold) 30%, transparent), transparent 70%);
 }
 .win-check {
   width: 92px; height: 92px; margin: 18px auto 14px; border-radius: 50%; display: grid; place-items: center;
-  background: color-mix(in srgb, #b8e62e 22%, transparent);
+  background: color-mix(in srgb, var(--gold) 22%, transparent);
   animation: check-pop 0.45s cubic-bezier(.2,1.4,.4,1) both;
 }
-.win-check span { width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; background: #c4f13a; box-shadow: 0 0 32px color-mix(in srgb, #c4f13a 55%, transparent); }
-.win-check svg { width: 34px; height: 34px; fill: #0b0b0b; }
+.win-check span { width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; background: #e0b04a; box-shadow: 0 0 32px color-mix(in srgb, #e0b04a 55%, transparent); }
+.win-check svg { width: 34px; height: 34px; fill: #1a1206; }
 @keyframes check-pop { from { transform: scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
 .win-title { font-size: clamp(1.25rem, 6vw, 1.55rem); margin: 0 0 2px; white-space: nowrap; }
 .win-sub { color: var(--text-3); font-size: 0.92rem; }
@@ -718,7 +721,7 @@ button.plan-day:active { background: var(--surface-2); }
 .win-ex .meta { display: block; font-size: 0.85rem; color: var(--text-3); margin-top: 2px; }
 .win-pr { font-size: 0.85rem; }
 .win-week { border-radius: 18px; border-color: transparent; background: var(--surface-2); margin-top: 18px; }
-.win-week .dots i.on { background: #9fcc1f; }
+
 .win-phrase { font-style: normal; color: var(--text-3); font-size: 0.9rem; margin: 14px 8px 0; }
 .win-foot {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 2; padding: 12px 16px calc(env(safe-area-inset-bottom) + 12px);
