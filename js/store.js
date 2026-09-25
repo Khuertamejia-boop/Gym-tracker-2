@@ -186,7 +186,11 @@ export function routineForDays(weekdays, name = 'Mi rutina') {
 // Convierte los últimos pesos/reps que trae una plantilla (p. ej. la del Excel)
 // en entrenamientos del historial, fechados la semana pasada.
 export function importTemplateHistory(tpl, routine) {
-  if (state.importedHistory?.includes(tpl.key)) return 0;
+  // Versiones anteriores importaban sin dejar marca: se detecta por las sesiones importadas.
+  if (state.importedHistory?.includes(tpl.key) || state.sessions.some((x) => x.imported)) {
+    if (!state.importedHistory?.includes(tpl.key)) { state.importedHistory = [...(state.importedHistory || []), tpl.key]; save(); }
+    return 0;
+  }
   state.importedHistory = [...(state.importedHistory || []), tpl.key];
   const monday = startOfWeek(new Date());
   monday.setDate(monday.getDate() - 7);

@@ -1419,7 +1419,9 @@ function importFromLink() {
   history.replaceState(null, '', location.pathname);
   const tpl = S.templateByKey('excel-4-dias');
   const st = S.getState();
-  if (st.importedHistory?.includes(tpl.key)) return setTimeout(() => toast('Tus datos del Excel ya estaban importados'), 300);
+  if (st.importedHistory?.includes(tpl.key) || st.sessions.some((x) => x.imported)) {
+    return setTimeout(() => toast('Tus datos del Excel ya estaban importados'), 300);
+  }
   let r = st.routines.find((x) => x.fromTemplate === tpl.key);
   if (!r) {
     st.routines.filter((x) => x.seeded).forEach((x) => S.deleteRoutine(x.id));
