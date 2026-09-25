@@ -19,6 +19,7 @@ La app tiene solo **dos pestañas**:
   - Sugerencias de progresión, notas por ejercicio y aviso 🏆 de récord personal.
   - **Modo enfoque**: un ejercicio por pantalla, cronómetro arriba y un carrusel horizontal con la miniatura de músculos de cada ejercicio (✓ en los terminados). Se cambia de ejercicio tocando el carrusel o deslizando a los lados.
   - Opción **Por lado (unilateral)** en ejercicios como step-up, búlgaras, zancadas, jalones, remo con mancuerna o curls: cada serie se registra para la izquierda (I) y la derecha (D). Step-up, búlgaras, remo con mancuerna y curl concentrado vienen activados; la elección se recuerda por ejercicio.
+  - En modo avanzado, al tocar el número de una serie se puede convertir en aproximación (o volver a efectiva) o eliminar.
   - Series de aproximación opcionales (interruptor por ejercicio, filas «A»): no cuentan en volumen, récords ni progresión, y se recuerdan para la próxima vez.
   - Series en filas redondeadas (serie, reps, peso, ✓) y un botón inferior que guía: *Marcar todas las series* → *Siguiente ejercicio* → *Terminar entrenamiento*. Descartar queda en el menú ⋯.
   - Resumen a pantalla completa al terminar: tiempo, series, volumen, el cuerpo con los músculos trabajados, récords, progreso de la semana y una frase motivadora.

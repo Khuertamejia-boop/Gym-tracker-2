@@ -66,6 +66,7 @@ function openSheet(title, body, onMount, back) {
     </div>`;
   $sheet.onclick = null;
   $sheet.classList.remove('sheet-top');
+  $sheet.style.transform = '';
   if (!$sheet.open) $sheet.showModal();
   onMount?.($sheet);
   mountMuscleMaps($sheet);
@@ -332,7 +333,8 @@ function exerciseStage(e, i, effort, d) {
     <div class="set-grid ${effort ? 'with-effort' : ''}">
       <div class="set-labels"><span>Serie</span><span>Reps</span><span class="unit-label">Peso ${unitSwitch(e.exId, u)}</span>${effort ? `<span>${effort}</span>` : ''}<span></span></div>
       ${e.warmupOn ? (e.warmup || []).map((w, j) => `<div class="set-row warm ${w.done ? 'done' : ''}">
-          <span class="set-n" title="Serie de aproximación">A</span>
+          ${S.isSimple() ? '<span class="set-n" title="Serie de aproximación">A</span>'
+            : `<button class="set-n" data-action="set-menu" data-kind="warm" data-i="${i}" data-j="${j}" aria-label="Opciones de la aproximación ${j + 1}">A</button>`}
           <input class="pill-input" type="number" inputmode="numeric" min="0" value="${esc(w.reps)}" placeholder="–" data-warm="reps" data-i="${i}" data-j="${j}" aria-label="Repeticiones aproximación ${j + 1}">
           <input class="pill-input" type="number" inputmode="decimal" step="0.5" min="0" value="${esc(S.toUnit(w.kg, u))}" placeholder="–" data-warm="kg" data-i="${i}" data-j="${j}" aria-label="Peso en ${u} aproximación ${j + 1}">
           ${effort ? '<span></span>' : ''}
@@ -342,7 +344,9 @@ function exerciseStage(e, i, effort, d) {
         const sug = setSuggestion(e, j, last);
         const label = x.side ? `${Math.floor(j / 2) + 1}<small>${x.side === 'L' ? 'I' : 'D'}</small>` : j + 1;
         return `<div class="set-row ${x.done ? 'done' : ''} ${j === nextSet ? 'next' : ''} ${x.side === 'R' ? 'side-end' : ''}">
-          <span class="set-n" ${x.side ? `title="Serie ${Math.floor(j / 2) + 1}, lado ${x.side === 'L' ? 'izquierdo' : 'derecho'}"` : ''}>${x.pr ? '<span title="Récord personal">🏆</span>' : label}</span>
+          ${S.isSimple()
+            ? `<span class="set-n">${x.pr ? '<span title="Récord personal">🏆</span>' : label}</span>`
+            : `<button class="set-n" data-action="set-menu" data-kind="set" data-i="${i}" data-j="${j}" aria-label="Opciones de la serie ${x.side ? `${Math.floor(j / 2) + 1} ${x.side === 'L' ? 'izquierda' : 'derecha'}` : j + 1}">${x.pr ? '🏆' : label}</button>`}
           <input class="pill-input" type="number" inputmode="numeric" min="0" value="${esc(x.reps)}" placeholder="${esc(sug.reps)}" data-set="reps" data-i="${i}" data-j="${j}" aria-label="Repeticiones serie ${x.side ? `${Math.floor(j / 2) + 1} ${x.side === 'L' ? 'izquierda' : 'derecha'}` : j + 1}">
           <input class="pill-input" type="number" inputmode="decimal" step="0.5" min="0" value="${esc(S.toUnit(x.kg, u))}" placeholder="${sug.kg !== '' ? esc(S.toUnit(sug.kg, u)) : '–'}" data-set="kg" data-i="${i}" data-j="${j}" aria-label="Peso en ${u} serie ${j + 1}">
           ${effort ? `<input class="pill-input small-input" type="number" inputmode="decimal" step="0.5" min="0" max="10" value="${esc(x.effort)}" placeholder="–" data-set="effort" data-i="${i}" data-j="${j}" aria-label="${effort} serie ${j + 1}">` : ''}
@@ -553,10 +557,14 @@ function openPicker(onPick, initialQuery = '') {
     $sheet.classList.add('sheet-top');
     const input = root.querySelector('#pick-search');
     const results = root.querySelector('#pick-results');
+    // Con el teclado abierto, iOS reduce y desplaza la zona visible: el buscador la sigue.
     const fit = () => {
-      const visible = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-      const top = results.getBoundingClientRect().top;
-      results.style.maxHeight = `${Math.max(140, visible - top - 16)}px`;
+      const vv = window.visualViewport;
+      const visible = vv ? vv.height : window.innerHeight;
+      document.documentElement.style.setProperty('--vvh', `${visible}px`);
+      $sheet.style.transform = vv && vv.offsetTop ? `translateY(${vv.offsetTop}px)` : '';
+      const top = results.getBoundingClientRect().top - (vv ? vv.offsetTop : 0);
+      results.style.maxHeight = `${Math.max(120, visible - top - 16)}px`;
     };
     const draw = () => {
       root.querySelector('#pick-chips').innerHTML = muscleChips(muscle, 'pick-filter');
@@ -578,7 +586,12 @@ function openPicker(onPick, initialQuery = '') {
     };
     input.addEventListener('input', () => { query = input.value; draw(); });
     window.visualViewport?.addEventListener('resize', fit);
-    $sheet.addEventListener('close', () => window.visualViewport?.removeEventListener('resize', fit), { once: true });
+    window.visualViewport?.addEventListener('scroll', fit);
+    $sheet.addEventListener('close', () => {
+      window.visualViewport?.removeEventListener('resize', fit);
+      window.visualViewport?.removeEventListener('scroll', fit);
+      $sheet.style.transform = '';
+    }, { once: true });
     root.onclick = (e) => {
       const b = e.target.closest('[data-action]');
       if (!b) return;
@@ -1493,6 +1506,61 @@ const actions = {
     afterMarking(anyPr);
   },
   'go-ex': (b) => goToExercise(Number(b.dataset.i)),
+  // Menú de una serie (modo avanzado): convertir entre efectiva y aproximación, o eliminar.
+  'set-menu': (b) => {
+    const { kind, i, j } = b.dataset;
+    const e = S.getState().draft.exercises[i];
+    const perSide = e.sets.some((x) => x.side);
+    const n = kind === 'warm' ? `Aproximación ${Number(j) + 1}` : `Serie ${perSide ? Math.floor(j / 2) + 1 : Number(j) + 1}`;
+    const canDelete = kind === 'warm' || e.sets.length > (perSide ? 2 : 1);
+    openSheet(n, `
+      <div class="menu-list">
+        ${kind === 'set'
+          ? `<button class="menu-row" data-action="set-to-warm" data-i="${i}" data-j="${j}"><span class="grow">Convertir en serie de aproximación<span class="muted small row-help">No contará en volumen, récords ni progresión</span></span></button>`
+          : `<button class="menu-row" data-action="warm-to-set" data-i="${i}" data-j="${j}"><span class="grow">Convertir en serie efectiva<span class="muted small row-help">Contará en tus estadísticas</span></span></button>`}
+        ${canDelete ? `<button class="menu-row danger-row" data-action="set-delete" data-kind="${kind}" data-i="${i}" data-j="${j}"><span class="grow">Eliminar ${perSide && kind === 'set' ? 'serie (ambos lados)' : 'serie'}</span></button>` : ''}
+      </div>`);
+  },
+  'set-to-warm': (b) => {
+    const e = S.getState().draft.exercises[b.dataset.i];
+    let j = Number(b.dataset.j);
+    const perSide = e.sets.some((x) => x.side);
+    if (perSide) j -= j % 2; // en ejercicios por lado se mueve la pareja
+    const d = S.getState().draft;
+    const sug = setSuggestion(e, j, S.lastPerformance(e.exId, d.editing ? d.id : null));
+    const [first] = e.sets.splice(j, perSide ? 2 : 1);
+    if (first.reps === '') first.reps = sug.reps;
+    if (first.kg === '') first.kg = sug.kg;
+    if (!e.sets.length) return toast('Debe quedar al menos una serie efectiva');
+    const { side, pr, kgTouched, effort, ...w } = first;
+    e.warmupOn = true;
+    e.warmup = [...(e.warmup || []), { kg: w.kg, reps: w.reps, done: Boolean(w.done) }];
+    closeSheet(); S.save(); const y = window.scrollY; render(); window.scrollTo(0, y);
+    toast('Serie marcada como aproximación');
+  },
+  'warm-to-set': (b) => {
+    const e = S.getState().draft.exercises[b.dataset.i];
+    const [w] = e.warmup.splice(Number(b.dataset.j), 1);
+    if (!e.warmup.length) e.warmupOn = false;
+    const base = { kg: w.kg, reps: w.reps, effort: '', done: Boolean(w.done) };
+    const rows = e.sets.some((x) => x.side) ? [{ ...base, side: 'L' }, { ...base, side: 'R' }] : [base];
+    e.sets.unshift(...rows);
+    closeSheet(); S.save(); const y = window.scrollY; render(); window.scrollTo(0, y);
+    toast('Ahora es una serie efectiva');
+  },
+  'set-delete': (b) => {
+    const e = S.getState().draft.exercises[b.dataset.i];
+    let j = Number(b.dataset.j);
+    if (b.dataset.kind === 'warm') {
+      e.warmup.splice(j, 1);
+      if (!e.warmup.length) e.warmupOn = false;
+    } else {
+      const perSide = e.sets.some((x) => x.side);
+      if (perSide) j -= j % 2;
+      e.sets.splice(j, perSide ? 2 : 1);
+    }
+    closeSheet(); S.save(); const y = window.scrollY; render(); window.scrollTo(0, y);
+  },
   'warm-toggle': (b) => {
     const d = S.getState().draft;
     const e = d.exercises[b.dataset.i];
@@ -1932,6 +2000,24 @@ Cloud.onChange(() => {
 });
 Cloud.initCloud({ onData: safeRender });
 
+// Actualizaciones: al publicar una versión nueva, el service worker nuevo toma el control
+// y la app se recarga sola (el entrenamiento en curso está guardado y no se pierde).
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return;
+    reloading = true;
+    try { sessionStorage.setItem('gymtrack.updated', '1'); } catch {}
+    location.reload();
+  });
+  navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+  }).catch(() => {});
+  try {
+    if (sessionStorage.getItem('gymtrack.updated')) {
+      sessionStorage.removeItem('gymtrack.updated');
+      setTimeout(() => toast('✨ App actualizada a la última versión'), 400);
+    }
+  } catch {}
 }

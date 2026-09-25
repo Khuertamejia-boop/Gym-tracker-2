@@ -3,7 +3,7 @@
 // y, si no hay conexión o tarda demasiado, la copia guardada.
 // Librerías del CDN: primero la copia guardada (nunca cambian de versión).
 // Las peticiones a Supabase (datos y sesión) nunca se guardan en caché.
-const CACHE = 'gymtrack-v11';
+const CACHE = 'gymtrack-v12';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'manifest.webmanifest', 'icons/icon.svg',
   'js/app.js', 'js/store.js', 'js/charts.js', 'js/cloud.js', 'js/config.js',
@@ -14,7 +14,10 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' evita que el navegador use copias viejas de GitHub Pages al instalar.
+  e.waitUntil(caches.open(CACHE)
+    .then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' }))))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
@@ -47,7 +50,8 @@ self.addEventListener('fetch', (e) => {
 
   e.respondWith(caches.open(CACHE).then(async (cache) => {
     try {
-      const res = await Promise.race([fetch(e.request), timeout(4000)]);
+      // no-cache: siempre pregunta al servidor si hay versión nueva (GitHub Pages permite guardar 10 min).
+      const res = await Promise.race([fetch(e.request, { cache: 'no-cache' }), timeout(4000)]);
       if (res.ok) cache.put(e.request, res.clone());
       return res;
     } catch {
