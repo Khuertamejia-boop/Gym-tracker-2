@@ -91,10 +91,10 @@ const RAW = [
   ['sentadilla', 'Sentadilla con barra', 'Cuádriceps', 'Barra'],
   ['sentadilla-frontal', 'Sentadilla frontal', 'Cuádriceps', 'Barra'],
   ['sentadilla-hack', 'Sentadilla hack', 'Cuádriceps', 'Máquina', 'sentadilla lat'],
-  ['sentadilla-smith', 'Sentadilla en Smith', 'Cuádriceps', 'Smith'],
+  ['sentadilla-smith', 'Sentadilla en Smith · cuádriceps', 'Cuádriceps', 'Smith'],
   ['sentadilla-goblet', 'Sentadilla goblet', 'Cuádriceps', 'Mancuernas'],
-  ['sentadilla-bulgara', 'Sentadilla búlgara', 'Cuádriceps', 'Mancuernas'],
-  ['prensa', 'Prensa de piernas', 'Cuádriceps', 'Máquina'],
+  ['sentadilla-bulgara', 'Sentadilla búlgara · cuádriceps', 'Cuádriceps', 'Mancuernas'],
+  ['prensa', 'Prensa de piernas · cuádriceps', 'Cuádriceps', 'Máquina'],
   ['extension-cuadriceps', 'Extensión de cuádriceps', 'Cuádriceps', 'Máquina'],
   ['zancadas', 'Zancadas (estocadas)', 'Cuádriceps', 'Mancuernas'],
   ['zancadas-caminando', 'Zancadas caminando', 'Cuádriceps', 'Mancuernas'],
@@ -113,7 +113,9 @@ const RAW = [
   // Glúteos
   ['hip-thrust', 'Hip thrust con barra', 'Glúteos', 'Barra'],
   ['hip-thrust-maquina', 'Hip thrust en máquina', 'Glúteos', 'Máquina'],
-  ['prensa-gluteos', 'Prensa enfocada en glúteos', 'Glúteos', 'Máquina', 'prensa pies altos'],
+  ['prensa-gluteos', 'Prensa de piernas · glúteos', 'Glúteos', 'Máquina', 'prensa pies altos enfocada'],
+  ['sentadilla-bulgara-gluteos', 'Sentadilla búlgara · glúteos', 'Glúteos', 'Mancuernas', 'torso inclinado enfocada'],
+  ['sentadilla-smith-gluteos', 'Sentadilla en Smith · glúteos', 'Glúteos', 'Smith', 'pies adelantados enfocada'],
   ['puente-gluteo', 'Puente de glúteo', 'Glúteos', 'Peso corporal'],
   ['patada-gluteo-polea', 'Patada de glúteo en polea', 'Glúteos', 'Polea'],
   ['abductores-maquina', 'Abducción de cadera en máquina', 'Glúteos', 'Máquina'],
@@ -140,4 +142,12 @@ const RAW = [
   ['woodchopper', 'Leñador en polea', 'Abdomen', 'Polea'],
 ];
 
-export const BASE_EXERCISES = RAW.map(([id, name, muscle, equipment, aliases = '']) => ({ id, name, muscle, equipment, aliases }));
+// Ejercicios con variantes de enfoque: al buscarlos aparece uno solo y luego se elige el enfoque.
+export const FAMILIES = {
+  prensa: { name: 'Prensa de piernas', variants: [['prensa', 'Cuádriceps'], ['prensa-gluteos', 'Glúteos']] },
+  bulgara: { name: 'Sentadilla búlgara', variants: [['sentadilla-bulgara', 'Cuádriceps'], ['sentadilla-bulgara-gluteos', 'Glúteos']] },
+  smith: { name: 'Sentadilla en Smith', variants: [['sentadilla-smith', 'Cuádriceps'], ['sentadilla-smith-gluteos', 'Glúteos']] },
+};
+const FAMILY_OF = Object.fromEntries(Object.entries(FAMILIES).flatMap(([key, f]) => f.variants.map(([id]) => [id, key])));
+
+export const BASE_EXERCISES = RAW.map(([id, name, muscle, equipment, aliases = '']) => ({ id, name, muscle, equipment, aliases, family: FAMILY_OF[id] }));

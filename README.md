@@ -18,12 +18,13 @@ La app tiene solo **dos pestañas**:
   - Por cada serie anotas kg y reps (y RIR/RPE fuera del modo simple).
   - Sugerencias de progresión, notas por ejercicio y aviso 🏆 de récord personal.
   - **Modo enfoque**: un ejercicio por pantalla, cronómetro arriba y un carrusel horizontal con la miniatura de músculos de cada ejercicio (✓ en los terminados). Se cambia de ejercicio tocando el carrusel o deslizando a los lados.
+  - Series de aproximación opcionales (interruptor por ejercicio, filas «A»): no cuentan en volumen, récords ni progresión, y se recuerdan para la próxima vez.
   - Series en filas redondeadas (serie, reps, peso, ✓) y un botón inferior que guía: *Marcar todas las series* → *Siguiente ejercicio* → *Terminar entrenamiento*. Descartar queda en el menú ⋯.
   - Resumen a pantalla completa al terminar: tiempo, series, volumen, el cuerpo con los músculos trabajados, récords, progreso de la semana y una frase motivadora.
   - Los entrenamientos terminados se pueden editar.
 - **Progreso**: entrenamientos, racha, constancia, tus ejercicios (peso y mejora), peso corporal y medidas, historial y estadísticas de volumen.
 
-Al tocar un ejercicio se abre su ficha: Acerca de (con la **guía muscular**: cuerpo realista de frente y de espalda con los músculos principales en rojo intenso y los secundarios en rojo suave), Historial, Gráficos y Récords. El cuerpo es de hombre o de mujer según el perfil (se cambia en tu perfil → Ajustes). El catálogo tiene más de 110 ejercicios con buscador, y puedes crear los tuyos.
+Al tocar un ejercicio se abre su ficha: Acerca de (con la **guía muscular**: cuerpo realista de frente y de espalda con los músculos principales en rojo intenso y los secundarios en rojo suave), Historial, Gráficos y Récords. El cuerpo es de hombre o de mujer según el perfil (se cambia en tu perfil → Ajustes). El catálogo tiene más de 110 ejercicios con buscador (se abre arriba para que el teclado no tape los resultados), y puedes crear los tuyos. Los ejercicios con variantes (prensa, sentadilla búlgara, sentadilla en Smith) aparecen una sola vez y al elegirlos se escoge el enfoque: cuádriceps o glúteos.
 
 **Kilos o libras**: en tu perfil → Ajustes eliges la unidad por defecto, y cada ejercicio puede tener la suya (por ejemplo, máquinas en libras) con el selector kg/lb de su tarjeta o de su ficha. Los pesos se guardan siempre en kg, así que récords y gráficos no se mezclan.
 

@@ -374,6 +374,26 @@ export function lastPerformance(exId, excludeId) {
   return null;
 }
 
+// Series de aproximación de la última vez (se guardan aparte y no cuentan en estadísticas).
+export function lastWarmup(exId, excludeId) {
+  for (let i = state.sessions.length - 1; i >= 0; i--) {
+    const s = state.sessions[i];
+    if (s.id === excludeId) continue;
+    const e = s.exercises.find((x) => x.exId === exId);
+    if (e) return e.warmup?.length ? e.warmup : null;
+  }
+  return null;
+}
+
+// Series de aproximación sugeridas: ~50 % y ~75 % del peso de trabajo.
+export function suggestWarmup(exId, workKg) {
+  const u = unitFor(exId);
+  const step = u === 'lb' ? 5 : 2.5;
+  const w = Number(workKg) || 0;
+  const at = (f) => (w ? fromUnit(Math.max(step, Math.round((toUnit(w, u) * f) / step) * step), u) : '');
+  return [{ kg: at(0.5), reps: 10, done: false }, { kg: at(0.75), reps: 5, done: false }];
+}
+
 export function exerciseHistory(exId) {
   const out = [];
   for (const s of state.sessions) {
@@ -492,7 +512,11 @@ export function draftExercise(exId, sets = 3, reps = '') {
     const kg = hint && hint.type === 'up' ? hint.kg : prev ? prev.kg : '';
     rows.push({ kg, reps: '', effort: '', done: false });
   }
-  return { exId, target: reps, note: '', sets: rows };
+  const prevWarm = lastWarmup(exId);
+  return {
+    exId, target: reps, note: '', sets: rows,
+    ...(prevWarm ? { warmupOn: true, warmup: prevWarm.map((w) => ({ kg: w.kg, reps: w.reps, done: false })) } : {}),
+  };
 }
 
 // Abre un entrenamiento terminado para corregirlo.
@@ -500,6 +524,9 @@ export function editSession(id) {
   const s = state.sessions.find((x) => x.id === id);
   if (!s) return null;
   state.draft = { ...JSON.parse(JSON.stringify(s)), editing: true };
+  state.draft.exercises.forEach((e) => {
+    if (e.warmup?.length) { e.warmupOn = true; e.warmup = e.warmup.map((w) => ({ ...w, done: true })); }
+  });
   save();
   return state.draft;
 }
@@ -510,7 +537,14 @@ export function finishDraft() {
   const editing = d.editing;
   delete d.editing;
   d.exercises = d.exercises
-    .map((e) => ({ ...e, sets: e.sets.filter((s) => s.done).map(({ kgTouched, ...rest }) => rest) }))
+    .map(({ warmupOn, warmup, ...e }) => {
+      const warm = warmupOn ? (warmup || []).filter((w) => w.done).map(({ done, ...w }) => w) : [];
+      return {
+        ...e,
+        ...(warm.length ? { warmup: warm } : {}),
+        sets: e.sets.filter((s) => s.done).map(({ kgTouched, ...rest }) => rest),
+      };
+    })
     .filter((e) => e.sets.length);
   if (editing) d.editedAt = Date.now();
   else d.finishedAt = Date.now();

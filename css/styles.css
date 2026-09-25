@@ -568,3 +568,25 @@ body.in-session main { padding-top: calc(env(safe-area-inset-top) + 8px); }
 .set-actions .link { padding: 6px 4px; }
 .last-line { overflow-wrap: anywhere; }
 .session-bar .pill-btn { border-radius: 999px; }
+
+/* ---------- v8: buscador arriba, variantes y series de aproximación ---------- */
+.sheet.sheet-top { margin: 0 auto auto; border-radius: 0 0 20px 20px; max-height: 100dvh; }
+.sheet.sheet-top .sheet-inner { padding-top: calc(env(safe-area-inset-top) + 12px); }
+@media (min-width: 700px) { .sheet.sheet-top { margin: 40px auto auto; border-radius: 20px; } }
+.pick-results { overflow-y: auto; overscroll-behavior: contain; max-height: 50vh; }
+.variant-list { display: grid; gap: 10px; }
+.variant {
+  display: flex; align-items: center; gap: 14px; width: 100%; padding: 10px 14px 10px 10px; text-align: left;
+  border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--surface-2); color: var(--text);
+}
+.variant:hover { border-color: var(--accent); }
+.variant b, .variant .muted { display: block; }
+.variant .chev { color: var(--text-3); font-size: 1.3rem; }
+.warm-toggle {
+  display: flex; align-items: center; gap: 10px; width: 100%; margin: 10px 0 2px; padding: 10px 14px;
+  border: 0; border-radius: var(--radius); background: var(--surface-2); color: var(--text); text-align: left; font-size: 0.95rem;
+}
+.set-row.warm .set-n { background: transparent; border: 1.5px dashed var(--border); color: var(--text-3); font-size: 0.9rem; }
+.set-row.warm .pill-input { background: transparent; border: 1.5px dashed var(--border); }
+.set-row.warm.done .pill-input, .set-row.warm.done .set-n { border-style: solid; border-color: var(--good); background: transparent; }
+.warm-actions { display: flex; gap: 12px; justify-content: flex-end; margin: -2px 0 6px; font-size: 0.9rem; }

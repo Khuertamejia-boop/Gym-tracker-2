@@ -1,5 +1,5 @@
 import * as S from './store.js';
-import { MUSCLES } from './data/exercises.js';
+import { MUSCLES, FAMILIES } from './data/exercises.js';
 import { TEMPLATES } from './data/templates.js';
 import { barChart, lineChart, destroyCharts } from './charts.js';
 import * as Cloud from './cloud.js';
@@ -65,6 +65,7 @@ function openSheet(title, body, onMount, back) {
       <div class="sheet-body">${body}</div>
     </div>`;
   $sheet.onclick = null;
+  $sheet.classList.remove('sheet-top');
   if (!$sheet.open) $sheet.showModal();
   onMount?.($sheet);
   mountMuscleMaps($sheet);
@@ -307,8 +308,19 @@ function exerciseStage(e, i, effort, d) {
     ${hint ? `<div class="hint hint-${hint.type}">${hint.type === 'up' ? '📈' : '💡'} ${esc(hint.text)}</div>` : ''}
     ${last?.note ? `<div class="hint">📝 Nota anterior: ${esc(last.note)}</div>` : ''}
     ${!last && !d.editing && S.isSimple() ? `<div class="hint">👋 Primera vez: elige un peso con el que puedas hacer ${esc(S.parseRange(e.target)?.hi || 10)} repeticiones con buena técnica, sin llegar al límite.</div>` : ''}
+    <button class="warm-toggle" data-action="warm-toggle" data-i="${i}" role="switch" aria-checked="${Boolean(e.warmupOn)}">
+      <span class="grow">Series de aproximación<span class="muted small row-help">Calentamiento con menos peso; no cuentan en tus estadísticas</span></span>
+      <span class="switch ${e.warmupOn ? 'on' : ''}" aria-hidden="true"></span>
+    </button>
     <div class="set-grid ${effort ? 'with-effort' : ''}">
       <div class="set-labels"><span>Serie</span><span>Reps</span><span class="unit-label">Peso ${unitSwitch(e.exId, u)}</span>${effort ? `<span>${effort}</span>` : ''}<span></span></div>
+      ${e.warmupOn ? (e.warmup || []).map((w, j) => `<div class="set-row warm ${w.done ? 'done' : ''}">
+          <span class="set-n" title="Serie de aproximación">A</span>
+          <input class="pill-input" type="number" inputmode="numeric" min="0" value="${esc(w.reps)}" placeholder="–" data-warm="reps" data-i="${i}" data-j="${j}" aria-label="Repeticiones aproximación ${j + 1}">
+          <input class="pill-input" type="number" inputmode="decimal" step="0.5" min="0" value="${esc(S.toUnit(w.kg, u))}" placeholder="–" data-warm="kg" data-i="${i}" data-j="${j}" aria-label="Peso en ${u} aproximación ${j + 1}">
+          ${effort ? '<span></span>' : ''}
+          <button class="set-check" data-action="toggle-warm" data-i="${i}" data-j="${j}" aria-pressed="${w.done}" aria-label="Marcar aproximación ${j + 1} como hecha">${ICON_CHECK}</button>
+        </div>`).join('') + `<div class="warm-actions"><button class="link" data-action="warm-add" data-i="${i}">+ Aproximación</button>${(e.warmup || []).length ? `<button class="link" data-action="warm-remove" data-i="${i}">Quitar</button>` : ''}</div>` : ''}
       ${e.sets.map((x, j) => {
         const sug = setSuggestion(e, j, last);
         return `<div class="set-row ${x.done ? 'done' : ''} ${j === nextSet ? 'next' : ''}">
@@ -510,29 +522,76 @@ function showExerciseDetail(id, tab = ui.exTab) {
 }
 
 // Selector reutilizable: busca un ejercicio y ejecuta onPick(id).
-function openPicker(onPick) {
-  let query = '', muscle = '';
+// Selector reutilizable: busca un ejercicio y ejecuta onPick(id).
+// Se abre desde arriba para que el teclado del teléfono no tape los resultados, y
+// los ejercicios con variantes (p. ej. prensa) aparecen una sola vez: al tocarlos se elige el enfoque.
+function openPicker(onPick, initialQuery = '') {
+  let query = initialQuery, muscle = '';
   openSheet('Añadir ejercicio', `
-    <input type="search" id="pick-search" placeholder="Buscar ejercicio" aria-label="Buscar ejercicio" style="margin-bottom:8px">
+    <input type="search" id="pick-search" placeholder="Buscar ejercicio" aria-label="Buscar ejercicio" value="${esc(query)}" style="margin-bottom:8px" autocomplete="off">
     <div id="pick-chips"></div>
-    <div id="pick-results" style="max-height:50vh;overflow:auto"></div>
+    <div id="pick-results" class="pick-results"></div>
     <button class="btn block" data-action="pick-new" style="margin-top:10px">+ Crear ejercicio propio</button>`, (root) => {
+    $sheet.classList.add('sheet-top');
     const input = root.querySelector('#pick-search');
+    const results = root.querySelector('#pick-results');
+    const fit = () => {
+      const visible = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      const top = results.getBoundingClientRect().top;
+      results.style.maxHeight = `${Math.max(140, visible - top - 16)}px`;
+    };
     const draw = () => {
       root.querySelector('#pick-chips').innerHTML = muscleChips(muscle, 'pick-filter');
-      root.querySelector('#pick-results').innerHTML = exerciseListHTML(S.searchExercises(query, muscle), 'pick');
+      const seen = new Set();
+      const items = [];
+      for (const e of S.searchExercises(query, muscle)) {
+        if (!e.family) { items.push(e); continue; }
+        if (seen.has(e.family)) continue;
+        seen.add(e.family);
+        items.push({ family: e.family, name: FAMILIES[e.family].name, variants: FAMILIES[e.family].variants.map(([, l]) => l) });
+      }
+      results.innerHTML = items.length ? `<div class="list">${items.map((e) => e.family
+        ? `<button class="list-item" data-action="pick-family" data-family="${e.family}">
+            <div class="grow"><div>${esc(e.name)}</div><div class="muted small">Elige el enfoque: ${e.variants.join(' o ').toLowerCase()}</div></div><span class="muted">›</span></button>`
+        : `<button class="list-item" data-action="pick" data-id="${e.id}">
+            <div class="grow"><div>${esc(e.name)}</div><div class="muted small">${esc(e.muscle)} · ${esc(e.equipment)}${e.custom ? ' · propio' : ''}</div></div><span class="muted">›</span></button>`).join('')}</div>`
+        : '<div class="empty small">No hay ejercicios que coincidan.</div>';
+      fit();
     };
     input.addEventListener('input', () => { query = input.value; draw(); });
+    window.visualViewport?.addEventListener('resize', fit);
+    $sheet.addEventListener('close', () => window.visualViewport?.removeEventListener('resize', fit), { once: true });
     root.onclick = (e) => {
       const b = e.target.closest('[data-action]');
       if (!b) return;
       if (b.dataset.action === 'pick-filter') { muscle = b.dataset.muscle; draw(); }
       if (b.dataset.action === 'pick') { root.onclick = null; closeSheet(); onPick(b.dataset.id); }
+      if (b.dataset.action === 'pick-family') { root.onclick = null; openVariantPicker(b.dataset.family, onPick, query); }
       if (b.dataset.action === 'pick-new') { root.onclick = null; newExerciseForm(query, onPick); }
     };
     draw();
-    setTimeout(() => input.focus(), 50);
+    setTimeout(() => { input.focus(); fit(); }, 50);
   });
+}
+
+function openVariantPicker(key, onPick, query) {
+  const fam = FAMILIES[key];
+  openSheet(fam.name, `
+    <p class="muted" style="margin:0 0 10px">¿Con qué enfoque lo vas a hacer?</p>
+    <div class="variant-list">${fam.variants.map(([id, label]) => `
+      <button class="variant" data-action="pick" data-id="${id}">
+        <span class="thumb" data-muscle-map="${id}" data-thumb></span>
+        <span class="grow"><b>Enfoque en ${label.toLowerCase()}</b><span class="muted small">${muscleNames(musclesFor(id)[0]).join(' · ')}</span></span>
+        <span class="chev" aria-hidden="true">›</span>
+      </button>`).join('')}</div>`, (root) => {
+    $sheet.classList.add('sheet-top');
+    root.onclick = (e) => {
+      const b = e.target.closest('[data-action]');
+      if (!b) return;
+      if (b.dataset.action === 'pick') { root.onclick = null; closeSheet(); onPick(b.dataset.id); }
+      if (b.dataset.action === 'variant-back') { root.onclick = null; openPicker(onPick, query); }
+    };
+  }, 'variant-back');
 }
 
 function newExerciseForm(prefill = '', onCreated) {
@@ -1416,6 +1475,40 @@ const actions = {
     afterMarking(anyPr);
   },
   'go-ex': (b) => goToExercise(Number(b.dataset.i)),
+  'warm-toggle': (b) => {
+    const d = S.getState().draft;
+    const e = d.exercises[b.dataset.i];
+    e.warmupOn = !e.warmupOn;
+    if (e.warmupOn && !(e.warmup || []).length) {
+      const last = S.lastPerformance(e.exId, d.editing ? d.id : null);
+      const work = e.sets.find((x) => x.kg !== '')?.kg || setSuggestion(e, 0, last).kg;
+      e.warmup = S.suggestWarmup(e.exId, work);
+    }
+    S.save(); const y = window.scrollY; render(); window.scrollTo(0, y);
+  },
+  'toggle-warm': (b) => {
+    const e = S.getState().draft.exercises[b.dataset.i];
+    const w = e.warmup[b.dataset.j];
+    if (!w.done && (w.reps === '' || w.reps === 0)) {
+      document.querySelector(`[data-warm="reps"][data-i="${b.dataset.i}"][data-j="${b.dataset.j}"]`)?.focus();
+      return toast('Anota las repeticiones');
+    }
+    if (w.kg === '') w.kg = 0;
+    w.done = !w.done;
+    S.save(); const y = window.scrollY; render(); window.scrollTo(0, y);
+  },
+  'warm-add': (b) => {
+    const e = S.getState().draft.exercises[b.dataset.i];
+    const prev = e.warmup[e.warmup.length - 1];
+    e.warmup.push({ kg: prev ? prev.kg : '', reps: prev ? prev.reps : 5, done: false });
+    S.save(); const y = window.scrollY; render(); window.scrollTo(0, y);
+  },
+  'warm-remove': (b) => {
+    const e = S.getState().draft.exercises[b.dataset.i];
+    e.warmup.pop();
+    if (!e.warmup.length) e.warmupOn = false;
+    S.save(); const y = window.scrollY; render(); window.scrollTo(0, y);
+  },
   'ex-menu': (b) => {
     const i = Number(b.dataset.i);
     const d = S.getState().draft;
@@ -1522,6 +1615,7 @@ const actions = {
       <p class="muted small" style="margin-top:0">${S.formatDate(s.date)}${mins ? ` · ${mins} min` : ''} · ${series(S.doneSets(s))} · ${vol(S.sessionVolume(s))}</p>
       ${s.exercises.map((e) => `<div style="margin-bottom:10px"><b class="small">${esc(S.exById(e.exId).name)}</b> <span class="muted small">(${S.unitFor(e.exId)})</span>
         <div class="muted small">${e.sets.map((x) => `${x.pr ? '🏆' : ''}${wn(x.kg, S.unitFor(e.exId))}×${x.reps}${x.effort !== '' && x.effort !== undefined ? ` @${x.effort}` : ''}`).join(' · ')}</div>
+        ${e.warmup?.length ? `<div class="muted small">Aproximación: ${e.warmup.map((w) => `${wn(w.kg, S.unitFor(e.exId))}×${w.reps}`).join(' · ')}</div>` : ''}
         ${e.note ? `<div class="muted small">📝 ${esc(e.note)}</div>` : ''}</div>`).join('')}
       <div class="stack">
         <button class="btn block" data-action="edit-session" data-id="${s.id}">Editar entrenamiento</button>
@@ -1715,6 +1809,13 @@ document.addEventListener('input', (e) => {
   }
   if (t.dataset.draft === 'date') {
     if (t.value) { S.getState().draft.date = t.value; S.save(); }
+    return;
+  }
+  if (t.dataset.warm) {
+    const ex = S.getState().draft.exercises[t.dataset.i];
+    const w = ex.warmup[t.dataset.j];
+    w[t.dataset.warm] = t.dataset.warm === 'kg' ? S.fromUnit(num(t.value), S.unitFor(ex.exId)) : num(t.value);
+    S.save();
     return;
   }
   if (t.dataset.set) {
