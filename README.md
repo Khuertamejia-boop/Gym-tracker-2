@@ -20,6 +20,8 @@ La app tiene solo **dos pestañas**:
 
 Al tocar un ejercicio se abre su ficha: Acerca de, Historial, Gráficos y Récords. El catálogo tiene más de 110 ejercicios con buscador, y puedes crear los tuyos.
 
+**Kilos o libras**: en Ajustes ⚙ eliges la unidad por defecto, y cada ejercicio puede tener la suya (por ejemplo, máquinas en libras) con el selector kg/lb de su tarjeta o de su ficha. Los pesos se guardan siempre en kg, así que récords y gráficos no se mezclan.
+
 **Modo simple** (activado por defecto para principiantes, se cambia en Ajustes ⚙): oculta RIR/RPE y el 1RM, usa frases sencillas y deja el volumen en "Más estadísticas".
 
 **Cambiar de rutina o de días**: Ajustes ⚙ → *Cambiar de rutina o de días*.

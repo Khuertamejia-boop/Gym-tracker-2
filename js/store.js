@@ -242,6 +242,33 @@ export function deleteRoutine(id) {
   save();
 }
 
+// ---------- Unidades (kg / lb) ----------
+// Los pesos se guardan siempre en kg; solo se convierten para mostrarlos y al escribirlos.
+// settings.unit es la unidad por defecto y settings.units guarda la de cada ejercicio
+// (útil cuando algunas máquinas del gimnasio están en libras).
+
+export const LB = 0.45359237;
+export const defaultUnit = () => state.settings.unit || 'kg';
+export const unitFor = (exId) => state.settings.units?.[exId] || defaultUnit();
+const round1 = (n) => Math.round(n * 10) / 10;
+const roundHalf = (n) => Math.round(n * 2) / 2; // las máquinas en libras van de 2,5 en 2,5 o de 5 en 5
+export const toUnit = (kg, unit) => (kg === '' || kg === null || kg === undefined ? ''
+  : unit === 'lb' ? roundHalf(Number(kg) / LB) : round1(Number(kg)));
+export const fromUnit = (v, unit) => (v === '' || v === null || v === undefined ? '' : unit === 'lb' ? Number(v) * LB : Number(v));
+
+export function setDefaultUnit(unit) {
+  state.settings.unit = unit;
+  save();
+}
+
+export function setExerciseUnit(exId, unit) {
+  const units = { ...(state.settings.units || {}) };
+  if (unit === defaultUnit()) delete units[exId];
+  else units[exId] = unit;
+  state.settings.units = units;
+  save();
+}
+
 // ---------- Perfil y configuración inicial ----------
 
 // Un usuario nuevo (sin entrenamientos ni rutinas propias) pasa por la configuración inicial.
@@ -418,22 +445,27 @@ export function progressionHint(exId, target, excludeId) {
   const kg = Number(top.kg) || 0;
   const working = last.sets.filter((s) => Number(s.kg) === kg);
   const simple = isSimple();
+  const u = unitFor(exId);
+  const w = (valueKg) => `${fmt(toUnit(valueKg, u))} ${u}`;
   if (!range || !kg) return { type: 'reps', kg, text: 'Intenta hacer 1 repetición más que la vez pasada' };
   const minReps = Math.min(...working.map((s) => Number(s.reps) || 0));
   if (minReps >= range.hi) {
-    const step = kg < 20 ? 1 : 2.5;
-    return { type: 'up', kg: kg + step, text: simple
-      ? `¡Lo dominas! Hoy sube a ${fmt(kg + step)} kg (ya te lo puse)`
-      : `Llegaste a ${range.hi} reps en todas las series: sube a ${fmt(kg + step)} kg` };
+    // Saltos habituales: 2,5 kg (1 kg en mancuernas ligeras) o 5 lb (2,5 lb en pesos ligeros).
+    const current = toUnit(kg, u);
+    const step = u === 'lb' ? (current < 45 ? 2.5 : 5) : (kg < 20 ? 1 : 2.5);
+    const next = fromUnit(current + step, u);
+    return { type: 'up', kg: next, text: simple
+      ? `¡Lo dominas! Hoy sube a ${w(next)} (ya te lo puse)`
+      : `Llegaste a ${range.hi} reps en todas las series: sube a ${w(next)}` };
   }
   if (minReps < range.lo) {
     return { type: 'hold', kg, text: simple
-      ? `Repite ${fmt(kg)} kg e intenta llegar a ${range.lo} repeticiones en cada serie`
-      : `Mantén ${fmt(kg)} kg hasta llegar a ${range.lo} reps en todas las series` };
+      ? `Repite ${w(kg)} e intenta llegar a ${range.lo} repeticiones en cada serie`
+      : `Mantén ${w(kg)} hasta llegar a ${range.lo} reps en todas las series` };
   }
   return { type: 'reps', kg, text: simple
-    ? `Usa ${fmt(kg)} kg e intenta hacer 1 repetición más que la vez pasada`
-    : `Mantén ${fmt(kg)} kg y suma reps hasta llegar a ${range.hi}` };
+    ? `Usa ${w(kg)} e intenta hacer 1 repetición más que la vez pasada`
+    : `Mantén ${w(kg)} y suma reps hasta llegar a ${range.hi}` };
 }
 
 const fmt = (n) => Number(n).toLocaleString('es', { maximumFractionDigits: 1 });
@@ -478,7 +510,7 @@ export function finishDraft() {
   const editing = d.editing;
   delete d.editing;
   d.exercises = d.exercises
-    .map((e) => ({ ...e, sets: e.sets.filter((s) => s.done) }))
+    .map((e) => ({ ...e, sets: e.sets.filter((s) => s.done).map(({ kgTouched, ...rest }) => rest) }))
     .filter((e) => e.sets.length);
   if (editing) d.editedAt = Date.now();
   else d.finishedAt = Date.now();
@@ -506,7 +538,7 @@ export function previousSameDay(session) {
 // ---------- Cuerpo ----------
 
 export const BODY_FIELDS = [
-  { key: 'weight', label: 'Peso', unit: 'kg' },
+  { key: 'weight', label: 'Peso', unit: 'kg', convert: true },
   { key: 'bodyfat', label: '% grasa', unit: '%' },
   { key: 'waist', label: 'Cintura', unit: 'cm' },
   { key: 'chest', label: 'Pecho', unit: 'cm' },

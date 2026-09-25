@@ -339,3 +339,5 @@ details.more > summary::before, details.more-inline > summary::before { content:
 details.more[open] > summary::before, details.more-inline[open] > summary::before { content: '－ '; }
 .week-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 10px; }
 .week-legend b { color: var(--text); }
+.segmented.unit-switch { padding: 2px; border-radius: 8px; }
+.segmented.unit-switch button { padding: 2px 9px; font-size: 0.75rem; border-radius: 6px; }
