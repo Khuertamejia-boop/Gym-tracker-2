@@ -270,8 +270,8 @@ details.table-view td:first-child, details.table-view th:first-child { text-alig
 .sheet-head h2 { margin: 0; }
 
 .toast {
-  position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 12px);
-  transform: translateX(-50%) translateY(20px); opacity: 0; pointer-events: none;
+  position: fixed; left: 50%; top: calc(env(safe-area-inset-top) + 64px);
+  transform: translateX(-50%) translateY(-12px); opacity: 0; pointer-events: none;
   background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px;
   font-size: 0.9rem; transition: 0.2s; z-index: 50; max-width: calc(100% - 32px);
 }
@@ -428,3 +428,58 @@ details.more[open] > summary::before, details.more-inline[open] > summary::befor
 .login-links { text-align: center; margin-top: 12px; color: var(--text-2); font-size: 0.92rem; }
 .login-links p { margin: 10px 0 0; }
 .link { border: 0; background: none; padding: 4px; color: var(--accent); font-weight: 600; cursor: pointer; }
+
+/* ---------- v6: terminar entrenamiento y resumen ---------- */
+.finish-btn { min-height: 54px; margin-top: 12px; font-size: 1.05rem; border-radius: 14px; }
+.danger-row { color: var(--danger); }
+body.no-scroll { overflow: hidden; }
+.celebrate {
+  position: fixed; inset: 0; z-index: 100; overflow-y: auto; background: var(--bg);
+  padding: calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 20px);
+  animation: win-in 0.3s ease-out;
+}
+@keyframes win-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.win { max-width: 460px; margin: 0 auto; text-align: center; position: relative; z-index: 1; }
+.win-title { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; margin: 8px 0 2px; }
+.win-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0 10px; }
+.win-stat {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 14px 6px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.win-stat .win-icon { font-size: 1.2rem; }
+.win-stat b { font-size: 1.6rem; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.win-stat span:last-child { font-size: 0.78rem; color: var(--text-2); }
+.win-note { color: var(--good); font-weight: 600; margin: 6px 0; }
+.win-body { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin: 12px 0; }
+.win-bodies { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.win-bodies > div { max-width: 150px; margin: 0 auto; width: 100%; }
+.win-worked { font-size: 0.92rem; color: var(--text-2); margin-top: 6px; }
+.win-worked b { color: var(--text); }
+.win-prs { background: var(--good-soft); border-radius: var(--radius); padding: 12px; margin: 12px 0; font-size: 0.92rem; }
+.win-prs b { display: block; margin-bottom: 4px; font-size: 1rem; }
+.win-week {
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin: 12px 0;
+}
+.win-week .dots { display: inline-flex; gap: 6px; }
+.win-week .dots i { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+.win-week .dots i.on { background: #f5821f; }
+.win-phrase { font-style: italic; color: var(--text-2); margin: 16px 8px 20px; }
+.win-done { min-height: 54px; font-size: 1.05rem; border-radius: 14px; }
+.confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+.confetti i {
+  position: absolute; top: -20px; left: var(--x); width: 8px; height: 14px; border-radius: 2px; opacity: 0;
+  transform: rotate(var(--r)); animation: confetti 1.8s ease-in var(--d) forwards;
+}
+.confetti i:nth-child(4n) { background: #3987e5; }
+.confetti i:nth-child(4n+1) { background: #e0302a; }
+.confetti i:nth-child(4n+2) { background: #0ca30c; }
+.confetti i:nth-child(4n+3) { background: #f5b000; }
+@keyframes confetti {
+  0% { opacity: 1; transform: translateY(0) rotate(var(--r)); }
+  100% { opacity: 0; transform: translateY(95vh) rotate(calc(var(--r) + 540deg)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .confetti { display: none; }
+  .celebrate { animation: none; }
+}

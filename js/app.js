@@ -3,7 +3,7 @@ import { MUSCLES } from './data/exercises.js';
 import { TEMPLATES } from './data/templates.js';
 import { barChart, lineChart, destroyCharts } from './charts.js';
 import * as Cloud from './cloud.js';
-import { mountMuscleMaps, musclesFor, muscleNames } from './body.js';
+import { mountMuscleMaps, musclesFor, muscleNames, sessionMuscles } from './body.js';
 
 const $view = document.getElementById('view');
 const $title = document.getElementById('view-title');
@@ -43,6 +43,7 @@ const ICON_CHECK = '<svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 
 const ICON_X = '<svg viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12 19 6.4Z"/></svg>';
 const ICON_UP = '<svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5H7Z"/></svg>';
 const ICON_DOWN = '<svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5H7Z"/></svg>';
+const ICON_MORE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/></svg>';
 const ICON_BACK = '<svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12l4.6-4.6Z"/></svg>';
 const ICON_PERSON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.4 0-8 2.2-8 5v2h16v-2c0-2.8-3.6-5-8-5Z"/></svg>';
 
@@ -209,14 +210,14 @@ function renderSession() {
       <div class="row between">
         <div class="grow"><h2 style="margin:0">${esc(d.dayName)}</h2>
           <div class="muted small">${d.editing ? 'Editando entrenamiento' : '<span id="elapsed"></span>'} · <span id="live-stats"></span></div></div>
-        <button class="btn primary" data-action="finish">${d.editing ? 'Guardar' : 'Terminar'}</button>
+        <button class="icon-btn" data-action="session-menu" aria-label="Más opciones">${ICON_MORE}</button>
       </div>
       ${d.editing ? `<label class="field" style="margin-top:10px"><span>Fecha</span>
         <input type="date" value="${d.date}" max="${S.todayISO()}" data-draft="date"></label>` : ''}
     </div>
     ${d.exercises.map((e, i) => exerciseCard(e, i, effort, d)).join('')}
     <button class="btn block" data-action="session-add-ex">+ Añadir ejercicio</button>
-    <button class="btn block ghost danger" style="margin-top:8px" data-action="discard">${d.editing ? 'Cancelar edición' : 'Descartar entrenamiento'}</button>`;
+    <button class="btn primary block finish-btn" data-action="finish">${d.editing ? 'Guardar cambios' : 'Terminar entrenamiento'}</button>`;
   const tick = () => {
     const el = document.getElementById('elapsed');
     if (!el || d.editing) return;
@@ -966,36 +967,83 @@ function finishOnboarding() {
 // RESUMEN AL TERMINAR
 // =====================================================================
 
+const PHRASES = [
+  'La constancia gana a la intensidad.',
+  'Cada serie cuenta. Hoy sumaste muchas.',
+  'Tu yo del futuro te lo agradecerá.',
+  'Lo difícil ya está hecho: presentarte.',
+  'Un entrenamiento más cerca de tu objetivo.',
+  'Pequeños progresos, grandes resultados.',
+  'Hoy fuiste mejor que ayer.',
+  'La disciplina es tu superpoder.',
+];
+
+// Resumen a pantalla completa al terminar: tiempo, series, volumen, músculos trabajados,
+// récords y progreso de la semana.
 function showSummary(session) {
   const mins = Math.max(1, Math.round((session.finishedAt - session.startedAt) / 60000));
   const volume = S.sessionVolume(session);
-  const volText = vol(volume);
-  const prev = S.previousSameDay(session);
+  const [primary, secondary] = sessionMuscles(session);
   const prs = [];
   for (const e of session.exercises) for (const x of e.sets) if (x.pr) prs.push({ e, x });
-  let compare = '';
-  if (prev) {
-    const pv = S.sessionVolume(prev);
-    const pct = pv ? Math.round(((volume - pv) / pv) * 100) : 0;
-    compare = pv ? `${pct >= 0 ? '▲' : '▼'} ${Math.abs(pct)}% de volumen vs. el ${S.formatDate(prev.date)}` : '';
-  }
-  const tile = (label, value) => `<div class="stat"><div class="label">${label}</div><div class="value">${value}</div></div>`;
-  openSheet('¡Entrenamiento terminado! 💪', `
-    <p class="muted" style="margin:0 0 12px">${esc(session.dayName)} · ${S.formatDate(session.date)}</p>
-    <div class="grid-3" style="margin-bottom:10px">
-      ${tile('Duración', mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins} min`)}
-      ${tile('Series', S.doneSets(session))}
-      ${tile('Volumen', volText)}
-    </div>
-    ${compare ? `<p class="small" style="margin:0 0 12px">${compare}</p>` : ''}
-    ${prs.length ? `<div class="hint hint-up" style="margin-bottom:12px"><b>🏆 ${prs.length === 1 ? 'Nuevo récord' : `${prs.length} récords nuevos`}</b><br>
-      ${prs.map(({ e, x }) => `${esc(S.exById(e.exId).name)}: ${wt(x.kg, S.unitFor(e.exId))} × ${x.reps}`).join('<br>')}</div>` : ''}
-    <div class="section-title" style="margin-top:4px">Mejor serie por ejercicio</div>
-    <div class="list small">${session.exercises.map((e) => {
-      const best = e.sets.reduce((a, x) => (S.e1rm(x) > S.e1rm(a) ? x : a), e.sets[0]);
-      return `<div class="list-item" style="padding:8px 0"><span class="grow">${esc(S.exById(e.exId).name)}</span><b>${wt(best.kg, S.unitFor(e.exId))} × ${best.reps}</b></div>`;
-    }).join('')}</div>
-    <button class="btn primary block" data-action="close-sheet" style="margin-top:12px">Listo</button>`);
+
+  // Solo se compara si es para bien.
+  const prev = S.previousSameDay(session);
+  const pv = prev ? S.sessionVolume(prev) : 0;
+  const pct = pv ? Math.round(((volume - pv) / pv) * 100) : 0;
+
+  // Semana: días distintos entrenados frente a los días previstos en la rutina.
+  const routine = S.activeRoutine();
+  const planned = routine ? routine.week.filter(Boolean).length : 0;
+  const trained = new Set(weekSessions().map((x) => x.date)).size;
+  const goal = Math.max(planned, trained);
+
+  const stat = (icon, value, label) => `<div class="win-stat"><span class="win-icon" aria-hidden="true">${icon}</span><b>${value}</b><span>${label}</span></div>`;
+  const overlay = document.createElement('div');
+  overlay.className = 'celebrate';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Resumen del entrenamiento');
+  overlay.innerHTML = `
+    <div class="confetti" aria-hidden="true">${Array.from({ length: 36 }, (_, i) => `<i style="--x:${(i * 37) % 100}%;--d:${(i % 7) * 0.12}s;--r:${(i * 53) % 360}deg;--c:${i % 4}"></i>`).join('')}</div>
+    <div class="win">
+      <div class="win-title">🎉 ¡Entrenamiento completado!</div>
+      <div class="muted">${esc(shortName(session.dayName))} · ${S.formatDate(session.date)}</div>
+      <div class="win-stats">
+        ${stat('⏱', mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60}` : mins, mins >= 60 ? 'tiempo' : 'minutos')}
+        ${stat('✓', S.doneSets(session), S.doneSets(session) === 1 ? 'serie' : 'series')}
+        ${stat('🏋', Math.round(S.toUnit(volume, S.defaultUnit())).toLocaleString('es'), `${S.defaultUnit()} levantados`)}
+      </div>
+      ${pct > 0 ? `<div class="win-note">📈 +${pct}% más volumen que la última vez</div>` : ''}
+      <div class="win-body">
+        <div class="win-bodies">
+          <div data-muscle-map="" data-groups="${primary.join(',')}|${secondary.join(',')}" data-view="front"></div>
+          <div data-muscle-map="" data-groups="${primary.join(',')}|${secondary.join(',')}" data-view="back"></div>
+        </div>
+        <div class="win-worked">Hoy trabajaste: <b>${muscleNames(primary).join(' · ')}</b></div>
+      </div>
+      ${prs.length ? `<div class="win-prs"><b>🏆 ${prs.length === 1 ? '¡Nuevo récord!' : `¡${prs.length} récords nuevos!`}</b>
+        ${prs.slice(0, 3).map(({ e, x }) => `<div>${esc(S.exById(e.exId).name)}: ${wt(x.kg, S.unitFor(e.exId))} × ${x.reps}</div>`).join('')}</div>` : ''}
+      ${goal ? `<div class="win-week"><span>🔥 Esta semana</span>
+        <span class="dots">${Array.from({ length: goal }, (_, i) => `<i class="${i < trained ? 'on' : ''}"></i>`).join('')}</span>
+        <b>${trained} de ${goal}</b></div>` : ''}
+      <p class="win-phrase">“${PHRASES[Math.floor(Math.random() * PHRASES.length)]}”</p>
+      <button class="btn primary block win-done">Listo</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.body.classList.add('no-scroll');
+  mountMuscleMaps(overlay);
+  const close = () => {
+    overlay.remove();
+    document.body.classList.remove('no-scroll');
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  overlay.querySelector('.win-done').addEventListener('click', close);
+  overlay.querySelector('.win-done').focus({ preventScroll: true });
+  overlay.scrollTop = 0;
+  if (navigator.vibrate) navigator.vibrate(80);
 }
 
 // =====================================================================
@@ -1296,6 +1344,9 @@ const actions = {
     }
     S.save();
     updateLiveStats();
+    if (s.done && !d.editing && d.exercises.every((x) => x.sets.every((y) => y.done))) {
+      setTimeout(() => toast('¡Completaste todas las series! 💪'), s.pr ? 2300 : 0);
+    }
   },
   'add-set': (b) => {
     const e = S.getState().draft.exercises[b.dataset.i];
@@ -1338,10 +1389,20 @@ const actions = {
     if (editing) toast('Cambios guardados');
     else showSummary(saved);
   },
+  'session-menu': () => {
+    const d = S.getState().draft;
+    openSheet(d.editing ? 'Editando entrenamiento' : 'Entrenamiento en curso', `
+      <div class="menu-list">
+        <button class="menu-row" data-action="session-add-ex-menu"><span class="grow">Añadir ejercicio</span><span class="chev" aria-hidden="true">›</span></button>
+        <button class="menu-row danger-row" data-action="discard"><span class="grow">${d.editing ? 'Cancelar edición' : 'Descartar entrenamiento'}</span></button>
+      </div>
+      ${d.editing ? '' : '<p class="muted small" style="margin:0">Al descartar se pierde lo anotado en esta sesión.</p>'}`);
+  },
+  'session-add-ex-menu': () => { closeSheet(); actions['session-add-ex'](); },
   discard: () => {
     const d = S.getState().draft;
     if (!d.editing && !confirm('¿Descartar este entrenamiento? Se perderá lo anotado.')) return;
-    S.getState().draft = null; S.save(); ui.openNotes.clear(); render();
+    S.getState().draft = null; S.save(); ui.openNotes.clear(); closeSheet(); render(); window.scrollTo(0, 0);
   },
   'edit-session': (b) => {
     if (S.getState().draft) return toast('Termina o descarta el entrenamiento en curso primero');

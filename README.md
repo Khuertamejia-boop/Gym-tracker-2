@@ -17,7 +17,9 @@ La app tiene solo **dos pestañas**:
 - **Entrenar**: la vista de tu plan con una pestaña por día (✓ en los hechos esta semana), cada ejercicio con su miniatura de músculos, series, reps y tu último peso, y el botón **Empezar**. Debajo, tu rutina con **Editar**.
   - Por cada serie anotas kg y reps (y RIR/RPE fuera del modo simple).
   - Sugerencias de progresión, notas por ejercicio y aviso 🏆 de récord personal.
-  - Resumen al terminar la sesión; los entrenamientos terminados se pueden editar.
+  - Botón **Terminar entrenamiento** al final de la lista (descartar queda en el menú ⋯) y aviso al completar todas las series.
+  - Resumen a pantalla completa al terminar: tiempo, series, volumen, el cuerpo con los músculos trabajados, récords, progreso de la semana y una frase motivadora.
+  - Los entrenamientos terminados se pueden editar.
 - **Progreso**: entrenamientos, racha, constancia, tus ejercicios (peso y mejora), peso corporal y medidas, historial y estadísticas de volumen.
 
 Al tocar un ejercicio se abre su ficha: Acerca de (con la **guía muscular**: cuerpo realista de frente y de espalda con los músculos principales en rojo intenso y los secundarios en rojo suave), Historial, Gráficos y Récords. El cuerpo es de hombre o de mujer según el perfil (se cambia en tu perfil → Ajustes). El catálogo tiene más de 110 ejercicios con buscador, y puedes crear los tuyos.

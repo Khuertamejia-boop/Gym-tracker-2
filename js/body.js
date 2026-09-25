@@ -38,12 +38,28 @@ function render(el, { view, primary, secondary, width, crop }) {
   }
 }
 
+// Músculos de un entrenamiento completo: principales de cualquier ejercicio y el resto como secundarios.
+export function sessionMuscles(session) {
+  const primary = new Set();
+  const secondary = new Set();
+  for (const e of session.exercises) {
+    const [p, sec] = musclesFor(e.exId);
+    p.forEach((g) => primary.add(g));
+    sec.forEach((g) => secondary.add(g));
+  }
+  primary.forEach((g) => secondary.delete(g));
+  return [[...primary], [...secondary]];
+}
+
 // Monta el mapa en todos los elementos con data-muscle-map="<exId>" dentro de root.
 // data-view="front|back" (opcional) y data-thumb (miniatura con zoom a la zona trabajada).
 export function mountMuscleMaps(root = document) {
   root.querySelectorAll('[data-muscle-map]:not([data-mounted])').forEach((el) => {
     el.dataset.mounted = '1';
-    const [primary, secondary] = musclesFor(el.dataset.muscleMap);
+    // data-groups="principal,principal|secundario,secundario" pinta grupos concretos (p. ej. un entrenamiento entero).
+    const [primary, secondary] = el.dataset.groups !== undefined
+      ? el.dataset.groups.split('|').map((part) => (part || '').split(',').filter(Boolean)).concat([[]]).slice(0, 2)
+      : musclesFor(el.dataset.muscleMap);
     if (el.hasAttribute('data-thumb')) {
       const main = primary[0];
       const view = BACK_GROUPS.includes(main) && !primary.includes('chest') ? 'back' : 'front';
