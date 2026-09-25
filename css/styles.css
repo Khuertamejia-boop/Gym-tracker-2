@@ -656,3 +656,8 @@ body.in-session .toast.show { transform: translateX(-50%) translateY(0); }
   font-size: 1.1rem; display: grid; place-items: center; opacity: 0.8;
 }
 .note-btn.on { border-color: var(--accent); background: var(--accent-soft); opacity: 1; }
+
+/* Ajustes con sesión iniciada: acciones de datos discretas al final */
+.data-links { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; padding: 0 4px; }
+.data-links .link { font-size: 0.9rem; font-weight: 500; }
+.data-links .link.danger { color: var(--danger); }

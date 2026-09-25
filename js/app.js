@@ -1283,7 +1283,7 @@ function openMenu() {
     <div class="menu-list">
       ${menuRow('open-routine-menu', 'Mi rutina', routine ? esc(routine.name) : '')}
       ${menuRow('open-settings', 'Ajustes')}
-      ${menuRow('open-backup', 'Respaldo de datos')}
+      ${user ? '' : menuRow('open-backup', 'Respaldo de datos')}
     </div>
     ${user ? '<button class="btn block ghost danger" data-action="cloud-logout">Cerrar sesión</button>' : ''}`);
 }
@@ -1366,7 +1366,11 @@ function openSettings() {
       </button>
       ${simple ? '' : menuRow('open-choice', 'Esfuerzo por serie', choiceLabel('effort'), 'data-key="effort"')}
       ${menuRow('open-choice', 'Tema', choiceLabel('theme'), 'data-key="theme"')}
-    </div>`, null, 'open-menu');
+    </div>
+    ${Cloud.getUser() ? `<div class="data-links">
+      <button class="link" data-action="export">Descargar mis datos</button>
+      <button class="link danger" data-action="reset">Borrar todos los datos</button>
+    </div>` : ''}`, null, 'open-menu');
 }
 
 function openChoice(key) {
