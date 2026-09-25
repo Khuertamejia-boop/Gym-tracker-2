@@ -1337,7 +1337,7 @@ function showSummary(session) {
         ${stat(ICON_CHECK, S.doneSets(session), 'Series')}
         ${stat(ICON_BARS, `${Math.round(S.toUnit(volume, u)).toLocaleString('es')} ${u}`, 'Volumen')}
       </div>
-      ${pct > 0 ? `<div class="win-note">📈 +${pct}% de volumen frente a la última vez</div>` : ''}
+      ${pct > 0 && pct <= 200 ? `<div class="win-note">📈 +${pct}% de volumen frente a la última vez</div>` : ''}
       ${prs.length ? `<div class="win-note">🏆 ${prs.length === 1 ? '¡Nuevo récord!' : `¡${prs.length} récords nuevos!`}</div>` : ''}
       <div class="win-list-head">Ejercicios · ${session.exercises.length}</div>
       <div class="win-list">${exRows}</div>

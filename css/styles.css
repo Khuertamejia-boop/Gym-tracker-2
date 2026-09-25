@@ -694,15 +694,15 @@ button.plan-day:active { background: var(--surface-2); }
 .celebrate { padding-bottom: calc(env(safe-area-inset-bottom) + 96px); }
 .win-glow {
   position: fixed; left: 0; right: 0; top: 0; height: 55vh; pointer-events: none; z-index: 0;
-  background: radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--gold) 30%, transparent), transparent 70%);
+  background: radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, #22b14c 26%, transparent), transparent 70%);
 }
 .win-check {
   width: 92px; height: 92px; margin: 18px auto 14px; border-radius: 50%; display: grid; place-items: center;
-  background: color-mix(in srgb, var(--gold) 22%, transparent);
+  background: color-mix(in srgb, #22b14c 20%, transparent);
   animation: check-pop 0.45s cubic-bezier(.2,1.4,.4,1) both;
 }
-.win-check span { width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; background: #e0b04a; box-shadow: 0 0 32px color-mix(in srgb, #e0b04a 55%, transparent); }
-.win-check svg { width: 34px; height: 34px; fill: #1a1206; }
+.win-check span { width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; background: #22b14c; box-shadow: 0 0 32px color-mix(in srgb, #22b14c 55%, transparent); }
+.win-check svg { width: 34px; height: 34px; fill: #fff; }
 @keyframes check-pop { from { transform: scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
 .win-title { font-size: clamp(1.25rem, 6vw, 1.55rem); margin: 0 0 2px; white-space: nowrap; }
 .win-sub { color: var(--text-3); font-size: 0.92rem; }
