@@ -1,9 +1,9 @@
 // Service worker: permite usar la app sin conexión en el gym.
-// Archivos propios: primero la red (para recibir actualizaciones al momento)
-// y, si no hay conexión o tarda demasiado, la copia guardada.
+// Archivos propios: primero la copia guardada (abre al instante en el gym);
+// cada versión nueva cambia CACHE y se descarga completa al instalarse.
 // Librerías del CDN: primero la copia guardada (nunca cambian de versión).
 // Las peticiones a Supabase (datos y sesión) nunca se guardan en caché.
-const CACHE = 'gymtrack-v22';
+const CACHE = 'gymtrack-v23';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'manifest.webmanifest', 'icons/icon.svg',
   'js/app.js', 'js/store.js', 'js/charts.js', 'js/cloud.js', 'js/config.js',
@@ -48,15 +48,17 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
+  // Archivos de la app: primero la copia guardada, así abre al instante aunque no haya señal.
+  // Las versiones nuevas llegan al instalarse un service worker nuevo (cambia CACHE).
   e.respondWith(caches.open(CACHE).then(async (cache) => {
+    const hit = await cache.match(e.request, { ignoreSearch: true });
+    if (hit) return hit;
     try {
-      // no-cache: siempre pregunta al servidor si hay versión nueva (GitHub Pages permite guardar 10 min).
-      const res = await Promise.race([fetch(e.request, { cache: 'no-cache' }), timeout(4000)]);
+      const res = await Promise.race([fetch(e.request, { cache: 'no-cache' }), timeout(8000)]);
       if (res.ok) cache.put(e.request, res.clone());
       return res;
     } catch {
-      const hit = await cache.match(e.request, { ignoreSearch: true });
-      return hit || Response.error();
+      return Response.error();
     }
   }));
 });

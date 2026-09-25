@@ -97,6 +97,7 @@ function render() {
   $title.textContent = ui.editRoutineId ? 'Mi rutina' : TITLES[ui.tab];
   ({ plan: renderPlan, train: renderTrain, progress: renderProgress })[ui.tab]();
   mountMuscleMaps($view);
+  syncWakeLock();
 }
 
 // =====================================================================
@@ -303,7 +304,7 @@ function renderTrain() {
           <span class="grow"><span class="name">${esc(ex.name)}</span>
           <span class="meta">${series(Number(e.sets))}${S.unilateralFor(e.exId) ? ' por lado' : ''}${e.reps ? ` · ${esc(e.reps)} reps` : ''}${top && Number(top.kg) ? ` · ${wt(top.kg, S.unitFor(e.exId))}` : ''}</span></span></button>`;
       }).join('')}</div>`
-    : `<div class="card empty small">Este día no tiene ejercicios todavía. Toca <b>Editar</b> en Mi rutina para añadirlos.</div>`;
+    : `<div class="card empty small">Este día no tiene ejercicios todavía. Tócalo en la pestaña <b>Mi plan → Editar</b> para añadirlos.</div>`;
   if (selected.exercises.length) {
     html += `<div class="cta-bar"><button class="btn primary block cta" data-action="start" data-day="${selected.id}">Empezar ${esc(shortName(selected.name))}</button></div>`;
   }
@@ -366,7 +367,7 @@ function renderSession() {
       <button class="rail-item rail-add" data-action="session-add-ex" aria-label="Añadir ejercicio">+</button>
     </div>
     ${e ? exerciseStage(e, i, effort, d) : `<div class="empty">Este entrenamiento no tiene ejercicios.<br><br><button class="btn primary" data-action="session-add-ex">+ Añadir ejercicio</button></div>`}
-    ${e ? `<div class="session-cta">${cta}</div>` : ''}`;
+    ${e ? `<div class="session-cta">${restBarHTML(d)}${cta}</div>` : ''}`;
 
   const rail = document.getElementById('rail');
   const active = rail.querySelector('.active');
@@ -392,10 +393,96 @@ function renderSession() {
     const sec = Math.max(0, Math.floor((Date.now() - d.startedAt) / 1000));
     const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), ss = String(sec % 60).padStart(2, '0');
     el.textContent = h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
+    restTick(d);
   };
   tick();
   if (!d.editing) render.timer = setInterval(tick, 1000);
 }
+
+// ---------- Descanso entre series ----------
+
+const mmss = (sec) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+
+function restBarHTML(d) {
+  if (!d.rest || d.editing) return '';
+  const left = Math.max(0, Math.ceil((d.rest.end - Date.now()) / 1000));
+  const pct = Math.min(100, (left / d.rest.total) * 100);
+  return `<div class="rest-bar" id="rest-bar" role="timer" aria-label="Descanso">
+    <span class="rest-fill" id="rest-fill" style="width:${pct}%"></span>
+    <button class="rest-adj" data-action="rest-adj" data-s="-15" aria-label="Quitar 15 segundos">−15</button>
+    <span class="rest-time"><small>Descanso</small><b id="rest-left">${mmss(left)}</b></span>
+    <button class="rest-adj" data-action="rest-adj" data-s="15" aria-label="Añadir 15 segundos">+15</button>
+    <button class="rest-skip" data-action="rest-skip">Saltar</button>
+  </div>`;
+}
+
+function restTick(d) {
+  if (!d.rest) return;
+  const left = Math.max(0, Math.ceil((d.rest.end - Date.now()) / 1000));
+  const el = document.getElementById('rest-left');
+  if (el) el.textContent = mmss(left);
+  const fill = document.getElementById('rest-fill');
+  if (fill) fill.style.width = `${Math.min(100, (left / d.rest.total) * 100)}%`;
+  if (left > 0) return;
+  const late = Date.now() - d.rest.end > 5000; // la app estaba cerrada: sin alarma tardía
+  d.rest = null;
+  S.save();
+  document.getElementById('rest-bar')?.remove();
+  if (late) return;
+  beep();
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  toast('⏱ ¡Descanso terminado! A por la siguiente serie');
+}
+
+function startRest(e) {
+  const d = S.getState().draft;
+  if (!S.restEnabled() || d.editing || d.exercises.every(exDone)) return;
+  const total = S.restFor(e.exId, e.target);
+  d.rest = { end: Date.now() + total * 1000, total, exId: e.exId };
+  unlockAudio();
+}
+
+// Sonido corto al terminar el descanso (el audio se habilita al tocar una serie).
+let audioCtx = null;
+function unlockAudio() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch { audioCtx = null; }
+}
+function beep() {
+  if (!audioCtx) return;
+  try {
+    [0, 0.22, 0.44].forEach((t, k) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.frequency.value = k === 2 ? 1320 : 880;
+      g.gain.setValueAtTime(0.0001, audioCtx.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.35, audioCtx.currentTime + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + t + 0.18);
+      o.connect(g).connect(audioCtx.destination);
+      o.start(audioCtx.currentTime + t); o.stop(audioCtx.currentTime + t + 0.2);
+    });
+  } catch {}
+}
+
+// Pantalla encendida mientras entrenas (se suelta al terminar o salir).
+let wakeLock = null;
+async function syncWakeLock() {
+  const want = document.body.classList.contains('in-session') && document.visibilityState === 'visible';
+  try {
+    if (want && !wakeLock && 'wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } else if (!want && wakeLock) {
+      await wakeLock.release();
+      wakeLock = null;
+    }
+  } catch { wakeLock = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  syncWakeLock();
+  if (document.visibilityState === 'visible' && S.getState().draft?.rest) restTick(S.getState().draft);
+});
 
 function goToExercise(k) {
   S.getState().draft.current = k;
@@ -454,6 +541,7 @@ function exerciseStage(e, i, effort, d) {
     </div>
     <div class="stage-sub">${nextSet === -1 ? '✓ Ejercicio completado' : pos}${e.target ? ` · objetivo ${esc(e.target)} reps` : ''}</div>
     ${last ? `<div class="last-line"><span class="last-label">Última vez</span> ${lastSummary(last.sets, u)}</div>` : ''}
+    ${e.upFrom && e.sets.some((x) => !x.done) && Number(e.sets[0].kg) > e.upFrom ? `<div class="up-line">↑ +${wn(Number(e.sets[0].kg) - e.upFrom, u)} ${u} <span>· la última vez completaste todas las reps</span></div>` : ''}
     ${last?.note ? `<div class="last-line">📝 ${esc(last.note)}</div>` : ''}
     ${!last && !d.editing && S.isSimple() ? `<div class="hint">👋 Primera vez: elige un peso con el que puedas hacer ${esc(S.parseRange(e.target)?.hi || 10)} repeticiones con buena técnica, sin llegar al límite.</div>` : ''}
     <div class="toggles">
@@ -1163,7 +1251,7 @@ function renderOnboarding() {
       <h2 class="ob-q">${empty ? 'Arma tu rutina' : 'Revisa tu rutina'}</h2>
       <p class="muted" style="margin-top:0">${empty
         ? 'Añade los ejercicios de cada día. Abajo puedes cambiar qué día entrenas cada uno.'
-        : 'Estos son los ejercicios recomendados. Puedes cambiar ejercicios, series y días ahora o cuando quieras desde <b>Entrenar → Mi rutina</b>.'}</p>
+        : 'Estos son los ejercicios recomendados. Puedes cambiar ejercicios, series y días ahora o cuando quieras desde la pestaña <b>Mi plan</b>.'}</p>
       ${routineEditorHTML(r, { embedded: true })}
       <button class="btn primary block" data-action="ob-review-done" style="margin-top:16px">Continuar</button>`;
   } else if (ob.step === 'account') {
@@ -1426,6 +1514,10 @@ function openSettings() {
         <span class="grow">Modo simple<span class="muted small row-help">Oculta RIR/RPE y las estadísticas avanzadas</span></span>
         <span class="switch ${simple ? 'on' : ''}" aria-hidden="true"></span>
       </button>
+      <button class="menu-row" data-action="toggle-rest" role="switch" aria-checked="${S.restEnabled()}">
+        <span class="grow">Temporizador de descanso<span class="muted small row-help">Arranca solo al marcar una serie</span></span>
+        <span class="switch ${S.restEnabled() ? 'on' : ''}" aria-hidden="true"></span>
+      </button>
       ${simple ? '' : menuRow('open-choice', 'Esfuerzo por serie', choiceLabel('effort'), 'data-key="effort"')}
       ${menuRow('open-choice', 'Tema', choiceLabel('theme'), 'data-key="theme"')}
     </div>
@@ -1535,6 +1627,11 @@ const actions = {
     render();
     openSettings();
   },
+  'toggle-rest': () => {
+    S.getState().settings.restTimer = !S.restEnabled();
+    S.save();
+    openSettings();
+  },
   'toggle-simple': () => {
     S.setProfile({ simple: !S.isSimple() });
     render();
@@ -1587,6 +1684,9 @@ const actions = {
     } else if (!markSet(i, j)) {
       document.querySelector(`[data-set="reps"][data-i="${i}"][data-j="${j}"]`)?.focus();
       return toast('Anota las repeticiones');
+    } else if (!(s.side === 'L' && d.exercises[i].sets[j + 1]?.side === 'R')) {
+      // En ejercicios por lado, el descanso empieza tras el lado derecho.
+      startRest(d.exercises[i]);
     }
     afterMarking(Boolean(s.pr));
   },
@@ -1606,6 +1706,24 @@ const actions = {
     afterMarking(anyPr);
   },
   'go-ex': (b) => goToExercise(Number(b.dataset.i)),
+  'rest-adj': (b) => {
+    const d = S.getState().draft;
+    if (!d?.rest) return;
+    const delta = Number(b.dataset.s);
+    const left = Math.max(0, Math.ceil((d.rest.end - Date.now()) / 1000));
+    if (left + delta <= 0) return actions['rest-skip']();
+    d.rest.end += delta * 1000;
+    d.rest.total = Math.max(15, d.rest.total + delta);
+    S.setRestFor(d.rest.exId, d.rest.total); // se recuerda para la próxima vez
+    restTick(d);
+  },
+  'rest-skip': () => {
+    const d = S.getState().draft;
+    if (!d) return;
+    d.rest = null;
+    S.save();
+    document.getElementById('rest-bar')?.remove();
+  },
   // Menú de una serie (modo avanzado): convertir entre efectiva y aproximación, o eliminar.
   'set-menu': (b) => {
     const { kind, i, j } = b.dataset;

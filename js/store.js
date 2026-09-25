@@ -346,6 +346,24 @@ export function startOfWeek(d) {
   return x;
 }
 
+// ---------- Descanso entre series ----------
+
+export const restEnabled = () => state.settings.restTimer !== false;
+
+// Segundos de descanso: los últimos que usaste en ese ejercicio o, si no,
+// según las repeticiones objetivo (series pesadas, más descanso).
+export function restFor(exId, target) {
+  const saved = state.settings.rest?.[exId];
+  if (saved) return saved;
+  const hi = parseRange(target)?.hi;
+  return !hi ? 90 : hi <= 6 ? 150 : hi <= 10 ? 120 : 90;
+}
+
+export function setRestFor(exId, seconds) {
+  state.settings.rest = { ...(state.settings.rest || {}), [exId]: seconds };
+  save();
+}
+
 // ---------- Plan de la semana ----------
 
 const mondayISO = (d = new Date()) => todayISO(startOfWeek(d));
@@ -566,8 +584,11 @@ export function draftExercise(exId, sets = 3, reps = '') {
     }
   }
   const prevWarm = lastWarmup(exId);
+  const lastTop = last ? Math.max(...last.sets.map((x) => Number(x.kg) || 0)) : 0;
   return {
     exId, target: reps, note: '', sets: rows,
+    // Peso anterior cuando hoy toca subir: la sesión lo muestra como "↑ +2,5 kg".
+    ...(hint && hint.type === 'up' && lastTop ? { upFrom: lastTop } : {}),
     ...(prevWarm ? { warmupOn: true, warmup: prevWarm.map((w) => ({ kg: w.kg, reps: w.reps, done: false })) } : {}),
   };
 }
@@ -589,8 +610,9 @@ export function finishDraft() {
   if (!d) return null;
   const editing = d.editing;
   delete d.editing;
+  delete d.rest;
   d.exercises = d.exercises
-    .map(({ warmupOn, warmup, ...e }) => {
+    .map(({ warmupOn, warmup, upFrom, ...e }) => {
       const warm = warmupOn ? (warmup || []).filter((w) => w.done).map(({ done, ...w }) => w) : [];
       return {
         ...e,
