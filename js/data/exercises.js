@@ -123,10 +123,10 @@ const RAW = [
   ['peso-muerto-sumo', 'Peso muerto sumo', 'Glúteos', 'Barra'],
 
   // Pantorrillas
-  ['elevacion-talones-pie', 'Elevación de talones de pie', 'Pantorrillas', 'Máquina', 'gemelos'],
-  ['elevacion-talones-sentado', 'Elevación de talones sentado', 'Pantorrillas', 'Máquina', 'gemelos sentado'],
-  ['elevacion-talones-prensa', 'Elevación de talones en prensa', 'Pantorrillas', 'Máquina', 'gemelos'],
-  ['elevacion-talones-smith', 'Elevación de talones en Smith', 'Pantorrillas', 'Smith', 'gemelos'],
+  ['elevacion-talones-pie', 'Elevación de pantorrillas en máquina', 'Pantorrillas', 'Máquina', 'gemelos talones de pie'],
+  ['elevacion-talones-sentado', 'Elevación de pantorrillas sentado', 'Pantorrillas', 'Máquina', 'gemelos talones maquina'],
+  ['elevacion-talones-prensa', 'Elevación de pantorrillas en prensa', 'Pantorrillas', 'Máquina', 'gemelos talones'],
+  ['elevacion-talones-smith', 'Elevación de pantorrillas en Smith', 'Pantorrillas', 'Smith', 'gemelos talones'],
 
   // Abdomen
   ['crunch', 'Crunch abdominal', 'Abdomen', 'Peso corporal', 'abdominales'],
