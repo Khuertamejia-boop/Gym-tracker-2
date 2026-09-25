@@ -346,6 +346,29 @@ export function startOfWeek(d) {
   return x;
 }
 
+// ---------- Plan de la semana ----------
+
+const mondayISO = (d = new Date()) => todayISO(startOfWeek(d));
+
+// Semana en curso: el plan fijo de la rutina o, si esta semana se movió algún día, esa versión.
+export function weekPlan(routine, d = new Date()) {
+  const o = routine.weekOverride;
+  return o && o.weekStart === mondayISO(d) ? o.week : routine.week;
+}
+
+export const weekChanged = (routine) => weekPlan(routine) !== routine.week;
+
+// Cambia solo esta semana: la próxima vuelve el plan de siempre.
+export function setWeekThisWeek(routine, week) {
+  routine.weekOverride = { weekStart: mondayISO(), week };
+  save();
+}
+
+export function resetWeek(routine) {
+  delete routine.weekOverride;
+  save();
+}
+
 export const DAY_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 export const DAY_SHORT = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 export const MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];

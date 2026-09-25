@@ -1,9 +1,10 @@
 import * as S from './store.js';
 import { MUSCLES, FAMILIES } from './data/exercises.js';
+import { MUSCLE_NAMES as MUSCLE_NAME } from './data/muscles.js';
 import { TEMPLATES } from './data/templates.js';
 import { barChart, lineChart, destroyCharts } from './charts.js';
 import * as Cloud from './cloud.js';
-import { mountMuscleMaps, musclesFor, muscleNames, sessionMuscles } from './body.js';
+import { mountMuscleMaps, musclesFor, muscleNames } from './body.js';
 
 const $view = document.getElementById('view');
 const $title = document.getElementById('view-title');
@@ -11,7 +12,7 @@ const $sheet = document.getElementById('sheet');
 const $toast = document.getElementById('toast');
 
 const ui = {
-  tab: 'train', // 'train' | 'progress'
+  tab: 'train', // 'plan' | 'train' | 'progress'
   ob: null, // configuración inicial en curso: { step, level, days, fromSettings }
   editRoutineId: null,
   period: 'week', // 'week' | 'month'
@@ -23,7 +24,7 @@ const ui = {
   exMetric: 'e1rm',
 };
 
-const TITLES = { train: 'Entrenar', progress: 'Progreso' };
+const TITLES = { plan: 'Mi plan', train: 'Entrenar', progress: 'Progreso' };
 
 // ---------- Utilidades ----------
 
@@ -46,6 +47,7 @@ const ICON_DOWN = '<svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5H7Z"/></svg>';
 const ICON_MORE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm6 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/></svg>';
 const ICON_CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 10.4 3.3 3.3-1.4 1.4-3.9-3.9V6h2v6.4Z"/></svg>';
 const ICON_BACK = '<svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12l4.6-4.6Z"/></svg>';
+const ICON_BARS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4v7H4v-7Zm6-5h4v12h-4V8Zm6-4h4v16h-4V4Z"/></svg>';
 const ICON_PERSON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.4 0-8 2.2-8 5v2h16v-2c0-2.8-3.6-5-8-5Z"/></svg>';
 
 function toast(msg) {
@@ -92,8 +94,160 @@ function render() {
   document.body.classList.toggle('in-session', !ui.ob && ui.tab === 'train' && Boolean(S.getState().draft));
   if (ui.ob) { renderOnboarding(); mountMuscleMaps($view); return; }
   $title.textContent = ui.editRoutineId ? 'Mi rutina' : TITLES[ui.tab];
-  ({ train: renderTrain, progress: renderProgress })[ui.tab]();
+  ({ plan: renderPlan, train: renderTrain, progress: renderProgress })[ui.tab]();
   mountMuscleMaps($view);
+}
+
+// =====================================================================
+// MI PLAN
+// =====================================================================
+
+// Músculos en los que se mide el volumen semanal (los pequeños se omiten para no saturar).
+const VOLUME_GROUPS = ['chest', 'lats', 'upper_back', 'shoulders', 'biceps', 'triceps', 'quads', 'hamstrings', 'glutes', 'calves', 'abs'];
+const VOLUME_MIN = 10;
+const VOLUME_MAX = 20;
+
+// Series por músculo: las del plan de la semana y las ya hechas. Un músculo
+// secundario cuenta como media serie; en ejercicios por lado, cada par es una serie.
+function weeklyVolume(routine, week) {
+  const planned = {}, done = {};
+  const add = (bag, exId, n) => {
+    const [p, sec] = musclesFor(exId);
+    p.forEach((g) => { bag[g] = (bag[g] || 0) + n; });
+    sec.filter((g) => !p.includes(g)).forEach((g) => { bag[g] = (bag[g] || 0) + n / 2; });
+  };
+  week.forEach((id) => {
+    const day = routine.days.find((d) => d.id === id);
+    day?.exercises.forEach((e) => add(planned, e.exId, Number(e.sets) || 0));
+  });
+  weekSessions().forEach((s) => s.exercises.forEach((e) => add(done, e.exId, e.sets.filter((x) => x.side !== 'R').length)));
+  return { planned, done };
+}
+
+const dayMinutes = (day) => Math.max(10, Math.round((day.exercises.reduce((a, e) => a + Number(e.sets || 0), 0) * 2.5) / 5) * 5);
+
+function renderPlan() {
+  const editing = ui.editRoutineId && S.routineById(ui.editRoutineId);
+  if (editing) {
+    $view.innerHTML = `<button class="btn ghost" data-action="close-editor" style="padding-left:0">‹ Volver</button>
+      ${routineEditorHTML(editing)}`;
+    return;
+  }
+  const routine = S.activeRoutine();
+  if (!routine) {
+    $view.innerHTML = `<div class="card empty"><p>Aún no tienes un plan de entrenamiento.</p>
+      <button class="btn primary" data-action="change-routine">Elegir rutina</button></div>`;
+    return;
+  }
+
+  const week = S.weekPlan(routine);
+  const changed = S.weekChanged(routine);
+  const today = S.weekdayIndex();
+  const monday = S.startOfWeek(new Date());
+  const sessions = weekSessions();
+  const plannedDays = week.filter(Boolean).length;
+  const trained = new Set(sessions.map((x) => x.date)).size;
+
+  const rows = S.DAY_NAMES.map((name, i) => {
+    const date = new Date(monday); date.setDate(monday.getDate() + i);
+    const iso = S.todayISO(date);
+    const day = routine.days.find((d) => d.id === week[i]);
+    const doneHere = sessions.filter((x) => x.date === iso);
+    const past = i < today;
+    const moved = changed && week[i] !== routine.week[i];
+    const editable = !past && !doneHere.length;
+    const title = doneHere.length ? shortName(doneHere[0].dayName) : day ? shortName(day.name) : 'Descanso';
+    const meta = doneHere.length ? 'Hecho'
+      : day ? `${day.exercises.length} ejercicios · ~${dayMinutes(day)} min`
+      : '';
+    const badge = doneHere.length ? `<span class="pd-badge done" aria-label="Hecho">${ICON_CHECK}</span>`
+      : i === today ? '<span class="pd-badge today">Hoy</span>'
+      : past && day ? '<span class="pd-badge missed">No hecho</span>'
+      : '';
+    return `<${editable ? `button class="plan-day" data-action="plan-row" data-wd="${i}"` : 'div class="plan-day"'} ${!day && !doneHere.length ? 'data-rest' : ''} ${past ? 'data-past' : ''}>
+      <span class="pd-date"><small>${name.slice(0, 3)}</small><b>${date.getDate()}</b></span>
+      <span class="grow"><span class="pd-name">${esc(title)}${moved ? ' <span class="pd-moved">cambiado</span>' : ''}</span>${meta ? `<span class="pd-meta">${meta}</span>` : ''}</span>
+      ${badge}${editable ? '<span class="chev" aria-hidden="true">›</span>' : ''}
+    </${editable ? 'button' : 'div'}>`;
+  }).join('');
+
+  const { planned, done } = weeklyVolume(routine, week);
+  const groups = VOLUME_GROUPS.filter((g) => planned[g] || done[g]).sort((a, b) => (planned[b] || 0) - (planned[a] || 0));
+  const scale = Math.max(24, ...groups.map((g) => Math.max(planned[g] || 0, done[g] || 0)));
+  const pctOf = (v) => `${Math.min(100, (v / scale) * 100).toFixed(1)}%`;
+  const fmtSets = (v) => Math.round(v);
+  const volumeRows = groups.map((g) => {
+    const p = planned[g] || 0, d = done[g] || 0;
+    const zone = p < VOLUME_MIN ? '<span class="vz low">bajo</span>' : p > VOLUME_MAX ? '<span class="vz high">alto</span>' : '';
+    return `<div class="vol-row">
+      <span class="vol-name">${g === 'upper_back' ? 'Espalda alta' : MUSCLE_NAME[g]}${zone}</span>
+      <span class="vol-bar" aria-hidden="true">
+        <span class="vol-band" style="left:${pctOf(VOLUME_MIN)};width:calc(${pctOf(VOLUME_MAX)} - ${pctOf(VOLUME_MIN)})"></span>
+        <span class="vol-plan" style="width:${pctOf(p)}"></span>
+        <span class="vol-done" style="width:${pctOf(d)}"></span>
+      </span>
+      <span class="vol-num"><b>${fmtSets(d)}</b>/${fmtSets(p)}</span>
+    </div>`;
+  }).join('');
+
+  $view.innerHTML = `
+    <div class="card plan-card">
+      <div class="row between">
+        <div style="min-width:0"><div class="muted small">Tu rutina</div><h3 class="ellipsis" style="margin:0">${esc(routine.name)}</h3></div>
+        <button class="btn sm" data-action="edit-routine" data-id="${routine.id}">Editar</button>
+      </div>
+      <div class="plan-progress">
+        <span class="dots">${Array.from({ length: Math.max(plannedDays, trained) }, (_, i) => `<i class="${i < trained ? 'on' : ''}"></i>`).join('')}</span>
+        <span class="muted small"><b>${trained} de ${Math.max(plannedDays, trained)}</b> entrenamientos esta semana</span>
+      </div>
+    </div>
+
+    <div class="plan-head"><b>Esta semana</b>${changed ? '<button class="link small" data-action="plan-reset">Volver al plan original</button>' : ''}</div>
+    <div class="plan-week">${rows}</div>
+    <p class="muted small plan-hint">¿No puedes entrenar algún día? Tócalo para moverlo. El cambio es solo para esta semana.</p>
+
+    ${groups.length ? `<div class="plan-head"><b>Volumen semanal</b><span class="muted small">series hechas / plan</span></div>
+    <div class="card vol-card">
+      ${volumeRows}
+      <div class="vol-legend muted small"><span class="lg-band"></span> Zona para hipertrofia: ${VOLUME_MIN}–${VOLUME_MAX} series por músculo. Los músculos secundarios cuentan como media serie.</div>
+    </div>` : ''}
+    <button class="btn block ghost" data-action="change-routine">Cambiar de rutina</button>`;
+}
+
+// Hoja para mover un día de esta semana (o entrenar en un día de descanso).
+function openPlanDay(wd) {
+  const routine = S.activeRoutine();
+  const week = [...S.weekPlan(routine)];
+  const today = S.weekdayIndex();
+  const monday = S.startOfWeek(new Date());
+  const doneDates = new Set(weekSessions().map((x) => x.date));
+  const free = (j) => {
+    const date = new Date(monday); date.setDate(monday.getDate() + j);
+    return j >= today && !doneDates.has(S.todayISO(date));
+  };
+  const dayOf = (id) => routine.days.find((d) => d.id === id);
+  const day = dayOf(week[wd]);
+  const name = S.DAY_NAMES[wd];
+
+  if (day) {
+    const targets = S.DAY_NAMES.map((n, j) => [n, j]).filter(([, j]) => j !== wd && free(j));
+    openSheet(`Mover ${shortName(day.name)}`, `
+      <p class="muted small" style="margin:0 0 8px">Toca el día en que lo harás esta semana.</p>
+      <div class="menu-list">${targets.map(([n, j]) => {
+        const other = dayOf(week[j]);
+        return `<button class="menu-row" data-action="plan-move" data-from="${wd}" data-to="${j}"><span class="grow">${n}${j === today ? ' (hoy)' : ''}</span>
+          <span class="muted small">${other ? `intercambiar con ${esc(shortName(other.name))}` : 'descanso'}</span></button>`;
+      }).join('') || '<div class="menu-row muted">No quedan días libres esta semana.</div>'}</div>
+      <button class="btn block ghost danger" data-action="plan-skip" data-wd="${wd}">Saltar esta semana</button>`);
+    return;
+  }
+  openSheet(name, `
+    <p class="muted small" style="margin:0 0 8px">Hoy toca descanso. ¿Quieres entrenar este día?</p>
+    <div class="menu-list">${orderedDays(routine).map((d) => {
+      const from = week.findIndex((id, j) => id === d.id && j !== wd && free(j));
+      return `<button class="menu-row" data-action="plan-set" data-wd="${wd}" data-id="${d.id}" data-from="${from}"><span class="grow">${esc(shortName(d.name))}</span>
+        <span class="muted small">${from >= 0 ? `se mueve desde el ${S.DAY_NAMES[from].toLowerCase()}` : 'extra'}</span></button>`;
+    }).join('')}</div>`);
 }
 
 // =====================================================================
@@ -103,16 +257,11 @@ function render() {
 function renderTrain() {
   const st = S.getState();
   if (st.draft) return renderSession();
-  const editing = ui.editRoutineId && S.routineById(ui.editRoutineId);
-  if (editing) {
-    $view.innerHTML = `<button class="btn ghost" data-action="close-editor" style="padding-left:0">‹ Volver</button>
-      ${routineEditorHTML(editing)}`;
-    return;
-  }
 
   const routine = S.activeRoutine();
   const wd = S.weekdayIndex();
-  const todayDay = routine ? routine.days.find((d) => d.id === routine.week[wd]) : null;
+  const week = routine ? S.weekPlan(routine) : [];
+  const todayDay = routine ? routine.days.find((d) => d.id === week[wd]) : null;
 
   let html = '';
   if (st.profile && !st.profile.gender) {
@@ -132,7 +281,7 @@ function renderTrain() {
   const ordered = orderedDays(routine);
   let selected = ordered.find((d) => d.id === ui.planDay);
   if (!selected) {
-    for (let k = 0; k < 7 && !selected; k++) selected = routine.days.find((d) => d.id === routine.week[(wd + k) % 7]);
+    for (let k = 0; k < 7 && !selected; k++) selected = routine.days.find((d) => d.id === week[(wd + k) % 7]);
     selected = selected || ordered[0];
   }
   const doneThisWeek = new Set(weekSessions().map((x) => x.dayName));
@@ -157,13 +306,7 @@ function renderTrain() {
   if (selected.exercises.length) {
     html += `<div class="cta-bar"><button class="btn primary block cta" data-action="start" data-day="${selected.id}">Empezar ${esc(shortName(selected.name))}</button></div>`;
   }
-  html += `<div class="section-title">Mi rutina</div>
-    <div class="card">
-      <div class="row between" style="margin-bottom:10px"><h3 style="margin:0">${esc(routine.name)}</h3>
-        <button class="btn sm" data-action="edit-routine" data-id="${routine.id}">Editar</button></div>
-      ${weekStrip(routine, true)}
-    </div>
-    <button class="btn block" data-action="start-free">+ Entrenamiento libre</button>`;
+  html += `<button class="btn block" data-action="start-free" style="margin-top:16px">+ Entrenamiento libre</button>`;
   $view.innerHTML = html;
 }
 
@@ -171,7 +314,7 @@ function renderTrain() {
 function orderedDays(routine) {
   const seen = new Set();
   const out = [];
-  routine.week.forEach((id) => { if (id && !seen.has(id)) { seen.add(id); out.push(routine.days.find((d) => d.id === id)); } });
+  S.weekPlan(routine).forEach((id) => { if (id && !seen.has(id)) { seen.add(id); out.push(routine.days.find((d) => d.id === id)); } });
   routine.days.forEach((d) => { if (!seen.has(d.id)) out.push(d); });
   return out.filter(Boolean);
 }
@@ -183,28 +326,6 @@ function weekSessions() {
 
 // Nombre corto para la tira de la semana: "Torso A (Pecho / Espalda)" → "Torso A".
 const shortName = (name) => name.replace(/\s*\(.*\)\s*/g, ' ').trim();
-
-// Código de 2-4 letras para la tira de la semana: "Full Body A" → "FBA", "Torso A" → "TA", "Push" → "Push".
-function dayCode(name) {
-  const words = shortName(name).split(/\s+/).filter((w) => w && !['y', 'de', 'con', '/', '·'].includes(w.toLowerCase()));
-  if (words.length === 1) return words[0].slice(0, 4);
-  return words.map((w) => (w.length <= 2 || /^\d+$/.test(w) ? w.toUpperCase() : w[0].toUpperCase())).join('').slice(0, 4);
-}
-
-function weekStrip(routine, withDone) {
-  const st = S.getState();
-  const monday = S.startOfWeek(new Date());
-  const today = S.weekdayIndex();
-  return `<div class="week">${S.DAY_SHORT.map((short, i) => {
-    const date = new Date(monday); date.setDate(monday.getDate() + i);
-    const iso = S.todayISO(date);
-    const day = routine.days.find((d) => d.id === routine.week[i]);
-    const done = withDone && st.sessions.some((s) => s.date === iso);
-    return `<div class="week-day ${i === today && withDone ? 'today' : ''} ${done ? 'done' : ''} ${day ? '' : 'rest'}" title="${S.DAY_NAMES[i]}: ${day ? esc(day.name) : 'descanso'}">
-      <b>${short}</b><span class="dot"></span><span>${day ? esc(dayCode(day.name)) : '—'}</span></div>`;
-  }).join('')}</div>
-  <div class="week-legend muted small">${routine.days.filter((d) => routine.week.includes(d.id)).map((d) => `<span><b>${esc(dayCode(d.name))}</b> ${esc(shortName(d.name))}</span>`).join('')}</div>`;
-}
 
 // Sesión en modo enfoque: un ejercicio por pantalla, carrusel arriba y botón inferior
 // que guía el siguiente paso (marcar series → siguiente ejercicio → terminar).
@@ -1170,7 +1291,6 @@ const PHRASES = [
 function showSummary(session) {
   const mins = Math.max(1, Math.round((session.finishedAt - session.startedAt) / 60000));
   const volume = S.sessionVolume(session);
-  const [primary, secondary] = sessionMuscles(session);
   const prs = [];
   for (const e of session.exercises) for (const x of e.sets) if (x.pr) prs.push({ e, x });
 
@@ -1181,42 +1301,52 @@ function showSummary(session) {
 
   // Semana: días distintos entrenados frente a los días previstos en la rutina.
   const routine = S.activeRoutine();
-  const planned = routine ? routine.week.filter(Boolean).length : 0;
+  const planned = routine ? S.weekPlan(routine).filter(Boolean).length : 0;
   const trained = new Set(weekSessions().map((x) => x.date)).size;
   const goal = Math.max(planned, trained);
 
-  const stat = (icon, value, label) => `<div class="win-stat"><span class="win-icon" aria-hidden="true">${icon}</span><b>${value}</b><span>${label}</span></div>`;
+  const stat = (icon, value, label) => `<div class="win-stat">${icon}<b>${value}</b><span>${label}</span></div>`;
+  const u = S.defaultUnit();
+  const exRows = session.exercises.map((e) => {
+    const perSide = e.sets.some((x) => x.side);
+    const sets = e.sets.filter((x) => x.side !== 'R');
+    const reps = e.sets.map((x) => Number(x.reps)).filter(Boolean);
+    const lo = Math.min(...reps), hi = Math.max(...reps);
+    const top = Math.max(...e.sets.map((x) => Number(x.kg) || 0));
+    const meta = [
+      `${series(sets.length)}${perSide ? ' por lado' : ''}`,
+      reps.length ? `${lo === hi ? lo : `${lo}–${hi}`} reps` : '',
+      top ? wt(top, S.unitFor(e.exId)) : '',
+    ].filter(Boolean).join(' · ');
+    return `<div class="win-ex"><span class="thumb" data-muscle-map="${e.exId}" data-thumb></span>
+      <span class="grow"><span class="name">${esc(S.exById(e.exId).name)}${e.sets.some((x) => x.pr) ? ' <span class="win-pr" title="Récord">🏆</span>' : ''}</span><span class="meta">${meta}</span></span></div>`;
+  }).join('');
   const overlay = document.createElement('div');
   overlay.className = 'celebrate';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-label', 'Resumen del entrenamiento');
   overlay.innerHTML = `
-    <div class="confetti" aria-hidden="true">${Array.from({ length: 36 }, (_, i) => `<i style="--x:${(i * 37) % 100}%;--d:${(i % 7) * 0.12}s;--r:${(i * 53) % 360}deg;--c:${i % 4}"></i>`).join('')}</div>
+    <div class="win-glow" aria-hidden="true"></div>
     <div class="win">
-      <div class="win-title">🎉 ¡Entrenamiento completado!</div>
-      <div class="muted">${esc(shortName(session.dayName))} · ${S.formatDate(session.date)}</div>
+      <div class="win-check" aria-hidden="true"><span>${ICON_CHECK}</span></div>
+      <h2 class="win-title">Entrenamiento completado</h2>
+      <div class="win-sub">${esc(shortName(session.dayName))} · ${S.formatDate(session.date)}</div>
       <div class="win-stats">
-        ${stat('⏱', mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60}` : mins, mins >= 60 ? 'tiempo' : 'minutos')}
-        ${stat('✓', S.doneSets(session), S.doneSets(session) === 1 ? 'serie' : 'series')}
-        ${stat('🏋', Math.round(S.toUnit(volume, S.defaultUnit())).toLocaleString('es'), `${S.defaultUnit()} levantados`)}
+        ${stat(ICON_CLOCK, mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : `${mins} min`, 'Tiempo')}
+        ${stat(ICON_CHECK, S.doneSets(session), 'Series')}
+        ${stat(ICON_BARS, `${Math.round(S.toUnit(volume, u)).toLocaleString('es')} ${u}`, 'Volumen')}
       </div>
-      ${pct > 0 ? `<div class="win-note">📈 +${pct}% más volumen que la última vez</div>` : ''}
-      <div class="win-body">
-        <div class="win-bodies">
-          <div data-muscle-map="" data-groups="${primary.join(',')}|${secondary.join(',')}" data-view="front"></div>
-          <div data-muscle-map="" data-groups="${primary.join(',')}|${secondary.join(',')}" data-view="back"></div>
-        </div>
-        <div class="win-worked">Hoy trabajaste: <b>${muscleNames(primary).join(' · ')}</b></div>
-      </div>
-      ${prs.length ? `<div class="win-prs"><b>🏆 ${prs.length === 1 ? '¡Nuevo récord!' : `¡${prs.length} récords nuevos!`}</b>
-        ${prs.slice(0, 3).map(({ e, x }) => `<div>${esc(S.exById(e.exId).name)}: ${wt(x.kg, S.unitFor(e.exId))} × ${x.reps}</div>`).join('')}</div>` : ''}
-      ${goal ? `<div class="win-week"><span>🔥 Esta semana</span>
+      ${pct > 0 ? `<div class="win-note">📈 +${pct}% de volumen frente a la última vez</div>` : ''}
+      ${prs.length ? `<div class="win-note">🏆 ${prs.length === 1 ? '¡Nuevo récord!' : `¡${prs.length} récords nuevos!`}</div>` : ''}
+      <div class="win-list-head">Ejercicios · ${session.exercises.length}</div>
+      <div class="win-list">${exRows}</div>
+      ${goal ? `<div class="win-week"><span class="muted">Esta semana</span>
         <span class="dots">${Array.from({ length: goal }, (_, i) => `<i class="${i < trained ? 'on' : ''}"></i>`).join('')}</span>
         <b>${trained} de ${goal}</b></div>` : ''}
-      <p class="win-phrase">“${PHRASES[Math.floor(Math.random() * PHRASES.length)]}”</p>
-      <button class="btn primary block win-done">Listo</button>
-    </div>`;
+      <p class="win-phrase">${PHRASES[Math.floor(Math.random() * PHRASES.length)]}</p>
+    </div>
+    <div class="win-foot"><button class="btn primary block win-done">Listo</button></div>`;
   document.body.appendChild(overlay);
   document.body.classList.add('no-scroll');
   mountMuscleMaps(overlay);
@@ -1262,7 +1392,6 @@ function updateAvatar() {
 
 function openMenu() {
   const user = Cloud.getUser();
-  const routine = S.activeRoutine();
   let top = '';
   if (user) {
     const { status } = Cloud.getInfo();
@@ -1281,7 +1410,6 @@ function openMenu() {
   }
   openSheet(user ? 'Tu cuenta' : 'Menú', `${top}
     <div class="menu-list">
-      ${menuRow('open-routine-menu', 'Mi rutina', routine ? esc(routine.name) : '')}
       ${menuRow('open-settings', 'Ajustes')}
       ${user ? '' : menuRow('open-backup', 'Respaldo de datos')}
     </div>
@@ -1307,16 +1435,6 @@ function openLogin(mode = 'login') {
     toast('Sesión iniciada · sincronizando tus datos');
     render();
   }), 'open-menu');
-}
-
-function openRoutineMenu() {
-  const routine = S.activeRoutine();
-  openSheet('Mi rutina', `
-    ${routine ? `<p class="muted small" style="margin:0 0 8px">Rutina activa: <b>${esc(routine.name)}</b></p>` : ''}
-    <div class="menu-list">
-      ${routine ? menuRow('menu-edit-routine', 'Editar ejercicios y días') : ''}
-      ${menuRow('change-routine', 'Cambiar de rutina')}
-    </div>`, null, 'open-menu');
 }
 
 const themePref = () => { try { return localStorage.getItem('gymtrack.theme') || 'auto'; } catch { return 'auto'; } };
@@ -1466,7 +1584,6 @@ const actions = {
   'open-settings': openSettings,
   'open-login': () => openLogin('login'),
   'open-signup': () => openLogin('signup'),
-  'open-routine-menu': openRoutineMenu,
   'open-backup': openBackup,
   'open-choice': (b) => openChoice(b.dataset.key),
   choose: (b) => {
@@ -1479,14 +1596,35 @@ const actions = {
     render();
     openSettings();
   },
-  'menu-edit-routine': () => {
-    closeSheet();
-    ui.tab = 'train';
-    document.querySelectorAll('.tabbar button').forEach((x) => x.classList.toggle('active', x.dataset.tab === 'train'));
-    ui.editRoutineId = S.getState().activeRoutineId;
-    render(); window.scrollTo(0, 0);
-  },
   'close-sheet': closeSheet,
+
+  // Mi plan
+  'plan-row': (b) => openPlanDay(Number(b.dataset.wd)),
+  'plan-move': (b) => {
+    const r = S.activeRoutine();
+    const week = [...S.weekPlan(r)];
+    const from = Number(b.dataset.from), to = Number(b.dataset.to);
+    [week[from], week[to]] = [week[to], week[from]];
+    S.setWeekThisWeek(r, week);
+    closeSheet(); toast(`Movido al ${S.DAY_NAMES[to].toLowerCase()}`); render();
+  },
+  'plan-skip': (b) => {
+    const r = S.activeRoutine();
+    const week = [...S.weekPlan(r)];
+    week[Number(b.dataset.wd)] = null;
+    S.setWeekThisWeek(r, week);
+    closeSheet(); toast('Día saltado esta semana'); render();
+  },
+  'plan-set': (b) => {
+    const r = S.activeRoutine();
+    const week = [...S.weekPlan(r)];
+    const wd = Number(b.dataset.wd), from = Number(b.dataset.from);
+    if (from >= 0) week[from] = null;
+    week[wd] = b.dataset.id;
+    S.setWeekThisWeek(r, week);
+    closeSheet(); render();
+  },
+  'plan-reset': () => { S.resetWeek(S.activeRoutine()); toast('Plan original restaurado'); render(); },
 
   // Entrenar
   start: (b) => {
@@ -1968,6 +2106,7 @@ document.addEventListener('change', (e) => {
   if (t.dataset.rweek !== undefined) {
     const r = S.routineById(ui.editRoutineId);
     r.week[t.dataset.rweek] = t.value || null;
+    delete r.weekOverride;
     S.save();
   }
 });

@@ -13,8 +13,9 @@ Está pensada para usarse desde el celular en el gym.
 
 Arriba a la derecha está tu **perfil**: iniciar sesión o ver tu cuenta, *Mi rutina*, *Ajustes* (cuerpo de la guía, unidad de peso, modo simple, esfuerzo y tema) y *Respaldo de datos*.
 
-La app tiene solo **dos pestañas**:
-- **Entrenar**: la vista de tu plan con una pestaña por día (✓ en los hechos esta semana), cada ejercicio con su miniatura de músculos, series, reps y tu último peso, y el botón **Empezar**. Debajo, tu rutina con **Editar**.
+La app tiene **tres pestañas**:
+- **Mi plan**: tu rutina y los 7 días de la semana (hecho, hoy, descanso). Toca un día para **moverlo solo esta semana** (se intercambia con otro día o se salta) y vuelve al plan original cuando quieras. Incluye el **volumen semanal** por músculo (series hechas frente a las del plan, con la zona de 10–20 series recomendada para hipertrofia; los secundarios cuentan como media serie) y los botones **Editar** y **Cambiar de rutina**.
+- **Entrenar**: la vista de tu plan con una pestaña por día (✓ en los hechos esta semana), cada ejercicio con su miniatura de músculos, series, reps y tu último peso, y el botón **Empezar**.
   - Por cada serie anotas kg y reps (y RIR/RPE fuera del modo simple).
   - Sugerencias de progresión, notas por ejercicio y aviso 🏆 de récord personal.
   - **Modo enfoque**: un ejercicio por pantalla, cronómetro arriba y un carrusel horizontal con la miniatura de músculos de cada ejercicio (✓ en los terminados). Se cambia de ejercicio tocando el carrusel o deslizando a los lados.
@@ -22,7 +23,7 @@ La app tiene solo **dos pestañas**:
   - En modo avanzado, al tocar el número de una serie se puede convertir en aproximación (o volver a efectiva) o eliminar.
   - Series de aproximación opcionales (interruptor por ejercicio, filas «A»): no cuentan en volumen, récords ni progresión, y se recuerdan para la próxima vez.
   - Series en filas redondeadas (serie, reps, peso, ✓) y un botón inferior que guía: *Marcar todas las series* → *Siguiente ejercicio* → *Terminar entrenamiento*. Descartar queda en el menú ⋯.
-  - Resumen a pantalla completa al terminar: tiempo, series, volumen, el cuerpo con los músculos trabajados, récords, progreso de la semana y una frase motivadora.
+  - Resumen limpio al terminar: check verde, tiempo, series y volumen en tarjetas, la lista de ejercicios hechos (series, reps, peso y 🏆 si hubo récord), el progreso de la semana y una frase motivadora.
   - Los entrenamientos terminados se pueden editar.
 - **Progreso**: entrenamientos, racha, constancia, tus ejercicios (peso y mejora), peso corporal y medidas, historial y estadísticas de volumen.
 
