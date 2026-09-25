@@ -411,13 +411,13 @@ export function lastWarmup(exId, excludeId) {
   return null;
 }
 
-// Series de aproximación sugeridas: ~50 % y ~75 % del peso de trabajo.
+// Serie de aproximación sugerida: una sola, con ~60 % del peso de trabajo.
 export function suggestWarmup(exId, workKg) {
   const u = unitFor(exId);
   const step = u === 'lb' ? 5 : 2.5;
   const w = Number(workKg) || 0;
   const at = (f) => (w ? fromUnit(Math.max(step, Math.round((toUnit(w, u) * f) / step) * step), u) : '');
-  return [{ kg: at(0.5), reps: 10, done: false }, { kg: at(0.75), reps: 5, done: false }];
+  return [{ kg: at(0.6), reps: 8, done: false }];
 }
 
 export function exerciseHistory(exId) {

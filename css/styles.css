@@ -607,3 +607,14 @@ button.set-n { border: 0; padding: 0; cursor: pointer; font: inherit; font-weigh
 .set-row.warm button.set-n { border: 1.5px dashed var(--border); }
 /* El buscador ocupa la pantalla desde arriba: el teclado nunca tapa la búsqueda ni los primeros resultados. */
 .sheet.sheet-top { height: auto; max-height: calc(var(--vvh, 100dvh)); }
+
+/* Carrusel: solo destaca el ejercicio actual; los demás se atenúan (el ✓ de los hechos sigue visible). */
+.rail-item { transition: transform 0.2s; }
+.rail-item [data-muscle-map] { transition: opacity 0.2s, filter 0.2s; }
+.rail-item:not(.active):not(.rail-add) { transform: scale(0.9); }
+.rail-item:not(.active) [data-muscle-map] { opacity: 0.35; filter: grayscale(0.9); }
+.rail-item.done:not(.active) { opacity: 1; }
+.rail-item.active { box-shadow: 0 6px 18px rgb(0 0 0 / 22%); }
+/* Durante la sesión los avisos van abajo, sobre el botón principal, para no tapar el carrusel. */
+body.in-session .toast { top: auto; bottom: calc(env(safe-area-inset-bottom) + 84px); transform: translateX(-50%) translateY(12px); }
+body.in-session .toast.show { transform: translateX(-50%) translateY(0); }
