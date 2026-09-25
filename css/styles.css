@@ -800,3 +800,11 @@ button.plan-day:active { background: var(--surface-2); }
 .empty-progress { text-align: center; padding: 28px 20px; }
 .empty-progress .ep-icon { font-size: 2.4rem; }
 .empty-progress p { margin: 6px 0 16px; }
+
+/* Invitación a crear cuenta tras el primer entrenamiento */
+.win-save {
+  text-align: left; margin: 16px 0 4px; padding: 14px 16px; border-radius: 18px;
+  background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.win-save p { margin: 4px 0 12px; font-size: 0.9rem; color: var(--text-2); }
+.win-save .row { gap: 8px; }

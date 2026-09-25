@@ -8,7 +8,7 @@ Está pensada para usarse desde el celular en el gym.
 **Configuración inicial (3 pasos, ~9 toques).** Un usuario nuevo indica en una sola pantalla si es hombre o mujer (para la guía muscular) y cuánto tiempo lleva entrenando, luego qué días puede ir:
 - Principiante: recibe una rutina recomendada (Full Body con 2-3 días, Torso/Pierna con 4 o más).
 - Intermedio o avanzado: elige entre Push/Pull/Legs, Arnold Split, Torso/Pierna, Full Body, Torso/Pierna · glúteo, o crea la suya desde cero.
-- Al elegir una rutina hecha empieza directamente (se personaliza cuando quiera en **Mi plan → Editar**); solo la rutina propia pasa por el editor. Después puede crear una cuenta para guardar su progreso.
+- Al elegir una rutina hecha empieza directamente (se personaliza cuando quiera en **Mi plan → Editar**); solo la rutina propia pasa por el editor. No se pide cuenta al empezar: al terminar el **primer entrenamiento** el resumen invita a crear una cuenta gratis para no perder el progreso (y lo recuerda solo tras el 5.º y el 15.º).
 - Quien ya tiene cuenta toca **Ya tengo cuenta** y recupera todo, con contraseña o con un **código de 6 dígitos por correo** (sin contraseña).
 - En el iPhone aparece una vez una guía para **añadir la app a la pantalla de inicio** (en Android, un botón Instalar).
 

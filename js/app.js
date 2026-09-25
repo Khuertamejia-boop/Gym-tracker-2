@@ -1270,23 +1270,9 @@ function renderOnboarding() {
         : 'Estos son los ejercicios recomendados. Puedes cambiar ejercicios, series y días ahora o cuando quieras desde la pestaña <b>Mi plan</b>.'}</p>
       ${routineEditorHTML(r, { embedded: true })}
       <button class="btn primary block" data-action="ob-review-done" style="margin-top:16px">Continuar</button>`;
-  } else if (ob.step === 'account') {
-    html = `<div class="ob-hero" style="padding-top:8px">
-        <div style="font-size:3rem">☁️</div>
-        <h1>Guarda tu progreso</h1>
-        <p class="muted">Crea una cuenta para no perder tus entrenamientos y verlos en cualquier dispositivo.</p>
-      </div>
-      <form class="card stack" id="login-form">
-        <input type="email" name="email" placeholder="Correo" autocomplete="email" required>
-        <input type="password" name="password" placeholder="Contraseña (mín. 6 caracteres)" autocomplete="new-password" minlength="6" required>
-        <button class="btn primary block" name="mode" value="signup">Crear cuenta</button>
-        <p class="small" id="login-msg" style="margin:0" role="status"></p>
-      </form>
-      <button class="btn block ghost" data-action="ob-finish">Ahora no</button>`;
   }
   $view.innerHTML = `<div class="ob">${html}</div>`;
   if (ob.step === 'login') bindAccountForm($view, obLoggedIn);
-  if (ob.step === 'account') bindAccountForm($view, () => actions['ob-finish']());
 }
 
 // Tras entrar desde la bienvenida: recupera la rutina o sigue con la configuración.
@@ -1340,7 +1326,8 @@ function openCodeLogin(onDone) {
           msg.textContent = 'Comprobando…';
           await Cloud.verifyCode(email, form.code.value.trim());
           if (onDone) return onDone();
-          closeSheet(); toast('Sesión iniciada · sincronizando tus datos'); render();
+          closeSheet(); document.getElementById('win-save')?.remove();
+          toast('Sesión iniciada · sincronizando tus datos'); render();
         }
       } catch (err) {
         msg.textContent = err.message;
@@ -1406,6 +1393,11 @@ const PHRASES = [
   'La disciplina es tu superpoder.',
 ];
 
+// Cuenta: se ofrece tras el 1.er entrenamiento (cuando ya vio que la app le sirve)
+// y se recuerda solo un par de veces más, nunca en la configuración inicial.
+const askSignup = (session) => Cloud.isConfigured() && !Cloud.getUser() && !session.editedAt
+  && [1, 5, 15].includes(S.getState().sessions.length);
+
 // Resumen a pantalla completa al terminar: tiempo, series, volumen, músculos trabajados,
 // récords y progreso de la semana.
 function showSummary(session) {
@@ -1459,6 +1451,11 @@ function showSummary(session) {
       </div>
       ${pct > 0 && pct <= 200 ? `<div class="win-note">📈 +${pct}% de volumen frente a la última vez</div>` : ''}
       ${prs.length ? `<div class="win-note">🏆 ${prs.length === 1 ? '¡Nuevo récord!' : `¡${prs.length} récords nuevos!`}</div>` : ''}
+      ${askSignup(session) ? `<div class="win-save" id="win-save">
+        <b>💾 Guarda tu progreso</b>
+        <p>${S.getState().sessions.length === 1 ? '¡Primer entrenamiento hecho!' : `Llevas ${S.getState().sessions.length} entrenamientos.`} Crea una cuenta gratis para no perder tu progreso y verlo en cualquier teléfono.</p>
+        <div class="row"><button class="btn primary grow" data-action="win-signup">Crear cuenta</button><button class="btn ghost" data-action="win-signup-later">Ahora no</button></div>
+      </div>` : ''}
       <div class="win-list-head">Ejercicios · ${session.exercises.length}</div>
       <div class="win-list">${exRows}</div>
       ${goal ? `<div class="win-week"><span class="muted">Esta semana</span>
@@ -1536,7 +1533,7 @@ function openMenu() {
     ${user ? '<button class="btn block ghost danger" data-action="cloud-logout">Cerrar sesión</button>' : ''}`);
 }
 
-function openLogin(mode = 'login') {
+function openLogin(mode = 'login', { back = 'open-menu', onDone } = {}) {
   const login = mode === 'login';
   openSheet(login ? 'Iniciar sesión' : 'Crear cuenta', `
     <form id="login-form" class="stack">
@@ -1550,12 +1547,13 @@ function openLogin(mode = 'login') {
         ? `<button class="btn block code-btn" data-action="code-login">✉️ Entrar con un código por correo</button>
            <button class="link" data-action="cloud-reset">¿Olvidaste tu contraseña?</button>
            <p>¿No tienes cuenta? <button class="link" data-action="open-signup">Créala aquí</button></p>`
-        : '<p>¿Ya tienes cuenta? <button class="link" data-action="open-login">Inicia sesión</button></p>'}
-    </div>`, (root) => bindAccountForm(root, () => {
+        : `<button class="btn block code-btn" data-action="code-login">✉️ Mejor, con un código por correo</button>
+           <p>¿Ya tienes cuenta? <button class="link" data-action="open-login">Inicia sesión</button></p>`}
+    </div>`, (root) => bindAccountForm(root, onDone || (() => {
     closeSheet();
     toast('Sesión iniciada · sincronizando tus datos');
     render();
-  }), 'open-menu');
+  })), back);
 }
 
 const themePref = () => { try { return localStorage.getItem('gymtrack.theme') || 'auto'; } catch { return 'auto'; } };
@@ -2090,8 +2088,6 @@ const actions = {
     const r = S.routineById(ui.ob.routineId);
     if (r.days.every((d) => !d.exercises.length)) return toast('Añade al menos un ejercicio a tu rutina');
     if (!r.week.some(Boolean)) return toast('Asigna al menos un día de la semana a tu rutina');
-    const needsAccount = Cloud.isConfigured() && !Cloud.getUser() && !ui.ob.fromSettings;
-    if (needsAccount) { ui.ob.step = 'account'; render(); window.scrollTo(0, 0); return; }
     toast(ui.ob.fromSettings ? 'Rutina actualizada' : '¡Listo! Tu rutina te espera en Entrenar');
     finishOnboarding();
   },
@@ -2104,6 +2100,13 @@ const actions = {
     render();
   },
   'go-train': () => setTab('train'),
+  'win-signup': () => openLogin('signup', { back: null, onDone: () => {
+    closeSheet();
+    document.getElementById('win-save')?.remove();
+    toast('✅ Cuenta creada · tus entrenamientos ya están en la nube');
+    render();
+  } }),
+  'win-signup-later': () => document.getElementById('win-save')?.remove(),
   'code-login': () => openCodeLogin(ui.ob ? obLoggedIn : null),
   'ob-finish': () => {
     toast('¡Listo! Tu rutina te espera en Entrenar');
