@@ -61,29 +61,6 @@ function mount(canvas, config) {
   instances.set(canvas.id, new window.Chart(canvas, config));
 }
 
-export function barChart(canvas, { labels, data, unit, horizontal, highlightLast, tooltipTitle }) {
-  const color = css('--series-1');
-  const muted = css('--heat-1');
-  const colors = data.map((_, i) => (highlightLast && i !== data.length - 1 ? muted : color));
-  mount(canvas, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        data,
-        backgroundColor: highlightLast ? colors : color,
-        hoverBackgroundColor: color,
-        borderRadius: 4,
-        borderSkipped: 'start',
-        maxBarThickness: horizontal ? 18 : 28,
-        categoryPercentage: 0.8,
-        barPercentage: 0.9,
-      }],
-    },
-    options: base({ unit, horizontal, tooltipTitle }),
-  });
-}
-
 export function lineChart(canvas, { labels, data, unit, tooltipTitle }) {
   const color = css('--series-1');
   const opts = base({ unit, tooltipTitle });
@@ -109,5 +86,92 @@ export function lineChart(canvas, { labels, data, unit, tooltipTitle }) {
       }],
     },
     options: opts,
+  });
+}
+
+// '#8f8e86' → 'rgba(143,142,134,a)' (Safari no admite color-mix en los degradados del canvas).
+function rgba(hex, a) {
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+// Mini gráfico de evolución: línea gris con área suave, puntos en el color
+// principal, eje de valores a la derecha y fechas reales en el eje X.
+export function sparkArea(canvas, { points, unit }) {
+  if (!window.Chart || !canvas) return;
+  const accent = css('--accent');
+  const line = css('--text-3');
+  const grid = css('--grid');
+  const text3 = css('--text-3');
+  const span = points[points.length - 1].x - points[0].x;
+  const long = span > 150 * 86400000;
+  const fmtDate = (t) => {
+    const d = new Date(t);
+    return long ? `${MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}` : `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  };
+  const fmtVal = (v) => (v >= 10000 ? compact(v) : v.toLocaleString('es', { maximumFractionDigits: 1 }));
+  const ys = points.map((p) => p.y);
+  const lo = Math.min(...ys), hi = Math.max(...ys);
+  const pad = Math.max((hi - lo) * 0.18, hi * 0.04, 1);
+  const ctx = canvas.getContext('2d');
+  const fill = ctx.createLinearGradient(0, 0, 0, canvas.clientHeight || 120);
+  fill.addColorStop(0, rgba(line, 0.32));
+  fill.addColorStop(1, rgba(line, 0));
+  mount(canvas, {
+    type: 'line',
+    data: {
+      datasets: [{
+        data: points,
+        borderColor: line,
+        borderWidth: 1.5,
+        backgroundColor: fill,
+        fill: 'start',
+        tension: 0,
+        pointRadius: points.length > 40 ? 2 : 3,
+        pointHoverRadius: 5,
+        pointBackgroundColor: accent,
+        pointBorderWidth: 0,
+        clip: 8,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 250 },
+      layout: { padding: { top: 6, left: 6 } },
+      interaction: { mode: 'nearest', intersect: false, axis: 'x' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: css('--text'), titleColor: css('--bg'), bodyColor: css('--bg'),
+          padding: 8, cornerRadius: 8, displayColors: false,
+          callbacks: {
+            title: (items) => { const d = new Date(items[0].parsed.x); return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`; },
+            label: (c) => `${fmtVal(c.parsed.y)} ${unit}`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          min: points[0].x, max: points[points.length - 1].x,
+          grid: { display: false }, border: { display: false },
+          ticks: { color: text3, maxTicksLimit: 3, maxRotation: 0, font: { size: 11 }, callback: (v) => fmtDate(v) },
+          afterBuildTicks: (axis) => {
+            const { min, max } = axis;
+            axis.ticks = [min, (min + max) / 2, max].map((value) => ({ value }));
+          },
+        },
+        y: {
+          position: 'right',
+          min: Math.max(0, Math.floor(lo - pad)), max: Math.ceil(hi + pad),
+          grid: { color: grid, drawTicks: false }, border: { display: false },
+          ticks: { color: text3, maxTicksLimit: 4, padding: 6, font: { size: 11 }, callback: (v, i, ticks) => ((i === 0 || i === ticks.length - 1) && v % 5 ? '' : fmtVal(Math.round(v))) },
+        },
+      },
+    },
   });
 }

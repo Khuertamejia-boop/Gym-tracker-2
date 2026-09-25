@@ -25,7 +25,7 @@ La app tiene **tres pestañas**:
   - Series en filas redondeadas (serie, reps, peso, ✓) y un botón inferior que guía: *Marcar todas las series* → *Siguiente ejercicio* → *Terminar entrenamiento*. Descartar queda en el menú ⋯.
   - Resumen limpio al terminar: check verde, tiempo, series y volumen en tarjetas, la lista de ejercicios hechos (series, reps, peso y 🏆 si hubo récord), el progreso de la semana y una frase motivadora.
   - Los entrenamientos terminados se pueden editar.
-- **Progreso**: entrenamientos, racha, constancia, tus ejercicios (peso y mejora), peso corporal y medidas, historial y estadísticas de volumen.
+- **Progreso**: analíticas por periodo (1M · 3M · 1A · Todo): 6 fichas (entrenos, duración, ejercicios, series, reps, volumen), barras de **músculos** (sólido = series directas, rayado = secundarias), mini‑gráficos de **evolución de cada ejercicio** (Máx = peso máximo, Vol = volumen por sesión), constancia con racha, peso corporal y medidas, e historial.
 
 Al tocar un ejercicio se abre su ficha: Acerca de (con la **guía muscular**: cuerpo realista de frente y de espalda con los músculos principales en rojo intenso y los secundarios en rojo suave), Historial, Gráficos y Récords. El cuerpo es de hombre o de mujer según el perfil (se cambia en tu perfil → Ajustes). El catálogo tiene más de 110 ejercicios con buscador (se abre arriba para que el teclado no tape los resultados), y puedes crear los tuyos. Los ejercicios con variantes (prensa, sentadilla búlgara, sentadilla en Smith) aparecen una sola vez y al elegirlos se escoge el enfoque: cuádriceps o glúteos.
 

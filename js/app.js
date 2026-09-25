@@ -2,7 +2,7 @@ import * as S from './store.js';
 import { MUSCLES, FAMILIES } from './data/exercises.js';
 import { MUSCLE_NAMES as MUSCLE_NAME } from './data/muscles.js';
 import { TEMPLATES } from './data/templates.js';
-import { barChart, lineChart, destroyCharts } from './charts.js';
+import { lineChart, sparkArea, destroyCharts } from './charts.js';
 import * as Cloud from './cloud.js';
 import { mountMuscleMaps, musclesFor, muscleNames } from './body.js';
 
@@ -15,8 +15,9 @@ const ui = {
   tab: 'train', // 'plan' | 'train' | 'progress'
   ob: null, // configuración inicial en curso: { step, level, days, fromSettings }
   editRoutineId: null,
-  period: 'week', // 'week' | 'month'
-  muscleMetric: 'sets', // 'sets' | 'volume'
+  range: '3m', // periodo de Progreso: '1m' | '3m' | '1a' | 'all'
+  exMetricP: 'max', // evolución de ejercicios: 'max' | 'vol'
+  exShowAll: false,
   bodyField: 'weight',
   openNotes: new Set(),
   historyLimit: 10,
@@ -792,37 +793,6 @@ function periodKey(iso, period) {
   return S.todayISO(S.startOfWeek(d));
 }
 
-function periodBuckets(period, count) {
-  const out = [];
-  const now = new Date();
-  for (let i = count - 1; i >= 0; i--) {
-    if (period === 'month') {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      out.push({ key: periodKey(S.todayISO(d), 'month'), label: S.MONTHS_SHORT[d.getMonth()], title: `${S.MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}` });
-    } else {
-      const d = S.startOfWeek(now); d.setDate(d.getDate() - i * 7);
-      out.push({ key: S.todayISO(d), label: `${d.getDate()} ${S.MONTHS_SHORT[d.getMonth()]}`, title: `Semana del ${d.getDate()} ${S.MONTHS_SHORT[d.getMonth()]}` });
-    }
-  }
-  return out;
-}
-
-function aggregate(period, count) {
-  const buckets = periodBuckets(period, count);
-  const idx = new Map(buckets.map((b, i) => [b.key, i]));
-  const volume = buckets.map(() => 0);
-  const sessions = buckets.map(() => 0);
-  const sets = buckets.map(() => 0);
-  for (const s of S.getState().sessions) {
-    const i = idx.get(periodKey(s.date, period));
-    if (i === undefined) continue;
-    volume[i] += S.sessionVolume(s);
-    sessions[i] += 1;
-    sets[i] += S.doneSets(s);
-  }
-  return { buckets, volume, sessions, sets };
-}
-
 function weekStreak() {
   const weeks = new Set(S.getState().sessions.map((s) => periodKey(s.date, 'week')));
   const d = S.startOfWeek(new Date());
@@ -832,99 +802,146 @@ function weekStreak() {
   return n;
 }
 
-// El periodo actual todavía no ha terminado, así que se muestra la cifra
-// anterior como referencia en lugar de un porcentaje engañoso.
-function deltaText(prev, unitLabel) {
-  return prev ? `${vol(prev)} ${unitLabel}` : 'sin datos previos';
+const RANGES = [['1m', '1M', 30], ['3m', '3M', 91], ['1a', '1A', 365], ['all', 'Todo', Infinity]];
+
+function rangeSessions() {
+  const days = RANGES.find(([k]) => k === ui.range)[2];
+  if (days === Infinity) return S.getState().sessions;
+  const from = new Date(); from.setDate(from.getDate() - days);
+  const iso = S.todayISO(from);
+  return S.getState().sessions.filter((x) => x.date > iso);
 }
 
-function tableView(headers, rows) {
-  return `<details class="table-view"><summary>Ver como tabla</summary><table>
-    <thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead>
-    <tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></details>`;
+// Números cortos para las fichas: 9,9 K · 1,08 M.
+function short(v) {
+  if (v >= 1e6) return `${(v / 1e6).toLocaleString('es', { maximumFractionDigits: 2 })} M`;
+  if (v >= 1e4) return `${(v / 1e3).toLocaleString('es', { maximumFractionDigits: 1 })} K`;
+  return Math.round(v).toLocaleString('es');
+}
+
+// Grupos del gráfico de músculos; cada uno suma los músculos del mapa que lo forman.
+const MUSCLE_BARS = [
+  ['Brazos', ['biceps', 'triceps', 'forearms']],
+  ['Pecho', ['chest']],
+  ['Espalda', ['lats', 'upper_back', 'lower_back']],
+  ['Hombros', ['shoulders']],
+  ['Piernas', ['quads', 'hamstrings', 'glutes', 'calves']],
+  ['Core', ['abs', 'obliques']],
+];
+
+function rangeStats(sessions) {
+  const exIds = new Set();
+  let sets = 0, reps = 0, minutes = 0;
+  const direct = MUSCLE_BARS.map(() => 0), indirect = MUSCLE_BARS.map(() => 0);
+  const barOf = (g) => MUSCLE_BARS.findIndex(([, gs]) => gs.includes(g));
+  for (const s of sessions) {
+    const m = (s.finishedAt - s.startedAt) / 60000;
+    if (m > 0 && m < 300) minutes += m;
+    for (const e of s.exercises) {
+      exIds.add(e.exId);
+      const done = e.sets.filter((x) => x.done !== false && x.side !== 'R');
+      sets += done.length;
+      done.forEach((x) => { reps += Number(x.reps) || 0; });
+      // Cada serie cuenta una vez por grupo: directa si algún músculo principal es del grupo.
+      const [p, sec] = musclesFor(e.exId);
+      const pb = new Set(p.map(barOf).filter((i) => i >= 0));
+      const sb = new Set(sec.map(barOf).filter((i) => i >= 0 && !pb.has(i)));
+      pb.forEach((i) => { direct[i] += done.length; });
+      sb.forEach((i) => { indirect[i] += done.length / 2; });
+    }
+  }
+  const volume = sessions.reduce((a, x) => a + S.sessionVolume(x), 0);
+  return { workouts: sessions.length, minutes, exercises: exIds.size, sets, reps, volume, direct, indirect };
+}
+
+// Evolución de cada ejercicio: un punto por entrenamiento (peso máximo o volumen).
+function exerciseSeries(sessions) {
+  const map = new Map();
+  for (const s of sessions) {
+    for (const e of s.exercises) {
+      const done = e.sets.filter((x) => x.done !== false);
+      if (!done.length) continue;
+      const y = ui.exMetricP === 'vol'
+        ? done.reduce((a, x) => a + S.setVolume(x), 0)
+        : Math.max(...done.map((x) => Number(x.kg) || 0));
+      if (!map.has(e.exId)) map.set(e.exId, []);
+      map.get(e.exId).push({ x: S.parseISO(s.date).getTime(), y });
+    }
+  }
+  return [...map.entries()]
+    .filter(([, pts]) => pts.length >= 2 && pts.some((p) => p.y > 0))
+    .sort((a, b) => b[1].length - a[1].length || b[1][b[1].length - 1].x - a[1][a[1].length - 1].x);
 }
 
 function renderProgress() {
   const st = S.getState();
-  const simple = S.isSimple();
-  const p = ui.period;
-  const count = 12;
-  const agg = aggregate(p, count);
-  const last = count - 1;
-  const prevLabel = p === 'week' ? 'semana pasada' : 'mes pasado';
-  const nowLabel = p === 'week' ? 'esta semana' : 'este mes';
-  const tile = (label, value, sub) => `<div class="stat"><div class="label">${label}</div><div class="value">${value}</div><div class="delta">${sub}</div></div>`;
+  const sessions = rangeSessions();
+  const t = rangeStats(sessions);
+  const du = S.defaultUnit();
+  const tile = (value, label) => `<div class="an-tile"><b>${value}</b><span>${label}</span></div>`;
+  const hours = t.minutes >= 60 ? `${Math.round(t.minutes / 60)} h` : `${Math.round(t.minutes)} min`;
+  const streak = weekStreak();
 
-  let html = `<div class="row between" style="margin-bottom:12px">
-      <div class="segmented" role="tablist">
-        <button class="${p === 'week' ? 'active' : ''}" data-action="period" data-p="week">Semanal</button>
-        <button class="${p === 'month' ? 'active' : ''}" data-action="period" data-p="month">Mensual</button>
-      </div>
-    </div>`;
+  let html = `<div class="segmented range-tabs" role="tablist">${RANGES.map(([k, l]) =>
+    `<button class="${ui.range === k ? 'active' : ''}" data-action="range" data-r="${k}" role="tab" aria-selected="${ui.range === k}">${l}</button>`).join('')}</div>`;
 
   if (!st.sessions.length && !st.body.length) {
     html += `<div class="card empty"><p><b>Todavía no hay datos.</b></p><p class="small">Termina tu primer entrenamiento y aquí verás cuántos días entrenas, tus récords y cómo mejoras.</p></div>`;
   }
 
-  html += `<div class="stats">
-    ${tile(`Entrenos · ${nowLabel}`, agg.sessions[last], `${series(agg.sets[last])}`)}
-    ${simple
-      ? tile(`Récords · ${nowLabel}`, prCount(agg.buckets[last].key, p), 'marcas superadas')
-      : tile(`Volumen · ${nowLabel}`, vol(agg.volume[last]), deltaText(agg.volume[last - 1], prevLabel))}
-    ${tile('Racha', weekStreak(), 'semanas seguidas')}
+  html += `<div class="an-grid">
+    ${tile(t.workouts, t.workouts === 1 ? 'Entreno' : 'Entrenos')}
+    ${tile(hours, 'Duración')}
+    ${tile(t.exercises, 'Ejercicios')}
+    ${tile(short(t.sets), 'Series')}
+    ${tile(short(t.reps), 'Reps')}
+    ${tile(short(S.toUnit(t.volume, du)), `Volumen ${du}`)}
   </div>`;
 
-  const volumeCards = `<div class="card">
-      <h3>Volumen total ${p === 'week' ? 'por semana' : 'por mes'}</h3>
-      <div class="muted small">Peso total levantado en ${S.defaultUnit() === 'lb' ? 'libras' : 'kilos'} (peso × repeticiones de cada serie, sumado)</div>
-      <div class="chart-box"><canvas id="c-volume" role="img" aria-label="Gráfico de volumen"></canvas></div>
-      ${tableView(['Periodo', 'Volumen', 'Series'], agg.buckets.map((b, i) => [b.title, vol(agg.volume[i]), agg.sets[i]]).reverse())}
-    </div>
-    <div class="card">
-      <div class="row between wrap"><h3>Por grupo muscular</h3>
-        <div class="segmented">
-          <button class="${ui.muscleMetric === 'sets' ? 'active' : ''}" data-action="muscle-metric" data-m="sets">Series</button>
-          <button class="${ui.muscleMetric === 'volume' ? 'active' : ''}" data-action="muscle-metric" data-m="volume">Volumen</button>
-        </div></div>
-      <div class="muted small">${ui.muscleMetric === 'sets' ? 'Series hechas' : `Peso levantado (${S.defaultUnit()})`} por semana, promedio de ${p === 'week' ? 'las últimas 4 semanas' : 'los últimos 3 meses'}</div>
-      <div class="chart-box tall"><canvas id="c-muscle" role="img" aria-label="Gráfico por grupo muscular"></canvas></div>
-      <div id="t-muscle"></div>
-    </div>`;
+  const maxBar = Math.max(1, ...t.direct.map((d, i) => d + t.indirect[i]));
+  const pct = (v) => `${((v / maxBar) * 100).toFixed(1)}%`;
+  html += `<section class="an-section">
+    <div class="an-head"><h3>Músculos</h3><button class="info-btn" data-action="muscle-info" aria-label="Qué significan las barras">i</button></div>
+    ${MUSCLE_BARS.map(([name], i) => `<div class="mb-row">
+      <span class="mb-name">${name}</span>
+      <span class="mb-track"><span class="mb-direct" style="width:${pct(t.direct[i])}"></span><span class="mb-indirect" style="width:${pct(t.indirect[i])}"></span></span>
+      <span class="mb-num">${Math.round(t.direct[i] + t.indirect[i])}</span>
+    </div>`).join('')}
+  </section>`;
 
-  if (!simple) html += volumeCards;
+  const list = exerciseSeries(sessions);
+  const shown = list.slice(0, ui.exShowAll ? 30 : 5);
+  const isVol = ui.exMetricP === 'vol';
+  html += `<section class="an-section">
+    <div class="an-head"><h3>Ejercicios</h3>
+      <div class="segmented sm">
+        <button class="${isVol ? 'active' : ''}" data-action="ex-metric-p" data-m="vol">Vol</button>
+        <button class="${isVol ? '' : 'active'}" data-action="ex-metric-p" data-m="max">Máx</button>
+      </div></div>
+    ${shown.length ? shown.map(([id, pts], i) => {
+      const u = isVol ? du : S.unitFor(id);
+      const lastY = S.toUnit(pts[pts.length - 1].y, u);
+      return `<div class="ex-spark">
+        <button class="ex-spark-head" data-action="ex-detail" data-id="${id}"><span class="ellipsis">${esc(S.exById(id).name)}</span>
+          <b>${isVol ? short(lastY) : fmtN(lastY)} <small>${u}</small></b></button>
+        <div class="spark-box"><canvas id="c-ex-${i}" role="img" aria-label="Evolución de ${esc(S.exById(id).name)}"></canvas></div>
+      </div>`;
+    }).join('') : '<p class="muted small" style="margin:4px 0 0">Cuando repitas un ejercicio al menos dos veces en este periodo verás aquí cómo evoluciona.</p>'}
+    ${list.length > 5 ? `<button class="btn sm ghost block" data-action="ex-show-all">${ui.exShowAll ? 'Ver menos' : `Ver los ${list.length} ejercicios`}</button>` : ''}
+  </section>`;
 
-  html += `<div class="card">
-    <h3>Constancia</h3>
-    <div class="muted small">Días que entrenaste en las últimas 20 semanas</div>
+  html += `<section class="an-section">
+    <div class="an-head"><h3>Constancia</h3><span class="muted small">Racha: <b>${streak}</b> ${streak === 1 ? 'semana' : 'semanas'}</span></div>
     ${heatmapHTML(20)}
-    <div class="chart-box" style="height:170px"><canvas id="c-sessions" role="img" aria-label="Entrenamientos por periodo"></canvas></div>
-    <div class="muted small" style="text-align:center">Entrenamientos ${p === 'week' ? 'por semana' : 'por mes'}</div>
-  </div>`;
+  </section>`;
 
-  html += exercisesProgressHTML();
   html += bodyCardHTML();
   html += historyHTML();
-
-  if (simple) {
-    html += `<details class="more" id="more-stats"><summary>Más estadísticas (volumen y grupos musculares)</summary>${volumeCards}</details>`;
-  }
-
   $view.innerHTML = html;
 
-  const titleOf = (i) => agg.buckets[i].title;
-  const drawVolume = () => {
-    barChart(document.getElementById('c-volume'), {
-      labels: agg.buckets.map((b) => b.label), data: agg.volume.map((v) => S.toUnit(v, S.defaultUnit())), unit: S.defaultUnit(), highlightLast: true, tooltipTitle: titleOf,
-    });
-    drawMuscleChart(p === 'week' ? 4 : 3);
-  };
-  if (simple) {
-    document.getElementById('more-stats').addEventListener('toggle', (e) => { if (e.target.open) drawVolume(); });
-  } else {
-    drawVolume();
-  }
-  barChart(document.getElementById('c-sessions'), {
-    labels: agg.buckets.map((b) => b.label), data: agg.sessions, unit: '', tooltipTitle: titleOf,
+  shown.forEach(([id, pts], i) => {
+    const u = isVol ? du : S.unitFor(id);
+    sparkArea(document.getElementById(`c-ex-${i}`), { points: pts.map((p) => ({ x: p.x, y: S.toUnit(p.y, u) })), unit: u });
   });
   const field = S.BODY_FIELDS.find((f) => f.key === ui.bodyField);
   const bodyData = bodySeries(field);
@@ -935,48 +952,6 @@ function renderProgress() {
       unit: bodyUnit(field),
     });
   }
-}
-
-function prCount(key, period) {
-  let n = 0;
-  for (const s of S.getState().sessions) {
-    if (periodKey(s.date, period) !== key) continue;
-    for (const e of s.exercises) for (const x of e.sets) if (x.pr) n++;
-  }
-  return n;
-}
-
-// Peso máximo reciente de cada ejercicio y cuánto ha subido desde la primera vez.
-function exercisesProgressHTML() {
-  const map = new Map();
-  for (const s of S.getState().sessions) {
-    for (const e of s.exercises) {
-      const sets = e.sets.filter((x) => x.done);
-      if (!sets.length) continue;
-      const top = Math.max(...sets.map((x) => Number(x.kg) || 0));
-      const entry = map.get(e.exId) || { first: top, last: top, lastDate: s.date, best: sets[0] };
-      entry.last = top;
-      entry.lastDate = s.date;
-      entry.best = sets.reduce((a, x) => (Number(x.kg) > Number(a.kg) ? x : a), sets[0]);
-      map.set(e.exId, entry);
-    }
-  }
-  if (!map.size) return '';
-  const rows = [...map.entries()].sort((a, b) => (a[1].lastDate < b[1].lastDate ? 1 : -1));
-  const item = ([id, v]) => {
-    const u = S.unitFor(id);
-    const diff = S.toUnit(v.last, u) - S.toUnit(v.first, u);
-    return `<button class="list-item" data-action="ex-detail" data-id="${id}">
-      <div class="grow"><div>${esc(S.exById(id).name)}</div>
-        <div class="muted small">Última vez: ${wt(v.best.kg, u)} × ${v.best.reps}${diff ? ` · ${diff > 0 ? '▲ +' : '▼ '}${fmtN(diff)} ${u} desde el inicio` : ''}</div></div>
-      <span class="muted">›</span></button>`;
-  };
-  return `<div class="card">
-    <h3>Tus ejercicios</h3>
-    <div class="muted small">Toca uno para ver su evolución y tus récords</div>
-    <div class="list">${rows.slice(0, 6).map(item).join('')}</div>
-    ${rows.length > 6 ? `<details class="more-inline"><summary>Ver los ${rows.length} ejercicios</summary><div class="list">${rows.slice(6).map(item).join('')}</div></details>` : ''}
-  </div>`;
 }
 
 // El peso corporal se guarda en kg y se muestra en la unidad por defecto.
@@ -1027,37 +1002,6 @@ function historyHTML() {
       ${all.length > shown.length ? `<button class="btn sm ghost" data-action="history-more">Ver más</button>` : ''}`
     : '<div class="empty small">Tus entrenamientos terminados aparecerán aquí.</div>'}
   </div>`;
-}
-
-function drawMuscleChart(range) {
-  const p = ui.period;
-  const keys = new Set(periodBuckets(p, range).map((b) => b.key));
-  const weeksInRange = p === 'week' ? range : Math.max(1, (range * 30.4) / 7);
-  const totals = new Map(MUSCLES.map((m) => [m, 0]));
-  for (const s of S.getState().sessions) {
-    if (!keys.has(periodKey(s.date, p))) continue;
-    for (const e of s.exercises) {
-      const m = S.exById(e.exId).muscle;
-      for (const set of e.sets) {
-        if (!set.done) continue;
-        totals.set(m, (totals.get(m) || 0) + (ui.muscleMetric === 'sets' ? 1 : S.setVolume(set)));
-      }
-    }
-  }
-  const du = S.defaultUnit();
-  const rows = [...totals.entries()]
-    .map(([m, v]) => [m, ui.muscleMetric === 'sets' ? v / weeksInRange : S.toUnit(v / weeksInRange, du)])
-    .sort((a, b) => b[1] - a[1]);
-  barChart(document.getElementById('c-muscle'), {
-    labels: rows.map((r) => r[0]),
-    data: rows.map((r) => Math.round(r[1] * 10) / 10),
-    unit: ui.muscleMetric === 'sets' ? 'series/sem' : `${du}/sem`,
-    horizontal: true,
-  });
-  document.getElementById('t-muscle').innerHTML = tableView(
-    ['Grupo', ui.muscleMetric === 'sets' ? 'Series/sem' : `${du}/sem`],
-    rows.map((r) => [r[0], ui.muscleMetric === 'sets' ? fmtN(r[1]) : `${Math.round(r[1]).toLocaleString('es')} ${du}`]),
-  );
 }
 
 function heatmapHTML(weeks) {
@@ -2004,9 +1948,13 @@ const actions = {
   },
 
   // Progreso
-  period: (b) => { ui.period = b.dataset.p; render(); },
+  range: (b) => { ui.range = b.dataset.r; render(); },
+  'ex-metric-p': (b) => { ui.exMetricP = b.dataset.m; render(); },
+  'ex-show-all': () => { ui.exShowAll = !ui.exShowAll; render(); },
+  'muscle-info': () => openSheet('Músculos', `<p style="margin-top:0">Cada barra suma las <b>series</b> que hiciste en el periodo para ese grupo.</p>
+    <p><span class="mb-key"></span> <b>Sólido:</b> el grupo es el músculo principal del ejercicio.</p>
+    <p><span class="mb-key indirect"></span> <b>Rayado:</b> trabaja como secundario (cuenta como media serie).</p>`),
   'history-more': () => { ui.historyLimit += 20; render(); },
-  'muscle-metric': (b) => { ui.muscleMetric = b.dataset.m; render(); },
   'body-field': (b) => { ui.bodyField = b.dataset.f; render(); },
   'body-add': () => bodyForm(),
   'body-edit': (b) => bodyForm(b.dataset.date),
