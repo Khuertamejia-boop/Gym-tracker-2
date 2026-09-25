@@ -618,3 +618,13 @@ button.set-n { border: 0; padding: 0; cursor: pointer; font: inherit; font-weigh
 /* Durante la sesión los avisos van abajo, sobre el botón principal, para no tapar el carrusel. */
 body.in-session .toast { top: auto; bottom: calc(env(safe-area-inset-bottom) + 84px); transform: translateX(-50%) translateY(12px); }
 body.in-session .toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Atenuado más marcado y fiable en iPhone: capa del color de fondo encima de las ilustraciones
+   no activas (la opacidad sola se nota poco con el teñido de los músculos en Safari). */
+.rail-item:not(.active):not(.rail-add)::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+}
+.rail-item:not(.active) [data-muscle-map] { opacity: 0.45; filter: grayscale(1); }
+.rail-item:not(.active):not(.rail-add) { transform: scale(0.86); }
+.rail-check { z-index: 2; }
