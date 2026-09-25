@@ -99,7 +99,7 @@ const RAW = [
   ['zancadas', 'Zancadas (estocadas)', 'Cuádriceps', 'Mancuernas'],
   ['zancadas-caminando', 'Zancadas caminando', 'Cuádriceps', 'Mancuernas'],
   ['pendulum-squat', 'Sentadilla péndulo', 'Cuádriceps', 'Máquina'],
-  ['step-up', 'Subidas al cajón (step-up)', 'Cuádriceps', 'Mancuernas'],
+  ['step-up', 'Step-up (subida al cajón)', 'Cuádriceps', 'Mancuernas', 'subidas cajon unilateral'],
 
   // Isquios
   ['peso-muerto-rumano', 'Peso muerto rumano', 'Isquios', 'Barra'],
@@ -149,5 +149,37 @@ export const FAMILIES = {
   smith: { name: 'Sentadilla en Smith', variants: [['sentadilla-smith', 'Cuádriceps'], ['sentadilla-smith-gluteos', 'Glúteos']] },
 };
 const FAMILY_OF = Object.fromEntries(Object.entries(FAMILIES).flatMap(([key, f]) => f.variants.map(([id]) => [id, key])));
+
+// Ejercicios que se pueden registrar por lado (izquierda / derecha).
+// true = activado por defecto (se hacen siempre de uno en uno); false = opcional.
+export const UNILATERAL = {
+  'step-up': true,
+  'sentadilla-bulgara': true,
+  'sentadilla-bulgara-gluteos': true,
+  zancadas: false,
+  'zancadas-caminando': false,
+  'jalon-pecho': false,
+  'jalon-agarre-cerrado': false,
+  'jalon-agarre-neutro': false,
+  'remo-mancuerna': true,
+  'remo-sentado-polea': false,
+  'curl-mancuernas': false,
+  'curl-martillo': false,
+  'curl-concentrado': true,
+  'curl-polea': false,
+  'extension-polea': false,
+  'extension-sobre-cabeza': false,
+  'patada-triceps': false,
+  'elevaciones-laterales': false,
+  'elevaciones-laterales-polea': false,
+  'extension-cuadriceps': false,
+  'curl-femoral-tumbado': false,
+  'curl-femoral-sentado': false,
+  prensa: false,
+  'prensa-gluteos': false,
+  'peso-muerto-rumano-mancuernas': false,
+  'patada-gluteo-polea': true,
+  'elevacion-talones-pie': false,
+};
 
 export const BASE_EXERCISES = RAW.map(([id, name, muscle, equipment, aliases = '']) => ({ id, name, muscle, equipment, aliases, family: FAMILY_OF[id] }));

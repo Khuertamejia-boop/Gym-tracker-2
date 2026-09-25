@@ -590,3 +590,16 @@ body.in-session main { padding-top: calc(env(safe-area-inset-top) + 8px); }
 .set-row.warm .pill-input { background: transparent; border: 1.5px dashed var(--border); }
 .set-row.warm.done .pill-input, .set-row.warm.done .set-n { border-style: solid; border-color: var(--good); background: transparent; }
 .warm-actions { display: flex; gap: 12px; justify-content: flex-end; margin: -2px 0 6px; font-size: 0.9rem; }
+.set-n small { font-size: 0.7rem; margin-left: 1px; color: var(--text-3); font-weight: 700; }
+.set-row.side-end { margin-bottom: 6px; }
+.set-row[class*="side"] { }
+.set-n { display: flex; align-items: center; justify-content: center; gap: 1px; }
+.toggles { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 2px; }
+.toggle-chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); font-size: 0.88rem; font-weight: 600;
+}
+.toggle-chip.on { color: var(--text); }
+.switch.sm { width: 34px; height: 20px; border-radius: 10px; }
+.switch.sm::after { top: 2px; left: 2px; width: 16px; height: 16px; }
+.switch.sm.on::after { transform: translateX(14px); }

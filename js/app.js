@@ -150,7 +150,7 @@ function renderTrain() {
         return `<button class="plan-item" data-action="ex-detail" data-id="${e.exId}">
           <span class="thumb" data-muscle-map="${e.exId}" data-thumb></span>
           <span class="grow"><span class="name">${esc(ex.name)}</span>
-          <span class="meta">${series(Number(e.sets))}${e.reps ? ` · ${esc(e.reps)} reps` : ''}${top && Number(top.kg) ? ` · ${wt(top.kg, S.unitFor(e.exId))}` : ''}</span></span></button>`;
+          <span class="meta">${series(Number(e.sets))}${S.unilateralFor(e.exId) ? ' por lado' : ''}${e.reps ? ` · ${esc(e.reps)} reps` : ''}${top && Number(top.kg) ? ` · ${wt(top.kg, S.unitFor(e.exId))}` : ''}</span></span></button>`;
       }).join('')}</div>`
     : `<div class="card empty small">Este día no tiene ejercicios todavía. Toca <b>Editar</b> en Mi rutina para añadirlos.</div>`;
   if (selected.exercises.length) {
@@ -284,8 +284,18 @@ function goToExercise(k) {
 function updateLiveStats() {}
 
 // Valores sugeridos de una serie: los de la última vez o el mínimo del objetivo.
+// Texto corto de una serie: "I 20×10" en ejercicios por lado.
+const sideTag = (x) => (x.side ? `${x.side === 'L' ? 'I' : 'D'} ` : '');
+
 function setSuggestion(e, j, last) {
-  const p = last?.sets[j];
+  const side = e.sets[j]?.side || null;
+  let p = last?.sets[j];
+  if (last && (p?.side || null) !== side) {
+    // La última vez se registró de otra forma: busca la serie equivalente del mismo lado.
+    const k = e.sets.slice(0, j).filter((x) => (x.side || null) === side).length;
+    const same = last.sets.filter((x) => (x.side || null) === side);
+    p = same[k] || last.sets[side ? Math.floor(j / 2) : j] || last.sets[last.sets.length - 1];
+  }
   return { kg: p ? p.kg : '', reps: p?.reps || (e.target ? Number(String(e.target).split('-')[0]) || '' : '') };
 }
 
@@ -297,21 +307,28 @@ function exerciseStage(e, i, effort, d) {
   const noteOpen = e.note || ui.openNotes.has(i);
   const u = S.unitFor(e.exId);
   const nextSet = e.sets.findIndex((x) => !x.done);
+  const perSide = e.sets.some((x) => x.side);
+  const total = perSide ? Math.ceil(e.sets.length / 2) : e.sets.length;
+  const pos = nextSet === -1 ? '' : perSide
+    ? `Serie ${Math.floor(nextSet / 2) + 1} de ${total} · lado ${e.sets[nextSet].side === 'L' ? 'izquierdo' : 'derecho'}`
+    : `Serie ${nextSet + 1} de ${total}`;
   return `<div class="stage" id="stage">
     <div class="muted small">${esc(shortName(d.dayName))} · Ejercicio ${i + 1} de ${d.exercises.length}</div>
     <div class="stage-head">
       <button class="link-btn grow" data-action="ex-detail" data-id="${e.exId}"><h2>${esc(ex.name)}</h2></button>
       <button class="icon-btn" data-action="ex-menu" data-i="${i}" aria-label="Opciones del ejercicio">${ICON_MORE}</button>
     </div>
-    <div class="stage-sub">${nextSet === -1 ? '✓ Ejercicio completado' : `Serie ${nextSet + 1} de ${e.sets.length}`}${e.target ? ` · objetivo ${esc(e.target)} reps` : ''}</div>
-    ${last ? `<div class="last-line">Última vez: ${last.sets.map((x) => `${wn(x.kg, u)}×${x.reps}`).join(' · ')} <span class="muted">${u}</span></div>` : ''}
+    <div class="stage-sub">${nextSet === -1 ? '✓ Ejercicio completado' : pos}${e.target ? ` · objetivo ${esc(e.target)} reps` : ''}</div>
+    ${last ? `<div class="last-line">Última vez: ${last.sets.map((x) => `${sideTag(x)}${wn(x.kg, u)}×${x.reps}`).join(' · ')} <span class="muted">${u}</span></div>` : ''}
     ${hint ? `<div class="hint hint-${hint.type}">${hint.type === 'up' ? '📈' : '💡'} ${esc(hint.text)}</div>` : ''}
     ${last?.note ? `<div class="hint">📝 Nota anterior: ${esc(last.note)}</div>` : ''}
     ${!last && !d.editing && S.isSimple() ? `<div class="hint">👋 Primera vez: elige un peso con el que puedas hacer ${esc(S.parseRange(e.target)?.hi || 10)} repeticiones con buena técnica, sin llegar al límite.</div>` : ''}
-    <button class="warm-toggle" data-action="warm-toggle" data-i="${i}" role="switch" aria-checked="${Boolean(e.warmupOn)}">
-      <span class="grow">Series de aproximación<span class="muted small row-help">Calentamiento con menos peso; no cuentan en tus estadísticas</span></span>
-      <span class="switch ${e.warmupOn ? 'on' : ''}" aria-hidden="true"></span>
-    </button>
+    <div class="toggles">
+      ${S.canUnilateral(e.exId) ? `<button class="toggle-chip ${perSide ? 'on' : ''}" data-action="uni-toggle" data-i="${i}" role="switch" aria-checked="${perSide}" title="Registra cada serie para la izquierda (I) y la derecha (D)">
+        <span class="switch sm ${perSide ? 'on' : ''}" aria-hidden="true"></span>Por lado</button>` : ''}
+      <button class="toggle-chip ${e.warmupOn ? 'on' : ''}" data-action="warm-toggle" data-i="${i}" role="switch" aria-checked="${Boolean(e.warmupOn)}" title="Series de calentamiento con menos peso; no cuentan en tus estadísticas">
+        <span class="switch sm ${e.warmupOn ? 'on' : ''}" aria-hidden="true"></span>Aproximación</button>
+    </div>
     <div class="set-grid ${effort ? 'with-effort' : ''}">
       <div class="set-labels"><span>Serie</span><span>Reps</span><span class="unit-label">Peso ${unitSwitch(e.exId, u)}</span>${effort ? `<span>${effort}</span>` : ''}<span></span></div>
       ${e.warmupOn ? (e.warmup || []).map((w, j) => `<div class="set-row warm ${w.done ? 'done' : ''}">
@@ -323,9 +340,10 @@ function exerciseStage(e, i, effort, d) {
         </div>`).join('') + `<div class="warm-actions"><button class="link" data-action="warm-add" data-i="${i}">+ Aproximación</button>${(e.warmup || []).length ? `<button class="link" data-action="warm-remove" data-i="${i}">Quitar</button>` : ''}</div>` : ''}
       ${e.sets.map((x, j) => {
         const sug = setSuggestion(e, j, last);
-        return `<div class="set-row ${x.done ? 'done' : ''} ${j === nextSet ? 'next' : ''}">
-          <span class="set-n">${x.pr ? '<span title="Récord personal">🏆</span>' : j + 1}</span>
-          <input class="pill-input" type="number" inputmode="numeric" min="0" value="${esc(x.reps)}" placeholder="${esc(sug.reps)}" data-set="reps" data-i="${i}" data-j="${j}" aria-label="Repeticiones serie ${j + 1}">
+        const label = x.side ? `${Math.floor(j / 2) + 1}<small>${x.side === 'L' ? 'I' : 'D'}</small>` : j + 1;
+        return `<div class="set-row ${x.done ? 'done' : ''} ${j === nextSet ? 'next' : ''} ${x.side === 'R' ? 'side-end' : ''}">
+          <span class="set-n" ${x.side ? `title="Serie ${Math.floor(j / 2) + 1}, lado ${x.side === 'L' ? 'izquierdo' : 'derecho'}"` : ''}>${x.pr ? '<span title="Récord personal">🏆</span>' : label}</span>
+          <input class="pill-input" type="number" inputmode="numeric" min="0" value="${esc(x.reps)}" placeholder="${esc(sug.reps)}" data-set="reps" data-i="${i}" data-j="${j}" aria-label="Repeticiones serie ${x.side ? `${Math.floor(j / 2) + 1} ${x.side === 'L' ? 'izquierda' : 'derecha'}` : j + 1}">
           <input class="pill-input" type="number" inputmode="decimal" step="0.5" min="0" value="${esc(S.toUnit(x.kg, u))}" placeholder="${sug.kg !== '' ? esc(S.toUnit(sug.kg, u)) : '–'}" data-set="kg" data-i="${i}" data-j="${j}" aria-label="Peso en ${u} serie ${j + 1}">
           ${effort ? `<input class="pill-input small-input" type="number" inputmode="decimal" step="0.5" min="0" max="10" value="${esc(x.effort)}" placeholder="–" data-set="effort" data-i="${i}" data-j="${j}" aria-label="${effort} serie ${j + 1}">` : ''}
           <button class="set-check" data-action="toggle-set" data-i="${i}" data-j="${j}" aria-pressed="${x.done}" aria-label="Marcar serie ${j + 1} como hecha">${ICON_CHECK}</button>
@@ -335,7 +353,7 @@ function exerciseStage(e, i, effort, d) {
     <div class="set-actions">
       <button class="add-set" data-action="add-set" data-i="${i}"><span class="plus" aria-hidden="true">+</span>Añadir serie</button>
       <span class="grow"></span>
-      ${e.sets.length > 1 ? `<button class="link" data-action="remove-set" data-i="${i}">Quitar serie</button>` : ''}
+      ${e.sets.length > (perSide ? 2 : 1) ? `<button class="link" data-action="remove-set" data-i="${i}">Quitar serie</button>` : ''}
       ${noteOpen ? '' : `<button class="link" data-action="note-open" data-i="${i}">+ Nota</button>`}
     </div>
     ${noteOpen ? `<textarea class="note" rows="2" maxlength="300" placeholder="Nota: agarre, sensaciones, molestias…" data-note="${i}" aria-label="Nota del ejercicio">${esc(e.note || '')}</textarea>` : ''}
@@ -484,7 +502,7 @@ function showExerciseDetail(id, tab = ui.exTab) {
     body = hist.length
       ? `<div class="list small">${hist.slice(0, 30).map((h) => `<div class="list-item" style="align-items:flex-start">
           <div style="width:90px;flex:none" class="muted">${S.formatDate(h.date)}</div>
-          <div class="grow">${h.sets.map((x) => `${wn(x.kg, u)}×${x.reps}${x.effort !== '' && x.effort !== undefined ? `<span class="muted">@${x.effort}</span>` : ''}`).join(' · ')}
+          <div class="grow">${h.sets.map((x) => `${sideTag(x)}${wn(x.kg, u)}×${x.reps}${x.effort !== '' && x.effort !== undefined ? `<span class="muted">@${x.effort}</span>` : ''}`).join(' · ')}
             ${h.note ? `<div class="muted">📝 ${esc(h.note)}</div>` : ''}</div></div>`).join('')}</div>`
       : '<div class="empty small">Sin historial todavía.</div>';
   } else if (tab === 'charts') {
@@ -1531,13 +1549,25 @@ const actions = {
   },
   'add-set': (b) => {
     const e = S.getState().draft.exercises[b.dataset.i];
-    const prev = e.sets[e.sets.length - 1];
-    e.sets.push({ kg: prev ? prev.kg : '', reps: '', effort: '', done: false });
-    S.save(); render();
+    const sides = e.sets.some((x) => x.side) ? ['L', 'R'] : [null];
+    for (const side of sides) {
+      const prev = [...e.sets].reverse().find((x) => (x.side || null) === side);
+      e.sets.push({ kg: prev ? prev.kg : '', reps: '', effort: '', done: false, ...(side ? { side } : {}) });
+    }
+    S.save(); const y = window.scrollY; render(); window.scrollTo(0, y);
   },
   'remove-set': (b) => {
     const e = S.getState().draft.exercises[b.dataset.i];
-    e.sets.pop(); S.save(); render();
+    e.sets.splice(e.sets.some((x) => x.side) ? -2 : -1);
+    S.save(); const y = window.scrollY; render(); window.scrollTo(0, y);
+  },
+  'uni-toggle': (b) => {
+    const e = S.getState().draft.exercises[b.dataset.i];
+    const on = !e.sets.some((x) => x.side);
+    S.convertSides(e, on);
+    S.setUnilateral(e.exId, on);
+    toast(on ? 'Registrarás cada lado por separado' : 'Series normales (ambos lados juntos)');
+    const y = window.scrollY; render(); window.scrollTo(0, y);
   },
   'ex-remove': (b) => {
     const d = S.getState().draft;
@@ -1614,7 +1644,7 @@ const actions = {
     openSheet(s.dayName, `
       <p class="muted small" style="margin-top:0">${S.formatDate(s.date)}${mins ? ` · ${mins} min` : ''} · ${series(S.doneSets(s))} · ${vol(S.sessionVolume(s))}</p>
       ${s.exercises.map((e) => `<div style="margin-bottom:10px"><b class="small">${esc(S.exById(e.exId).name)}</b> <span class="muted small">(${S.unitFor(e.exId)})</span>
-        <div class="muted small">${e.sets.map((x) => `${x.pr ? '🏆' : ''}${wn(x.kg, S.unitFor(e.exId))}×${x.reps}${x.effort !== '' && x.effort !== undefined ? ` @${x.effort}` : ''}`).join(' · ')}</div>
+        <div class="muted small">${e.sets.map((x) => `${x.pr ? '🏆' : ''}${sideTag(x)}${wn(x.kg, S.unitFor(e.exId))}×${x.reps}${x.effort !== '' && x.effort !== undefined ? ` @${x.effort}` : ''}`).join(' · ')}</div>
         ${e.warmup?.length ? `<div class="muted small">Aproximación: ${e.warmup.map((w) => `${wn(w.kg, S.unitFor(e.exId))}×${w.reps}`).join(' · ')}</div>` : ''}
         ${e.note ? `<div class="muted small">📝 ${esc(e.note)}</div>` : ''}</div>`).join('')}
       <div class="stack">

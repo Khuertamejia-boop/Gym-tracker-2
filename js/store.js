@@ -1,5 +1,5 @@
 // Persistencia en localStorage y utilidades de datos.
-import { BASE_EXERCISES } from './data/exercises.js';
+import { BASE_EXERCISES, UNILATERAL } from './data/exercises.js';
 import { TEMPLATES } from './data/templates.js';
 
 const KEY = 'gymtrack.v1';
@@ -269,6 +269,32 @@ export function setExerciseUnit(exId, unit) {
   save();
 }
 
+// ---------- Ejercicios por lado (unilateral) ----------
+// Con la opción activa, cada serie se guarda como dos filas: izquierda (side 'L') y derecha ('R').
+
+export const canUnilateral = (exId) => exId in UNILATERAL;
+export const unilateralFor = (exId) => canUnilateral(exId) && (state.settings.unilateral?.[exId] ?? UNILATERAL[exId]);
+
+export function setUnilateral(exId, on) {
+  state.settings.unilateral = { ...(state.settings.unilateral || {}), [exId]: on };
+  save();
+}
+
+// Convierte las series de un ejercicio del borrador entre normal y por lado.
+export function convertSides(e, on) {
+  if (on && !e.sets.some((x) => x.side)) {
+    e.sets = e.sets.flatMap((x) => [{ ...x, side: 'L' }, { ...x, side: 'R', pr: undefined }]);
+  } else if (!on && e.sets.some((x) => x.side)) {
+    const out = [];
+    for (let k = 0; k < e.sets.length; k += 2) {
+      const [l, r] = [e.sets[k], e.sets[k + 1] || e.sets[k]];
+      const { side, ...rest } = l;
+      out.push({ ...rest, done: l.done && r.done });
+    }
+    e.sets = out;
+  }
+}
+
 // ---------- Perfil y configuración inicial ----------
 
 // Un usuario nuevo (sin entrenamientos ni rutinas propias) pasa por la configuración inicial.
@@ -507,10 +533,14 @@ export function draftExercise(exId, sets = 3, reps = '') {
   const last = lastPerformance(exId);
   const hint = progressionHint(exId, reps);
   const rows = [];
+  const sides = unilateralFor(exId) ? ['L', 'R'] : [null];
   for (let i = 0; i < sets; i++) {
-    const prev = last?.sets[i] || last?.sets[last.sets.length - 1];
-    const kg = hint && hint.type === 'up' ? hint.kg : prev ? prev.kg : '';
-    rows.push({ kg, reps: '', effort: '', done: false });
+    for (const side of sides) {
+      const same = last ? last.sets.filter((x) => (x.side || null) === side) : [];
+      const prev = same[i] || same[same.length - 1] || last?.sets[i] || last?.sets[last.sets.length - 1];
+      const kg = hint && hint.type === 'up' ? hint.kg : prev ? prev.kg : '';
+      rows.push({ kg, reps: '', effort: '', done: false, ...(side ? { side } : {}) });
+    }
   }
   const prevWarm = lastWarmup(exId);
   return {
@@ -542,7 +572,7 @@ export function finishDraft() {
       return {
         ...e,
         ...(warm.length ? { warmup: warm } : {}),
-        sets: e.sets.filter((s) => s.done).map(({ kgTouched, ...rest }) => rest),
+        sets: e.sets.filter((s) => s.done).map(({ kgTouched, pr, ...rest }) => (pr ? { ...rest, pr } : rest)),
       };
     })
     .filter((e) => e.sets.length);
