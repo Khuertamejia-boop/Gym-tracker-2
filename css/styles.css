@@ -640,3 +640,19 @@ body.in-session .toast.show { transform: translateX(-50%) translateY(0); }
   display: inline-block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
   color: var(--text-3); margin-right: 4px;
 }
+
+/* Contador de series compacto y botón de nota */
+.set-actions { gap: 10px; margin-top: 10px; }
+.stepper-label { font-size: 0.9rem; color: var(--text-2); font-weight: 600; }
+.stepper { display: inline-flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-2); }
+.step-btn {
+  width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--surface); color: var(--accent);
+  font-size: 1.4rem; line-height: 1; font-weight: 700; display: grid; place-items: center; box-shadow: var(--shadow);
+}
+.step-btn:disabled { color: var(--text-3); opacity: 0.5; box-shadow: none; }
+.step-count { min-width: 28px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+.note-btn {
+  width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface-2);
+  font-size: 1.1rem; display: grid; place-items: center; opacity: 0.8;
+}
+.note-btn.on { border-color: var(--accent); background: var(--accent-soft); opacity: 1; }

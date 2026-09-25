@@ -365,10 +365,14 @@ function exerciseStage(e, i, effort, d) {
       }).join('')}
     </div>
     <div class="set-actions">
-      <button class="add-set" data-action="add-set" data-i="${i}"><span class="plus" aria-hidden="true">+</span>Añadir serie</button>
+      <span class="stepper-label">Series</span>
+      <div class="stepper" role="group" aria-label="Número de series">
+        <button class="step-btn" data-action="remove-set" data-i="${i}" aria-label="Quitar una serie" ${e.sets.length > (perSide ? 2 : 1) ? '' : 'disabled'}>−</button>
+        <span class="step-count" aria-live="polite">${total}</span>
+        <button class="step-btn" data-action="add-set" data-i="${i}" aria-label="Añadir una serie">+</button>
+      </div>
       <span class="grow"></span>
-      ${e.sets.length > (perSide ? 2 : 1) ? `<button class="link" data-action="remove-set" data-i="${i}">Quitar serie</button>` : ''}
-      ${noteOpen ? '' : `<button class="link" data-action="note-open" data-i="${i}">+ Nota</button>`}
+      <button class="note-btn ${noteOpen ? 'on' : ''}" data-action="note-open" data-i="${i}" aria-label="${noteOpen ? 'Nota del ejercicio' : 'Añadir nota'}" title="Nota">📝</button>
     </div>
     ${noteOpen ? `<textarea class="note" rows="2" maxlength="300" placeholder="Nota: agarre, sensaciones, molestias…" data-note="${i}" aria-label="Nota del ejercicio">${esc(e.note || '')}</textarea>` : ''}
   </div>`;
@@ -1698,8 +1702,12 @@ const actions = {
     closeSheet(); setTab('train');
   },
   'note-open': (b) => {
-    ui.openNotes.add(Number(b.dataset.i)); render();
-    document.querySelector(`[data-note="${b.dataset.i}"]`)?.focus();
+    const i = Number(b.dataset.i);
+    const e = S.getState().draft.exercises[i];
+    const y = window.scrollY;
+    if (ui.openNotes.has(i) && !e.note) { ui.openNotes.delete(i); render(); window.scrollTo(0, y); return; }
+    ui.openNotes.add(i); render(); window.scrollTo(0, y);
+    document.querySelector(`[data-note="${i}"]`)?.focus({ preventScroll: true });
   },
   'plan-day': (b) => { ui.planDay = b.dataset.id; render(); },
   'set-gender': (b) => {
