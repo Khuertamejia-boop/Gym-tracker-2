@@ -5,20 +5,20 @@ Está pensada para usarse desde el celular en el gym.
 
 ## Funciones
 
-**Configuración inicial.** Un usuario nuevo responde cuánto tiempo lleva entrenando y qué días puede ir:
+**Configuración inicial.** Un usuario nuevo indica si es hombre o mujer (para la guía muscular), cuánto tiempo lleva entrenando y qué días puede ir:
 - Principiante: recibe una rutina recomendada (Full Body con 2-3 días, Torso/Pierna con 4 o más).
 - Intermedio o avanzado: elige entre Push/Pull/Legs, Arnold Split, Torso/Pierna, Full Body, Torso/Pierna · glúteo, o crea la suya desde cero.
 - Después revisa y personaliza ejercicios, series y días, y puede crear una cuenta para guardar su progreso.
 - Quien ya tiene cuenta toca **Ya tengo cuenta** y recupera todo.
 
 La app tiene solo **dos pestañas**:
-- **Entrenar**: lo que toca hoy, tu rutina (con **Editar**) y otros días.
+- **Entrenar**: la vista de tu plan con una pestaña por día (✓ en los hechos esta semana), cada ejercicio con su miniatura de músculos, series, reps y tu último peso, y el botón **Empezar**. Debajo, tu rutina con **Editar**.
   - Por cada serie anotas kg y reps (y RIR/RPE fuera del modo simple).
   - Sugerencias de progresión, notas por ejercicio y aviso 🏆 de récord personal.
   - Resumen al terminar la sesión; los entrenamientos terminados se pueden editar.
 - **Progreso**: entrenamientos, racha, constancia, tus ejercicios (peso y mejora), peso corporal y medidas, historial y estadísticas de volumen.
 
-Al tocar un ejercicio se abre su ficha: Acerca de, Historial, Gráficos y Récords. El catálogo tiene más de 110 ejercicios con buscador, y puedes crear los tuyos.
+Al tocar un ejercicio se abre su ficha: Acerca de (con la **guía muscular**: cuerpo realista de frente y de espalda con los músculos principales en rojo intenso y los secundarios en rojo suave), Historial, Gráficos y Récords. El cuerpo es de hombre o de mujer según el perfil (se cambia en Ajustes ⚙). El catálogo tiene más de 110 ejercicios con buscador, y puedes crear los tuyos.
 
 **Kilos o libras**: en Ajustes ⚙ eliges la unidad por defecto, y cada ejercicio puede tener la suya (por ejemplo, máquinas en libras) con el selector kg/lb de su tarjeta o de su ficha. Los pesos se guardan siempre en kg, así que récords y gráficos no se mezclan.
 
@@ -77,5 +77,8 @@ js/config.js          datos de conexión de Supabase
 supabase/setup.sql    tabla y permisos en Supabase
 js/data/exercises.js  catálogo de ejercicios
 js/data/templates.js  rutinas predefinidas
+js/data/muscles.js    músculos principales y secundarios de cada ejercicio
+js/body.js            guía muscular (usa js/vendor/muscle-map)
+js/vendor/muscle-map  js-rich-body-highlighter 0.1.1 (MIT): ilustraciones del cuerpo
 sw.js                 caché sin conexión
 ```

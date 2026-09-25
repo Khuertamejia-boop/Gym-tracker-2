@@ -3,6 +3,7 @@ import { MUSCLES } from './data/exercises.js';
 import { TEMPLATES } from './data/templates.js';
 import { barChart, lineChart, destroyCharts } from './charts.js';
 import * as Cloud from './cloud.js';
+import { mountMuscleMaps, musclesFor, muscleNames } from './body.js';
 
 const $view = document.getElementById('view');
 const $title = document.getElementById('view-title');
@@ -61,6 +62,7 @@ function openSheet(title, body, onMount) {
   $sheet.onclick = null;
   if (!$sheet.open) $sheet.showModal();
   onMount?.($sheet);
+  mountMuscleMaps($sheet);
 }
 const closeSheet = () => $sheet.open && $sheet.close();
 $sheet.addEventListener('click', (e) => { if (e.target === $sheet) closeSheet(); });
@@ -80,9 +82,10 @@ function render() {
   clearInterval(render.timer);
   if (!ui.ob && S.needsOnboarding()) ui.ob = { step: 'welcome', days: [] };
   document.body.classList.toggle('onboarding', Boolean(ui.ob));
-  if (ui.ob) return renderOnboarding();
+  if (ui.ob) { renderOnboarding(); mountMuscleMaps($view); return; }
   $title.textContent = ui.editRoutineId ? 'Mi rutina' : TITLES[ui.tab];
   ({ train: renderTrain, progress: renderProgress })[ui.tab]();
+  mountMuscleMaps($view);
 }
 
 // =====================================================================
@@ -102,40 +105,75 @@ function renderTrain() {
   const routine = S.activeRoutine();
   const wd = S.weekdayIndex();
   const todayDay = routine ? routine.days.find((d) => d.id === routine.week[wd]) : null;
-  const doneToday = st.sessions.some((s) => s.date === S.todayISO());
 
   let html = '';
   if (Cloud.isConfigured() && !Cloud.getUser()) {
     html += `<button class="card banner" data-action="open-settings">☁️ <span class="grow"><b>Inicia sesión</b> para guardar tus datos en la nube y no perderlos.</span> ›</button>`;
   }
+  if (st.profile && !st.profile.gender) {
+    html += `<div class="card"><b>¿Eres hombre o mujer?</b>
+      <p class="muted small" style="margin:2px 0 10px">Lo usamos para mostrarte el cuerpo correcto en la guía de músculos.</p>
+      <div class="grid-2"><button class="btn" data-action="set-gender" data-v="male">Hombre</button><button class="btn" data-action="set-gender" data-v="female">Mujer</button></div></div>`;
+  }
   if (!routine) {
     html += `<div class="card empty"><p>Aún no tienes una rutina.</p>
       <button class="btn primary" data-action="change-routine">Elegir rutina</button></div>`;
-  } else {
-    html += `<div class="card">
-      <div class="muted small">${S.DAY_NAMES[wd]}</div>
-      ${todayDay
-        ? `<h2 style="font-size:1.35rem;margin:2px 0 6px">${esc(todayDay.name)}</h2>
-           <p class="muted small" style="margin:0 0 12px">${todayDay.exercises.length} ejercicios · ${todayDay.exercises.map((e) => esc(S.exById(e.exId).name)).slice(0, 3).join(', ')}${todayDay.exercises.length > 3 ? '…' : ''}</p>
-           <button class="btn primary block" data-action="start" data-day="${todayDay.id}">${doneToday ? 'Entrenar otra vez' : 'Empezar entrenamiento'}</button>`
-        : `<h2 style="font-size:1.35rem;margin:2px 0 6px">Hoy toca descanso</h2>
-           <p class="muted small" style="margin:0">Recuperarse también es parte del progreso. Si quieres entrenar igual, elige un día abajo.</p>`}
-    </div>`;
-    html += `<div class="section-title">Mi rutina</div>
-      <div class="card">
-        <div class="row between" style="margin-bottom:10px"><h3 style="margin:0">${esc(routine.name)}</h3>
-          <button class="btn sm" data-action="edit-routine" data-id="${routine.id}">Editar</button></div>
-        ${weekStrip(routine, true)}
-        <p class="muted small" style="margin:10px 0 0">Toca <b>Editar</b> para cambiar tus días o ejercicios.</p>
-      </div>`;
-    html += `<div class="section-title">Otro día de la rutina</div><div class="card"><div class="list">
-      ${routine.days.map((d) => `<button class="list-item" data-action="start" data-day="${d.id}">
-        <div class="grow"><div><b>${esc(d.name)}</b></div><div class="muted small">${d.exercises.length} ejercicios</div></div>
-        <span class="btn sm">Empezar</span></button>`).join('')}
-    </div></div>`;
+    html += `<button class="btn block" data-action="start-free">+ Entrenamiento libre</button>`;
+    $view.innerHTML = html;
+    return;
   }
-  html += `<button class="btn block" data-action="start-free">+ Entrenamiento libre</button>`;
+
+  // Días en el orden de la semana; el seleccionado por defecto es el de hoy o el próximo.
+  const ordered = orderedDays(routine);
+  let selected = ordered.find((d) => d.id === ui.planDay);
+  if (!selected) {
+    for (let k = 0; k < 7 && !selected; k++) selected = routine.days.find((d) => d.id === routine.week[(wd + k) % 7]);
+    selected = selected || ordered[0];
+  }
+  const doneThisWeek = new Set(weekSessions().map((x) => x.dayName));
+  const sets = selected.exercises.reduce((a, e) => a + Number(e.sets || 0), 0);
+  const minutes = Math.max(10, Math.round((sets * 2.5) / 5) * 5);
+
+  html += `<p class="muted small" style="margin:0 4px 8px">${S.DAY_NAMES[wd]} · ${todayDay ? `hoy toca <b>${esc(shortName(todayDay.name))}</b>` : 'hoy toca descanso'}</p>
+    <div class="chips plan-chips" role="tablist">${ordered.map((d) => `<button class="chip ${d.id === selected.id ? 'active' : ''}" role="tab" aria-selected="${d.id === selected.id}" data-action="plan-day" data-id="${d.id}">
+      ${esc(shortName(d.name))}${doneThisWeek.has(d.name) ? ' <span class="ok">✓</span>' : ''}</button>`).join('')}</div>
+    <div class="plan-head"><b>Ejercicios · ${selected.exercises.length}</b>${selected.exercises.length ? `<span class="muted small">~ ${minutes} min</span>` : ''}</div>`;
+  html += selected.exercises.length
+    ? `<div class="plan-list">${selected.exercises.map((e) => {
+        const ex = S.exById(e.exId);
+        const last = S.lastPerformance(e.exId);
+        const top = last ? last.sets.reduce((a, x) => (Number(x.kg) > Number(a.kg) ? x : a), last.sets[0]) : null;
+        return `<button class="plan-item" data-action="ex-detail" data-id="${e.exId}">
+          <span class="thumb" data-muscle-map="${e.exId}" data-thumb></span>
+          <span class="grow"><span class="name">${esc(ex.name)}</span>
+          <span class="meta">${series(Number(e.sets))}${e.reps ? ` · ${esc(e.reps)} reps` : ''}${top && Number(top.kg) ? ` · ${wt(top.kg, S.unitFor(e.exId))}` : ''}</span></span></button>`;
+      }).join('')}</div>`
+    : `<div class="card empty small">Este día no tiene ejercicios todavía. Toca <b>Editar</b> en Mi rutina para añadirlos.</div>`;
+  if (selected.exercises.length) {
+    html += `<div class="cta-bar"><button class="btn primary block cta" data-action="start" data-day="${selected.id}">Empezar ${esc(shortName(selected.name))}</button></div>`;
+  }
+  html += `<div class="section-title">Mi rutina</div>
+    <div class="card">
+      <div class="row between" style="margin-bottom:10px"><h3 style="margin:0">${esc(routine.name)}</h3>
+        <button class="btn sm" data-action="edit-routine" data-id="${routine.id}">Editar</button></div>
+      ${weekStrip(routine, true)}
+    </div>
+    <button class="btn block" data-action="start-free">+ Entrenamiento libre</button>`;
   $view.innerHTML = html;
+}
+
+// Días de la rutina en el orden en que aparecen en la semana (los no asignados, al final).
+function orderedDays(routine) {
+  const seen = new Set();
+  const out = [];
+  routine.week.forEach((id) => { if (id && !seen.has(id)) { seen.add(id); out.push(routine.days.find((d) => d.id === id)); } });
+  routine.days.forEach((d) => { if (!seen.has(d.id)) out.push(d); });
+  return out.filter(Boolean);
+}
+
+function weekSessions() {
+  const monday = S.todayISO(S.startOfWeek(new Date()));
+  return S.getState().sessions.filter((x) => x.date >= monday);
 }
 
 // Nombre corto para la tira de la semana: "Torso A (Pecho / Espalda)" → "Torso A".
@@ -205,6 +243,7 @@ function exerciseCard(e, i, effort, d) {
   const u = S.unitFor(e.exId);
   return `<div class="card ex-card">
     <div class="ex-head">
+      <button class="thumb thumb-sm" data-action="ex-detail" data-id="${e.exId}" aria-label="Ver músculos de ${esc(ex.name)}"><span data-muscle-map="${e.exId}" data-thumb></span></button>
       <div class="grow">
         <button class="link-btn" data-action="ex-detail" data-id="${e.exId}"><h3>${esc(ex.name)}</h3></button>
         <div class="row wrap small" style="gap:6px;margin-top:4px">
@@ -325,8 +364,20 @@ function showExerciseDetail(id, tab = ui.exTab) {
 
   if (tab === 'about') {
     const video = `https://www.youtube.com/results?search_query=${encodeURIComponent(ex.name + ' técnica correcta')}`;
+    const [primary, secondary] = musclesFor(id);
     body = `
-      <div class="row wrap" style="gap:6px;margin-bottom:12px"><span class="tag">${esc(ex.muscle)}</span><span class="tag">${esc(ex.equipment)}</span></div>
+      <div class="muscle-guide">
+        <div class="bodies">
+          <div><div class="body-map" data-muscle-map="${id}" data-view="front"></div><div class="cap">Frente</div></div>
+          <div><div class="body-map" data-muscle-map="${id}" data-view="back"></div><div class="cap">Espalda</div></div>
+        </div>
+        <div class="legend"><span><span class="sw sw-primary"></span>Principal</span>${secondary.length ? '<span><span class="sw sw-secondary"></span>Secundario</span>' : ''}</div>
+        <div class="row wrap" style="gap:6px;justify-content:center">
+          ${muscleNames(primary).map((n) => `<span class="tag tag-primary">${n}</span>`).join('')}
+          ${muscleNames(secondary).map((n) => `<span class="tag">${n}</span>`).join('')}
+        </div>
+      </div>
+      <div class="row wrap" style="gap:6px;margin:12px 0"><span class="tag">${esc(ex.equipment)}</span></div>
       ${rec.sets ? `<p class="small" style="margin:0 0 12px">Lo has hecho en <b>${rec.sessions}</b> ${rec.sessions === 1 ? 'sesión' : 'sesiones'} (${series(rec.sets)}). Mejor serie: <b>${wt(rec.maxKg.kg, u)} × ${rec.maxKg.reps}</b>.</p>`
         : '<p class="muted small" style="margin:0 0 12px">Todavía no has registrado este ejercicio.</p>'}
       <div class="row between" style="margin-bottom:12px"><div class="grow"><b>Unidad de peso</b><div class="muted small">Si esta máquina está en libras, elige lb</div></div>${unitSwitch(id, u)}</div>
@@ -772,7 +823,7 @@ function renderOnboarding() {
   const ob = ui.ob;
   const back = (step) => `<button class="btn ghost" data-action="ob-go" data-step="${step}" style="padding-left:0">‹ Atrás</button>`;
   const cancel = ob.fromSettings ? `<button class="btn ghost" data-action="ob-cancel" style="padding-left:0">Cancelar</button>` : '';
-  const progress = (n) => `<div class="ob-progress" aria-label="Paso ${n} de 4">${[1, 2, 3, 4].map((i) => `<span class="${i <= n ? 'on' : ''}"></span>`).join('')}</div>`;
+  const progress = (n) => `<div class="ob-progress" aria-label="Paso ${n} de 5">${[1, 2, 3, 4, 5].map((i) => `<span class="${i <= n ? 'on' : ''}"></span>`).join('')}</div>`;
   let html = '';
   $title.textContent = ob.fromSettings ? 'Cambiar rutina' : 'Bienvenido';
 
@@ -781,10 +832,10 @@ function renderOnboarding() {
     html = `<div class="ob-hero">
         <img src="icons/icon.svg" alt="" width="72" height="72">
         <h1>Tu rutina y tu progreso, en un solo lugar</h1>
-        <p class="muted">Responde 3 preguntas y te armamos una rutina. Luego solo anota tus series y mira cómo mejoras.</p>
+        <p class="muted">Responde 4 preguntas y te armamos una rutina. Luego solo anota tus series y mira cómo mejoras.</p>
       </div>
       <div class="stack">
-        <button class="btn primary block" data-action="ob-go" data-step="experience">Empezar</button>
+        <button class="btn primary block" data-action="ob-go" data-step="gender">Empezar</button>
         ${Cloud.isConfigured() ? '<button class="btn block" data-action="ob-go" data-step="login">Ya tengo cuenta</button>' : ''}
       </div>`;
   } else if (ob.step === 'login') {
@@ -798,15 +849,20 @@ function renderOnboarding() {
         <button type="button" class="btn sm ghost" data-action="cloud-reset">¿Olvidaste tu contraseña?</button>
         <p class="small" id="login-msg" style="margin:0" role="status"></p>
       </form>`;
+  } else if (ob.step === 'gender') {
+    html = `${back('welcome')}${progress(1)}
+      <h2 class="ob-q">¿Eres hombre o mujer?</h2>
+      <p class="muted" style="margin-top:0">Lo usamos para mostrarte el cuerpo correcto en la guía de músculos de cada ejercicio.</p>
+      <div class="stack">${[['male', 'Hombre'], ['female', 'Mujer']].map(([k, t]) => `<button class="option ${ob.gender === k ? 'selected' : ''}" data-action="ob-gender" data-v="${k}"><b>${t}</b></button>`).join('')}</div>`;
   } else if (ob.step === 'experience') {
-    html = `${ob.fromSettings ? cancel : back('welcome')}${progress(1)}
+    html = `${ob.fromSettings ? cancel : back('gender')}${progress(2)}
       <h2 class="ob-q">¿Cuánto tiempo llevas entrenando?</h2>
       <div class="stack">${LEVELS.map(([k, t, d]) => `<button class="option ${ob.level === k ? 'selected' : ''}" data-action="ob-level" data-v="${k}">
         <b>${t}</b><span class="muted small">${d}</span></button>`).join('')}</div>`;
   } else if (ob.step === 'days') {
     const n = ob.days.length;
     const rec = n ? S.templateByKey(S.recommendTemplate(ob.level, n)) : null;
-    html = `${back('experience')}${progress(2)}
+    html = `${back('experience')}${progress(3)}
       <h2 class="ob-q">¿Qué días puedes entrenar?</h2>
       <p class="muted" style="margin-top:0">Toca los días. Puedes cambiarlos cuando quieras.</p>
       <div class="day-picker">${S.DAY_NAMES.map((name, i) => `<button class="day-toggle ${ob.days.includes(i) ? 'on' : ''}" data-action="ob-day" data-d="${i}" aria-pressed="${ob.days.includes(i)}">
@@ -831,7 +887,7 @@ function renderOnboarding() {
       </div>`;
     const others = TEMPLATES.filter((t) => t.key !== recKey);
     const saved = S.getState().routines.filter((r) => !r.seeded && r.id !== S.getState().activeRoutineId);
-    html = `${back('days')}${progress(3)}
+    html = `${back('days')}${progress(4)}
       <h2 class="ob-q">${ob.level === 'beginner' ? 'Esta es tu rutina recomendada' : '¿Qué rutina quieres seguir?'}</h2>
       ${tplCard(rec, true)}`;
     if (ob.level === 'beginner' && !ob.showAll) {
@@ -850,7 +906,7 @@ function renderOnboarding() {
     const r = S.routineById(ob.routineId);
     ui.editRoutineId = r.id;
     const empty = r.days.every((d) => !d.exercises.length);
-    html = `${back('choose')}${progress(4)}
+    html = `${back('choose')}${progress(5)}
       <h2 class="ob-q">${empty ? 'Arma tu rutina' : 'Revisa tu rutina'}</h2>
       <p class="muted" style="margin-top:0">${empty
         ? 'Añade los ejercicios de cada día. Abajo puedes cambiar qué día entrenas cada uno.'
@@ -892,6 +948,7 @@ function renderOnboarding() {
 function finishOnboarding() {
   const ob = ui.ob;
   S.setProfile({
+    ...(ob.gender ? { gender: ob.gender } : {}),
     level: ob.level,
     days: ob.days,
     simple: ob.fromSettings ? S.isSimple() : ob.level === 'beginner',
@@ -1024,6 +1081,10 @@ function openSettings() {
       <div class="section-title">Mi rutina</div>
       <button class="btn block" data-action="change-routine">Cambiar de rutina o de días</button>
       <div class="section-title">Preferencias</div>
+      <div class="row between"><div class="grow"><b>Cuerpo en la guía</b><div class="muted small">Para el mapa de músculos</div></div>
+        <div class="segmented">
+          ${[['male', 'Hombre'], ['female', 'Mujer']].map(([v, l]) => `<button class="${(st.profile?.gender || 'male') === v ? 'active' : ''}" data-action="set-gender" data-v="${v}">${l}</button>`).join('')}
+        </div></div>
       <div class="row between"><div class="grow"><b>Unidad de peso</b><div class="muted small">Cada ejercicio puede tener la suya (máquinas en libras)</div></div>
         <div class="segmented">
           ${['kg', 'lb'].map((v) => `<button class="${S.defaultUnit() === v ? 'active' : ''}" data-action="set-unit" data-v="${v}">${v}</button>`).join('')}
@@ -1189,6 +1250,12 @@ const actions = {
     ui.openNotes.add(Number(b.dataset.i)); render();
     document.querySelector(`[data-note="${b.dataset.i}"]`)?.focus();
   },
+  'plan-day': (b) => { ui.planDay = b.dataset.id; render(); },
+  'set-gender': (b) => {
+    S.setProfile({ gender: b.dataset.v });
+    closeSheet(); render();
+    toast(`Guía muscular con cuerpo de ${b.dataset.v === 'female' ? 'mujer' : 'hombre'}`);
+  },
   'ex-unit': (b) => {
     S.setExerciseUnit(b.dataset.id, b.dataset.u);
     if ($sheet.open && document.querySelector('#sheet [data-action="ex-tab"]')) showExerciseDetail(b.dataset.id);
@@ -1235,6 +1302,11 @@ const actions = {
     render(); window.scrollTo(0, 0);
   },
   'ob-cancel': () => { ui.ob = null; ui.editRoutineId = null; render(); window.scrollTo(0, 0); },
+  'ob-gender': (b) => {
+    ui.ob.gender = b.dataset.v;
+    ui.ob.step = 'experience';
+    render(); window.scrollTo(0, 0);
+  },
   'ob-level': (b) => {
     ui.ob.level = b.dataset.v;
     ui.ob.step = 'days';
@@ -1445,7 +1517,7 @@ document.addEventListener('change', (e) => {
 });
 
 // Vuelve a dibujar los gráficos si cambia el tema del sistema.
-matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => ui.tab === 'progress' && !ui.ob && render());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => safeRender());
 
 // ---------- Inicio ----------
 
