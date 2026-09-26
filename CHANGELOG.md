@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Iniciar sesión: se quita el botón «Entrar con un código por correo» (Supabase ya no deja poner el código en el correo sin un servicio de correo propio). Se entra con correo y contraseña.
 - Días de la semana: el miércoles se muestra como «M» (antes «X»).
 - Botón de compartir: el subtítulo ahora dice «Crea una imagen para tus historias».
 - Compartir: el bloque de datos se arrastra con el dedo y se pellizca para cambiar el tamaño (con imán al centro), un botón en la esquina cambia la alineación; «¡NUEVO PR!» sin emoji, en blanco con cápsula de cristal. Se quitan los botones de tamaño y posición.

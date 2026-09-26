@@ -34,7 +34,7 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   unidades kg/lb (se guarda siempre en kg), récords, progresión, plan semanal (`weekPlan`, cambios de
   "solo esta semana" en `routine.weekOverride`), descanso (`restFor`).
 - `js/cloud.js` — Supabase (tabla `gym_data`, un JSON por usuario, fusión con marcas de borrado),
-  login con contraseña o código de 6 dígitos por correo.
+  login con contraseña (el código por correo está oculto, ver Decisiones).
 - `js/body.js` + `js/vendor/muscle-map/` — cuerpo realista (hombre/mujer) con músculos en rojo.
 - `js/share.js` — imagen para compartir (1080×1920) dibujada en canvas.
 - `js/charts.js` — Chart.js (CDN jsdelivr): líneas y mini-gráficos de evolución.
@@ -61,12 +61,12 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   sticker: se arrastra con un dedo, se pellizca para el tamaño (imán al centro) y un botón redondo en la
   esquina cambia la alineación; nada de filas de botones. Muestra los músculos trabajados y una cápsula
   de cristal «¡NUEVO PR!» (sin emoji, texto blanco) si hubo récords. Botón protagonista en el resumen.
-- Supabase: para el código por correo hay que añadir `{{ .Token }}` a la plantilla "Magic Link".
+- Login solo con correo y contraseña (26-09-2026): Supabase no deja editar las plantillas de correo sin SMTP
+  propio, así que el botón «Entrar con un código» se ocultó. Para recuperarlo: SMTP propio (p. ej. iCloud con
+  contraseña de app) + `{{ .Token }}` en "Magic Link or OTP" y "Confirm signup" + volver a poner el botón.
 
 ## Pendientes (al 26-09-2026)
 
-- Supabase: falta que el dueño añada `{{ .Token }}` a la plantilla de correo "Magic Link" para que
-  llegue el código de 6 dígitos (sin eso, el correo solo trae un enlace).
 - Confirmar en un iPhone real el pellizco/arrastre del sticker de Compartir y el menú de compartir/guardar.
 - Pregunta abierta al dueño: en la rutina importada del Excel, el "75" de press inclinado, ¿era kg o lb?
 - Ideas de fase 4 (no pedidas aún): superseries, recordatorios los días de entreno, semana de descarga.

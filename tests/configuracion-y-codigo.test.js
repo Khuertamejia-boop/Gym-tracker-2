@@ -27,12 +27,11 @@ const { chromium, devices } = require('playwright'); const OUT = process.env.OUT
   await click('[data-action="install-dismiss"]'); console.log('install dismissed:', await p.locator('.install-card').count());
   await click('.tabbar [data-tab="progress"]'); console.log('empty progress:', await p.locator('.empty-progress').count());
   await p.screenshot({ path: OUT + '/v19-progress.png' });
-  // login con código
-  await click('#profile-btn'); await click('#sheet [data-action="open-login"]'); await click('#sheet [data-action="code-login"]');
-  await p.fill('#code-form [name="email"]', 'a@b.com'); await click('#code-btn');
-  console.log('code msg:', await p.textContent('#code-msg'));
-  await p.fill('#code-form [name="code"]', '000000'); await click('#code-btn'); console.log('bad code:', await p.textContent('#code-msg'));
-  await p.screenshot({ path: OUT + '/v19-code.png' });
-  await p.fill('#code-form [name="code"]', '123456'); await click('#code-btn'); await p.waitForTimeout(1200);
-  console.log('logged avatar:', await p.textContent('#profile-btn'), '| sheet open', await p.evaluate(() => document.getElementById('sheet').open));
+  // el botón de entrar con código está oculto (Supabase no deja editar el correo sin SMTP propio)
+  await click('#profile-btn'); await click('#sheet [data-action="open-login"]');
+  console.log('code button (login):', await p.locator('#sheet [data-action="code-login"]').count());
+  await p.screenshot({ path: OUT + '/v19-login.png' });
+  await click('#sheet [data-action="open-signup"]');
+  console.log('code button (signup):', await p.locator('#sheet [data-action="code-login"]').count());
+  await p.screenshot({ path: OUT + '/v19-signup.png' });
   console.log('errors', JSON.stringify(errs)); await b.close(); })();

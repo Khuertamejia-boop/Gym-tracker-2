@@ -1410,7 +1410,6 @@ function renderOnboarding() {
         <input type="email" name="email" placeholder="Correo" autocomplete="email" required>
         <input type="password" name="password" placeholder="Contraseña" autocomplete="current-password" minlength="6" required>
         <button class="btn primary block" name="mode" value="login">Entrar</button>
-        <button type="button" class="btn block code-btn" data-action="code-login">✉️ Entrar con un código por correo</button>
         <button type="button" class="btn sm ghost" data-action="cloud-reset">¿Olvidaste tu contraseña?</button>
         <p class="small" id="login-msg" style="margin:0" role="status"></p>
       </form>`;
@@ -1751,11 +1750,9 @@ function openLogin(mode = 'login', { back = 'open-menu', onDone } = {}) {
     </form>
     <div class="login-links">
       ${login
-        ? `<button class="btn block code-btn" data-action="code-login">✉️ Entrar con un código por correo</button>
-           <button class="link" data-action="cloud-reset">¿Olvidaste tu contraseña?</button>
+        ? `<button class="link" data-action="cloud-reset">¿Olvidaste tu contraseña?</button>
            <p>¿No tienes cuenta? <button class="link" data-action="open-signup">Créala aquí</button></p>`
-        : `<button class="btn block code-btn" data-action="code-login">✉️ Mejor, con un código por correo</button>
-           <p>¿Ya tienes cuenta? <button class="link" data-action="open-login">Inicia sesión</button></p>`}
+        : `<p>¿Ya tienes cuenta? <button class="link" data-action="open-login">Inicia sesión</button></p>`}
     </div>`, (root) => bindAccountForm(root, onDone || (() => {
     closeSheet();
     toast('Sesión iniciada · sincronizando tus datos');

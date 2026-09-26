@@ -9,7 +9,7 @@ Está pensada para usarse desde el celular en el gym.
 - Principiante: recibe una rutina recomendada (Full Body con 2-3 días, Torso/Pierna con 4 o más).
 - Intermedio o avanzado: elige entre Push/Pull/Legs, Arnold Split, Torso/Pierna, Full Body, Torso/Pierna · glúteo, o crea la suya desde cero.
 - Al elegir una rutina hecha empieza directamente (se personaliza cuando quiera en **Mi plan → Editar**); solo la rutina propia pasa por el editor. No se pide cuenta al empezar: al terminar el **primer entrenamiento** el resumen invita a crear una cuenta gratis para no perder el progreso (y lo recuerda solo tras el 5.º y el 15.º).
-- Quien ya tiene cuenta toca **Ya tengo cuenta** y recupera todo, con contraseña o con un **código de 6 dígitos por correo** (sin contraseña).
+- Quien ya tiene cuenta toca **Ya tengo cuenta** y recupera todo, con su correo y contraseña.
 - En el iPhone aparece una vez una guía para **añadir la app a la pantalla de inicio** (en Android, un botón Instalar).
 
 Arriba a la derecha está tu **perfil**: iniciar sesión o ver tu cuenta, *Ajustes* (cuerpo de la guía, unidad de peso, modo simple, temporizador de descanso, esfuerzo y tema) y, sin sesión, *Respaldo de datos*.
@@ -98,8 +98,8 @@ js/vendor/muscle-map  js-rich-body-highlighter 0.1.1 (MIT): ilustraciones del cu
 sw.js                 caché sin conexión
 ```
 
-### Entrar con código por correo (Supabase)
-Para que el correo traiga el código de 6 dígitos: en Supabase → **Authentication → Emails → Magic Link**, añade `{{ .Token }}` al cuerpo del mensaje (por ejemplo: `Tu código para entrar: {{ .Token }}`). El servicio de correo incluido en Supabase tiene un límite bajo de envíos por hora; para muchos usuarios conviene configurar un SMTP propio (Authentication → Emails → SMTP).
+### Entrar con código por correo (desactivado)
+El botón está oculto: Supabase solo deja editar las plantillas de correo (para añadir `{{ .Token }}`) si se configura un SMTP propio (Authentication → Emails → Set up SMTP). La función `openCodeLogin` sigue en `js/app.js`; para reactivarla, configura el SMTP, añade `{{ .Token }}` a las plantillas "Magic Link or OTP" y "Confirm signup" y vuelve a poner el botón `data-action="code-login"`.
 
 ## Pruebas y registro de cambios
 
