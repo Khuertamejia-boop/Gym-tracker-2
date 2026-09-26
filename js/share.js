@@ -92,6 +92,13 @@ function spacedWidth(g, text, spacing) {
 
 // Posición horizontal de un bloque de ancho w según la alineación.
 const MARGIN = 80;
+
+// Nombres cortos de los músculos para la línea "Cuádriceps · Glúteos".
+const SHORT_MUSCLE = {
+  chest: 'Pecho', shoulders: 'Hombros', biceps: 'Bíceps', triceps: 'Tríceps', forearms: 'Antebrazos',
+  abs: 'Abdomen', obliques: 'Oblicuos', upper_back: 'Espalda alta', lats: 'Dorsales', lower_back: 'Lumbares',
+  glutes: 'Glúteos', quads: 'Cuádriceps', hamstrings: 'Femorales', calves: 'Pantorrillas',
+};
 const blockX = (align, w) => (align === 'center' ? (W - w) / 2 : align === 'right' ? W - MARGIN - w : MARGIN);
 
 function brand(g, y, align, k) {
@@ -111,7 +118,8 @@ function brand(g, y, align, k) {
 // layout: { align: 'left'|'center'|'right', size: 's'|'m'|'l', pos: 'bottom'|'top' }
 async function drawPhoto(g, session, photo, layout = {}) {
   const align = layout.align || 'left';
-  const k = { s: 0.8, m: 1, l: 1.2 }[layout.size || 'm'];
+  // Tamaños: la grande es la antigua mediana; la mediana, la antigua pequeña.
+  const k = { s: 0.65, m: 0.8, l: 1 }[layout.size || 'm'];
   const top = layout.pos === 'top';
   const st = sessionStats(session);
   const [primary, secondary] = sessionMuscles(session);
@@ -133,18 +141,40 @@ async function drawPhoto(g, session, photo, layout = {}) {
   const mini = await bodyCanvas('front', primary, secondary, bodyW);
   const prs = session.exercises.reduce((a, e) => a + e.sets.filter((x) => x.pr).length, 0);
   const stats = [[st.time, 'Tiempo'], [String(st.sets), 'Series']];
-  if (prs) stats.push([`🏆 ${prs}`, prs === 1 ? 'Récord' : 'Récords']);
+  const worked = primary.slice(0, 4).map((gr) => SHORT_MUSCLE[gr] || gr).join(' · ');
+  const musclesH = worked ? 50 * k : 0;
+  const badgeH = prs ? 58 * k + 30 * k : 0;
 
   g.font = font(800, volSize);
   const volW = Math.min(g.measureText(vol).width, W - 2 * MARGIN - (align === 'center' ? 0 : bodyW + 30 * k));
-  const heroH = align === 'center' ? mini.height + 24 * k + volSize * 0.8 + 50 * k : Math.max(mini.height, volSize + 50 * k);
+  const heroH = align === 'center'
+    ? mini.height + 24 * k + volSize * 0.8 + 50 * k + musclesH
+    : Math.max(mini.height, volSize * 0.8 + 50 * k + musclesH);
   const eyebrowH = 32 * k + 36 * k;
   const statsH = 64 * k + 48 * k;
-  const blockH = eyebrowH + heroH + 56 * k + statsH + 64 * k + 26 * k;
+  const blockH = badgeH + eyebrowH + heroH + 56 * k + statsH + 64 * k + 26 * k;
   let y = top ? 250 : H - 110 - blockH;
 
   g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 28; g.shadowOffsetY = 2;
   g.textAlign = 'left';
+
+  // ¡NUEVO PR! en una cápsula dorada.
+  if (prs) {
+    const txt = prs === 1 ? '🏆 ¡NUEVO PR!' : `🏆 ¡${prs} NUEVOS PR!`;
+    g.font = font(800, Math.round(28 * k));
+    const tw = spacedWidth(g, txt, 3 * k);
+    const bw = tw + 52 * k, bh = 58 * k;
+    const bx = blockX(align, bw);
+    const gold = g.createLinearGradient(bx, y, bx + bw, y + bh);
+    gold.addColorStop(0, '#f6dc97'); gold.addColorStop(1, '#c8962e');
+    g.fillStyle = gold;
+    g.beginPath(); g.roundRect(bx, y, bw, bh, bh / 2); g.fill();
+    g.save(); g.shadowColor = 'transparent';
+    g.fillStyle = '#1a1206';
+    spaced(g, txt, bx + 26 * k, y + bh / 2 + 10 * k, 3 * k);
+    g.restore();
+    y += badgeH;
+  }
 
   // Fecha y día.
   g.fillStyle = '#fff'; g.font = font(700, Math.round(30 * k));
@@ -162,18 +192,27 @@ async function drawPhoto(g, session, photo, layout = {}) {
     g.fillText(vol, W / 2, y + volSize * 0.8, W - 2 * MARGIN);
     g.font = font(600, Math.round(26 * k)); g.fillStyle = 'rgba(255,255,255,0.85)';
     spaced(g, labelTxt, W / 2, y + volSize * 0.8 + 46 * k, 6 * k, 'center');
-    y += volSize * 0.8 + 50 * k;
+    if (worked) {
+      g.font = font(600, Math.round(34 * k)); g.fillStyle = '#fff';
+      g.fillText(worked, W / 2, y + volSize * 0.8 + 46 * k + musclesH, W - 2 * MARGIN);
+    }
+    y += volSize * 0.8 + 50 * k + musclesH;
   } else {
     const rowH = heroH;
     const bodyX = align === 'left' ? MARGIN - 16 * k : W - MARGIN - mini.width + 16 * k;
     g.drawImage(mini, bodyX, y + rowH - mini.height);
-    const base = y + rowH - 50 * k;
+    const base = y + rowH - 50 * k - musclesH;
     g.fillStyle = '#fff';
-    g.textAlign = align === 'left' ? 'left' : 'right';
+    const ta = align === 'left' ? 'left' : 'right';
+    g.textAlign = ta;
     const tx = align === 'left' ? bodyX + mini.width + 20 * k : bodyX - 20 * k;
     g.fillText(vol, tx, base, volW);
     g.font = font(600, Math.round(26 * k)); g.fillStyle = 'rgba(255,255,255,0.85)';
-    spaced(g, labelTxt, tx, base + 46 * k, 6 * k, align === 'left' ? 'left' : 'right');
+    spaced(g, labelTxt, tx, base + 46 * k, 6 * k, ta);
+    if (worked) {
+      g.font = font(600, Math.round(34 * k)); g.fillStyle = '#fff'; g.textAlign = ta;
+      g.fillText(worked, tx, base + 46 * k + musclesH, W - MARGIN - (align === 'left' ? tx : W - tx));
+    }
     y += rowH;
   }
   y += 56 * k;

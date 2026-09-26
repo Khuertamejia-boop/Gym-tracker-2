@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Imagen para compartir: línea con los músculos trabajados (p. ej. Cuádriceps · Glúteos) bajo el volumen, cápsula dorada «¡NUEVO PR!» / «¡2 NUEVOS PR!» y tamaños de texto más contenidos (la grande es la antigua mediana, y hay una nueva más pequeña).
 - Pruebas automáticas guardadas en `tests/`, notas del proyecto en `CLAUDE.md` y este registro de cambios.
 - Compartir: solo la plantilla sobre foto, con alineación, tamaño de texto y posición ajustables
 - Resumen más limpio: chips de mejora y récords, botón de compartir con miniatura de la historia y ejercicios plegables

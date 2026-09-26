@@ -58,5 +58,6 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - La cuenta **no** se pide en la configuración inicial: se ofrece tras el 1.er entrenamiento (y el 5.º y 15.º).
 - Temporizador de descanso automático al marcar serie; se detiene tras la última serie del entreno.
 - Compartir: solo plantilla "Sobre foto" (PNG transparente o sobre foto), con alineación,
-  tamaño y posición ajustables; botón protagonista en el resumen con miniatura de la historia.
+  tamaño (3 tamaños contenidos) y posición ajustables; muestra los músculos trabajados y una cápsula
+  dorada «¡NUEVO PR!» si hubo récords; botón protagonista en el resumen con miniatura de la historia.
 - Supabase: para el código por correo hay que añadir `{{ .Token }}` a la plantilla "Magic Link".
