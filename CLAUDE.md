@@ -86,6 +86,9 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - Logo (26-09-2026, opción A de 4): pesa blanca redondeada sobre degradado carmesí (#e8354b → #a50d24), estilo iconos de Apple.
   `icons/icon.svg` lleva esquinas redondeadas (favicon, bienvenida); los PNG (`icon-180` para iPhone, 192, 512) van
   cuadrados a sangre porque iOS/Android recortan las esquinas. Reutilizar la misma pesa en la app de Xcode.
+- Miniaturas de ejercicios (26-09-2026): zoom automático al músculo principal (`zoomBox` en `js/body.js`, cajas medidas
+  en `BOXES`; brazos, hombros y piernas se enfocan en un solo lado). Ilustraciones por ejercicio y cuerpo 3D girable
+  quedan para la app de Xcode (en la web solo hay dibujos de frente y espalda).
 - Cuentas del dueño: la de **iCloud** es la principal (datos reales); la de **Gmail** es solo para probar la app.
   Al cerrar sesión se sincroniza y se vacía el dispositivo (`S.clearLocal()`), para cambiar de cuenta sin mezclar datos.
 
