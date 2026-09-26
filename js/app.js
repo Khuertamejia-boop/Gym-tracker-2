@@ -1645,7 +1645,7 @@ function showSummary(session) {
       </div>` : ''}
       <button class="share-cta" data-share aria-label="Compartir entrenamiento">
         <span class="sc-thumb" aria-hidden="true"><img alt=""></span>
-        <span class="sc-text"><b>Comparte tu entrenamiento</b><small>Crea una historia para Instagram</small></span>
+        <span class="sc-text"><b>Comparte tu entrenamiento</b><small>Crea una imagen para tus historias</small></span>
         <span class="sc-go" aria-hidden="true">${ICON_SHARE}</span>
       </button>
       ${askSignup(session) ? `<div class="win-save" id="win-save">
