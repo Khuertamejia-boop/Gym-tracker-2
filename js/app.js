@@ -49,6 +49,7 @@ const ICON_MORE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10a2 
 const ICON_CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 10.4 3.3 3.3-1.4 1.4-3.9-3.9V6h2v6.4Z"/></svg>';
 const ICON_BACK = '<svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12l4.6-4.6Z"/></svg>';
 const ICON_BARS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4v7H4v-7Zm6-5h4v12h-4V8Zm6-4h4v16h-4V4Z"/></svg>';
+const ICON_SHARE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 7.5 7.5l1.4 1.4L11 6.8V15h2V6.8l2.1 2.1 1.4-1.4L12 3ZM5 11v9h14v-9h-3v2h1v5H7v-5h1v-2H5Z"/></svg>';
 const ICON_PERSON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.4 0-8 2.2-8 5v2h16v-2c0-2.8-3.6-5-8-5Z"/></svg>';
 
 function toast(msg) {
@@ -638,6 +639,7 @@ function markSet(i, j) {
 
 function afterMarking(anyPr) {
   const d = S.getState().draft;
+  if (d.rest && d.exercises.every(exDone)) d.rest = null; // última serie: sin descanso
   S.save();
   const y = window.scrollY;
   render();
@@ -645,6 +647,189 @@ function afterMarking(anyPr) {
   if (!d.editing && d.exercises.every(exDone)) {
     setTimeout(() => toast('¡Completaste todas las series! 💪'), anyPr ? 2300 : 0);
   }
+}
+
+// ---------- Barra −/+ sobre el teclado (peso y reps) ----------
+
+const numBar = document.createElement('div');
+numBar.className = 'num-bar';
+numBar.hidden = true;
+numBar.setAttribute('role', 'toolbar');
+numBar.setAttribute('aria-label', 'Ajuste rápido');
+document.body.appendChild(numBar);
+let numTarget = null;
+
+const isNumField = (el) => el?.matches?.('.set-row [data-set="kg"], .set-row [data-set="reps"], .set-row [data-warm="kg"], .set-row [data-warm="reps"]');
+const exOfField = (el) => S.getState().draft?.exercises[el.dataset.i];
+const isBarbell = (exId) => S.exById(exId).equipment === 'Barra';
+
+function showNumBar(el) {
+  numTarget = el;
+  const kind = el.dataset.set || el.dataset.warm;
+  const e = exOfField(el);
+  if (!e) return;
+  const u = S.unitFor(e.exId);
+  const step = kind === 'kg' ? (u === 'lb' ? 5 : 2.5) : 1;
+  const label = kind === 'kg' ? `${fmtN(step)} ${u}` : '1 rep';
+  numBar.innerHTML = `
+    <button type="button" data-nb="-${step}" aria-label="Restar ${label}">−${fmtN(step)}</button>
+    <button type="button" data-nb="${step}" aria-label="Sumar ${label}">+${fmtN(step)}</button>
+    ${kind === 'kg' && isBarbell(e.exId) ? '<button type="button" data-nb="plates">Discos</button>' : ''}
+    <span class="grow"></span>
+    <button type="button" data-nb="done" class="nb-done">Listo</button>`;
+  numBar.hidden = false;
+  placeNumBar();
+}
+
+function placeNumBar() {
+  if (numBar.hidden) return;
+  const vv = window.visualViewport;
+  const bottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+  numBar.style.top = `${bottom - numBar.offsetHeight}px`;
+}
+window.visualViewport?.addEventListener('resize', placeNumBar);
+window.visualViewport?.addEventListener('scroll', placeNumBar);
+
+document.addEventListener('focusin', (e) => { if (isNumField(e.target)) showNumBar(e.target); });
+document.addEventListener('focusout', () => setTimeout(() => {
+  if (!isNumField(document.activeElement)) { numBar.hidden = true; numTarget = null; }
+}, 60));
+// Los botones no roban el foco: el teclado sigue abierto.
+numBar.addEventListener('pointerdown', (e) => e.preventDefault());
+numBar.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-nb]');
+  if (!b || !numTarget) return;
+  const t = numTarget;
+  const v = b.dataset.nb;
+  if (v === 'done') { t.blur(); return; }
+  const e2 = exOfField(t);
+  if (v === 'plates') {
+    const kg = S.fromUnit(num(t.value !== '' ? t.value : t.placeholder) || 0, S.unitFor(e2.exId));
+    t.blur();
+    openPlates(e2.exId, kg);
+    return;
+  }
+  const cur = Number(t.value !== '' ? t.value : t.placeholder) || 0;
+  const next = Math.max(0, Math.round((cur + Number(v)) * 100) / 100);
+  t.value = String(next);
+  t.dispatchEvent(new Event('input', { bubbles: true }));
+});
+
+// ---------- Calculadora de discos ----------
+
+const PLATES = { kg: [25, 20, 15, 10, 5, 2.5, 1.25], lb: [45, 35, 25, 10, 5, 2.5] };
+const BARS = { kg: [20, 15, 10], lb: [45, 35, 25] };
+const PLATE_COLORS = ['#c8102e', '#1f5fbf', '#e0b04a', '#1f8a3a', '#e8e8e4', '#3a3a3a', '#a8a8a0'];
+
+function platesFor(total, bar, u) {
+  let side = (total - bar) / 2;
+  const out = [];
+  if (side <= 0) return { out, rest: 0 };
+  for (const p of PLATES[u]) while (side + 1e-9 >= p) { out.push(p); side -= p; }
+  return { out, rest: Math.round(side * 2 * 100) / 100 };
+}
+
+function openPlates(exId, kg) {
+  const u = S.unitFor(exId);
+  const st = S.getState().settings;
+  const bar = st.bar?.[u] ?? BARS[u][0];
+  const total = Math.round(S.toUnit(kg, u) * 100) / 100;
+  const { out, rest } = platesFor(total, bar, u);
+  const maxP = PLATES[u][0];
+  openSheet('Calculadora de discos', `
+    <form id="plates-form" class="plates">
+      <label class="field"><span>Peso total (${u})</span>
+        <input type="number" inputmode="decimal" step="0.5" min="0" name="total" value="${total || ''}" placeholder="0"></label>
+      <div class="muted small" style="margin:10px 0 6px">Barra</div>
+      <div class="segmented">${BARS[u].map((b) => `<button type="button" class="${b === bar ? 'active' : ''}" data-bar="${b}">${fmtN(b)} ${u}</button>`).join('')}</div>
+      <div class="plate-viz" aria-hidden="true">
+        <span class="pv-bar"></span>
+        ${out.map((p) => `<span class="pv-plate" style="height:${40 + (p / maxP) * 70}px;background:${PLATE_COLORS[PLATES[u].indexOf(p)]}"></span>`).join('')}
+        <span class="pv-collar"></span>
+      </div>
+      <p class="plates-text">${total <= bar ? `Solo la barra (${fmtN(bar)} ${u}).`
+        : `<b>Por lado:</b> ${out.length ? out.map((p) => fmtN(p)).join(' + ') : '—'} ${u}`}
+        ${rest ? `<br><span class="muted small">Faltan ${fmtN(rest)} ${u} que no se pueden cargar con discos estándar.</span>` : ''}</p>
+    </form>`, (root) => {
+    const form = root.querySelector('#plates-form');
+    form.addEventListener('submit', (e) => e.preventDefault());
+    form.total.addEventListener('change', () => openPlates(exId, S.fromUnit(num(form.total.value) || 0, u)));
+    form.querySelectorAll('[data-bar]').forEach((b) => b.addEventListener('click', () => {
+      st.bar = { ...(st.bar || {}), [u]: Number(b.dataset.bar) };
+      S.save();
+      openPlates(exId, S.fromUnit(num(form.total.value) || 0, u));
+    }));
+  });
+}
+
+// ---------- Compartir el resumen como imagen ----------
+
+async function shareSummary(session) {
+  const W = 1080, H = 1350;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  const font = (w, s) => `${w} ${s}px -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif`;
+  g.fillStyle = '#0f1011'; g.fillRect(0, 0, W, H);
+  const glow = g.createRadialGradient(W / 2, 0, 40, W / 2, 0, 760);
+  glow.addColorStop(0, 'rgba(34,177,76,0.35)'); glow.addColorStop(1, 'rgba(34,177,76,0)');
+  g.fillStyle = glow; g.fillRect(0, 0, W, H);
+  // Check
+  g.fillStyle = 'rgba(34,177,76,0.22)'; g.beginPath(); g.arc(W / 2, 190, 92, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#22b14c'; g.beginPath(); g.arc(W / 2, 190, 66, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = '#fff'; g.lineWidth = 12; g.lineCap = 'round'; g.lineJoin = 'round';
+  g.beginPath(); g.moveTo(W / 2 - 28, 192); g.lineTo(W / 2 - 6, 214); g.lineTo(W / 2 + 32, 170); g.stroke();
+  g.textAlign = 'center';
+  g.fillStyle = '#fff'; g.font = font(800, 64); g.fillText('Entrenamiento completado', W / 2, 360);
+  g.fillStyle = '#9a9990'; g.font = font(500, 34); g.fillText(`${shortName(session.dayName)} · ${S.formatDate(session.date)}`, W / 2, 415);
+  // Fichas
+  const mins = Math.max(1, Math.round((session.finishedAt - session.startedAt) / 60000));
+  const u = S.defaultUnit();
+  const stats = [
+    [mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : `${mins} min`, 'Tiempo'],
+    [String(S.doneSets(session)), 'Series'],
+    [`${Math.round(S.toUnit(S.sessionVolume(session), u)).toLocaleString('es')} ${u}`, 'Volumen'],
+  ];
+  const bw = 300, gap = 30, x0 = (W - (bw * 3 + gap * 2)) / 2;
+  stats.forEach(([v, l], k) => {
+    const x = x0 + k * (bw + gap);
+    g.fillStyle = '#1e1f20'; g.beginPath(); g.roundRect(x, 480, bw, 170, 32); g.fill();
+    g.fillStyle = '#fff'; g.font = font(800, 48); g.fillText(v, x + bw / 2, 570);
+    g.fillStyle = '#9a9990'; g.font = font(500, 30); g.fillText(l, x + bw / 2, 618);
+  });
+  // Ejercicios
+  g.textAlign = 'left';
+  g.fillStyle = '#fff'; g.font = font(700, 38); g.fillText(`Ejercicios · ${session.exercises.length}`, 90, 740);
+  const list = session.exercises.slice(0, 5);
+  list.forEach((e, k) => {
+    const y = 815 + k * 92;
+    const sets = e.sets.filter((x) => x.side !== 'R').length;
+    const top = Math.max(...e.sets.map((x) => Number(x.kg) || 0));
+    const name = S.exById(e.exId).name;
+    g.fillStyle = '#fff'; g.font = font(600, 34);
+    g.fillText(name.length > 34 ? `${name.slice(0, 33)}…` : name, 90, y);
+    g.fillStyle = '#9a9990'; g.font = font(500, 28);
+    g.fillText(`${series(sets)}${top ? ` · ${wt(top, S.unitFor(e.exId))}` : ''}${e.sets.some((x) => x.pr) ? '  🏆' : ''}`, 90, y + 36);
+  });
+  if (session.exercises.length > 5) { g.fillStyle = '#9a9990'; g.font = font(500, 28); g.fillText(`y ${session.exercises.length - 5} más`, 90, 815 + 5 * 92); }
+  g.textAlign = 'center'; g.fillStyle = '#d9233a'; g.font = font(800, 30); g.fillText('Mi Gym Tracker', W / 2, H - 44);
+
+  const blob = await new Promise((r) => c.toBlob(r, 'image/png'));
+  const file = new File([blob], `entrenamiento-${session.date}.png`, { type: 'image/png' });
+  try {
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Entrenamiento completado' });
+      return;
+    }
+  } catch (err) {
+    if (err?.name === 'AbortError') return;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = file.name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('Imagen guardada');
 }
 
 // =====================================================================
@@ -1486,7 +1671,7 @@ function showSummary(session) {
         <b>${trained} de ${goal}</b></div>` : ''}
       <p class="win-phrase">${PHRASES[Math.floor(Math.random() * PHRASES.length)]}</p>
     </div>
-    <div class="win-foot"><button class="btn primary block win-done">Listo</button></div>`;
+    <div class="win-foot"><button class="btn win-share" aria-label="Compartir resumen">${ICON_SHARE}</button><button class="btn primary grow win-done">Listo</button></div>`;
   document.body.appendChild(overlay);
   document.body.classList.add('no-scroll');
   mountMuscleMaps(overlay);
@@ -1498,6 +1683,7 @@ function showSummary(session) {
   const onKey = (e) => { if (e.key === 'Escape') close(); };
   document.addEventListener('keydown', onKey);
   overlay.querySelector('.win-done').addEventListener('click', close);
+  overlay.querySelector('.win-share').addEventListener('click', () => shareSummary(session).catch(() => toast('No se pudo crear la imagen')));
   overlay.querySelector('.win-done').focus({ preventScroll: true });
   overlay.scrollTop = 0;
   if (navigator.vibrate) navigator.vibrate(80);
@@ -1931,10 +2117,16 @@ const actions = {
     openSheet(ex.name, `
       <div class="menu-list">
         <button class="menu-row" data-action="ex-detail" data-id="${ex.id}"><span class="grow">Ver músculos y técnica</span><span class="chev" aria-hidden="true">›</span></button>
+        ${isBarbell(ex.id) ? `<button class="menu-row" data-action="plates" data-i="${i}"><span class="grow">Calculadora de discos</span><span class="chev" aria-hidden="true">›</span></button>` : ''}
         ${i > 0 ? `<button class="menu-row" data-action="ex-move" data-i="${i}" data-dir="-1"><span class="grow">Mover antes</span></button>` : ''}
         ${i < d.exercises.length - 1 ? `<button class="menu-row" data-action="ex-move" data-i="${i}" data-dir="1"><span class="grow">Mover después</span></button>` : ''}
         <button class="menu-row danger-row" data-action="ex-remove" data-i="${i}"><span class="grow">Quitar del entrenamiento</span></button>
       </div>`);
+  },
+  plates: (b) => {
+    const e = S.getState().draft.exercises[b.dataset.i];
+    const next = e.sets.find((x) => !x.done) || e.sets[e.sets.length - 1];
+    openPlates(e.exId, Number(next?.kg) || 0);
   },
   'ex-move': (b) => {
     const d = S.getState().draft;
