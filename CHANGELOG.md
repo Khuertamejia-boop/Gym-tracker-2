@@ -3,6 +3,10 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Progreso con colores que significan algo: verde = vas bien o mejoras, ámbar = te quedas corto.
+  - Arriba, 3 fichas (entrenos, duración, volumen) con el cambio frente al periodo anterior («↑ 18 %» en verde).
+  - «Músculos» pasa a «Series por semana»: media semanal por grupo con la zona 10–20 dibujada; verde dentro, ámbar y «BAJO» si se queda corto.
+  - Ejercicios: la línea va en verde si subes y en gris si estás estancado, con la mejora al lado («+7,5 kg»).
 - Tanda de arreglos y limpieza del entreno:
   - Los avisos salen arriba, como una notificación del iPhone, y ya no tapan el descanso.
   - El iPhone ya no hace zoom al escribir la nota, el RIR/RPE o la fecha.

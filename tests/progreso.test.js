@@ -24,7 +24,7 @@ for (const scheme of ['dark', 'light']) {
   await p.reload(); await p.waitForTimeout(600);
   await click('.tabbar [data-tab="progress"]'); await p.waitForTimeout(600);
   console.log(scheme, 'tiles:', (await p.locator('.an-tile').allTextContents()).map(t => t.replace(/\s+/g, ' ').trim()).join(' | '));
-  console.log('bars:', (await p.locator('.mb-row').allTextContents()).map(t => t.replace(/\s+/g, ' ').trim()).join(' | '), '| sparks', await p.locator('.ex-spark canvas').count());
+  console.log('bars:', (await p.locator('.sw-row').allTextContents()).map(t => t.replace(/\s+/g, ' ').trim()).join(' | '), '| sparks', await p.locator('.ex-spark canvas').count(), '| deltas:', (await p.locator('.ex-delta').allTextContents()).join(' '));
   await p.screenshot({ path: `${OUT}/an-${scheme}-1.png` });
   await p.evaluate(() => window.scrollTo(0, document.querySelector('.an-section:nth-of-type(2)') ? 560 : 560)); await p.waitForTimeout(300);
   await p.screenshot({ path: `${OUT}/an-${scheme}-2.png` });

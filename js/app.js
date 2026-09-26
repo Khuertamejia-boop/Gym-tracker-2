@@ -1211,39 +1211,69 @@ function short(v) {
   return Math.round(v).toLocaleString('es');
 }
 
-// Grupos del gráfico de músculos; cada uno suma los músculos del mapa que lo forman.
-const MUSCLE_BARS = [
-  ['Brazos', ['biceps', 'triceps', 'forearms']],
+// Sesiones del periodo anterior de la misma duración (para comparar); nada en «Todo».
+function prevRangeSessions() {
+  const days = RANGES.find(([k]) => k === ui.range)[2];
+  if (days === Infinity) return null;
+  const to = new Date(); to.setDate(to.getDate() - days);
+  const from = new Date(); from.setDate(from.getDate() - days * 2);
+  const [fi, ti] = [S.todayISO(from), S.todayISO(to)];
+  return S.getState().sessions.filter((x) => x.date > fi && x.date <= ti);
+}
+
+// Semanas del periodo: desde el inicio del periodo (o tu primer entreno, si es posterior) hasta hoy.
+function rangeWeeks() {
+  const all = S.getState().sessions;
+  if (!all.length) return 1;
+  const days = RANGES.find(([k]) => k === ui.range)[2];
+  const first = S.parseISO(all[0].date).getTime();
+  const start = days === Infinity ? first : Math.max(first, Date.now() - days * 86400000);
+  return Math.max(1, (Date.now() - start) / (7 * 86400000));
+}
+
+// Series por semana de cada grupo (media de sus músculos), comparables con la zona 10–20.
+// Como en Mi plan, un músculo secundario cuenta media serie; en ejercicios por lado, cada par es una serie.
+const WEEKLY_GROUPS = [
   ['Pecho', ['chest']],
-  ['Espalda', ['lats', 'upper_back', 'lower_back']],
+  ['Espalda', ['lats', 'upper_back']],
   ['Hombros', ['shoulders']],
-  ['Piernas', ['quads', 'hamstrings', 'glutes', 'calves']],
-  ['Core', ['abs', 'obliques']],
+  ['Brazos', ['biceps', 'triceps']],
+  ['Piernas', ['quads', 'hamstrings', 'glutes']],
+  ['Core', ['abs']],
 ];
+function weeklySets(sessions) {
+  const bag = {};
+  for (const s of sessions) {
+    for (const e of s.exercises) {
+      const n = e.sets.filter((x) => x.done !== false && x.side !== 'R').length;
+      const [p, sec] = musclesFor(e.exId);
+      p.forEach((g) => { bag[g] = (bag[g] || 0) + n; });
+      sec.filter((g) => !p.includes(g)).forEach((g) => { bag[g] = (bag[g] || 0) + n / 2; });
+    }
+  }
+  const weeks = rangeWeeks();
+  return WEEKLY_GROUPS.map(([name, gs]) => [name, gs.reduce((a, g) => a + (bag[g] || 0), 0) / gs.length / weeks]);
+}
 
 function rangeStats(sessions) {
-  const exIds = new Set();
-  let sets = 0, reps = 0, minutes = 0;
-  const direct = MUSCLE_BARS.map(() => 0), indirect = MUSCLE_BARS.map(() => 0);
-  const barOf = (g) => MUSCLE_BARS.findIndex(([, gs]) => gs.includes(g));
+  let minutes = 0;
   for (const s of sessions) {
     const m = (s.finishedAt - s.startedAt) / 60000;
     if (m > 0 && m < 300) minutes += m;
-    for (const e of s.exercises) {
-      exIds.add(e.exId);
-      const done = e.sets.filter((x) => x.done !== false && x.side !== 'R');
-      sets += done.length;
-      done.forEach((x) => { reps += Number(x.reps) || 0; });
-      // Cada serie cuenta una vez por grupo: directa si algún músculo principal es del grupo.
-      const [p, sec] = musclesFor(e.exId);
-      const pb = new Set(p.map(barOf).filter((i) => i >= 0));
-      const sb = new Set(sec.map(barOf).filter((i) => i >= 0 && !pb.has(i)));
-      pb.forEach((i) => { direct[i] += done.length; });
-      sb.forEach((i) => { indirect[i] += done.length / 2; });
-    }
   }
   const volume = sessions.reduce((a, x) => a + S.sessionVolume(x), 0);
-  return { workouts: sessions.length, minutes, exercises: exIds.size, sets, reps, volume, direct, indirect };
+  return { workouts: sessions.length, minutes, volume };
+}
+
+// Cápsula de cambio: verde si sube; gris si baja o no cambia.
+function deltaPill(cur, prev, { pct = true, cls = 'an-delta', unit = '' } = {}) {
+  if (prev === null || prev === undefined) return '';
+  if (pct && !prev) return '';
+  const diff = pct ? Math.round(((cur - prev) / prev) * 100) : cur - prev;
+  const txt = pct ? `${Math.abs(diff)} %` : `${fmtN(Math.abs(diff))}${unit}`;
+  if (!diff) return `<span class="${cls}">= ${pct ? '0 %' : `0${unit}`}</span>`;
+  const sign = unit ? (diff > 0 ? '+' : '−') : `${diff > 0 ? '↑' : '↓'} `;
+  return `<span class="${cls} ${diff > 0 ? 'up' : ''}">${sign}${txt}</span>`;
 }
 
 // Evolución de cada ejercicio: un punto por entrenamiento (peso máximo o volumen).
@@ -1270,7 +1300,9 @@ function renderProgress() {
   const sessions = rangeSessions();
   const t = rangeStats(sessions);
   const du = S.defaultUnit();
-  const tile = (value, label) => `<div class="an-tile"><b>${value}</b><span>${label}</span></div>`;
+  const tile = (value, label, delta = '') => `<div class="an-tile"><b>${value}</b><span>${label}</span>${delta}</div>`;
+  const prev = prevRangeSessions();
+  const pt = prev && prev.length ? rangeStats(prev) : null;
   const hours = t.minutes >= 60 ? `${Math.round(t.minutes / 60)} h` : `${Math.round(t.minutes)} min`;
   const streak = weekStreak();
 
@@ -1292,23 +1324,26 @@ function renderProgress() {
   }
 
   html += `<div class="an-grid">
-    ${tile(t.workouts, t.workouts === 1 ? 'Entreno' : 'Entrenos')}
-    ${tile(hours, 'Duración')}
-    ${tile(t.exercises, 'Ejercicios')}
-    ${tile(short(t.sets), 'Series')}
-    ${tile(short(t.reps), 'Reps')}
-    ${tile(short(S.toUnit(t.volume, du)), `Volumen ${du}`)}
+    ${tile(t.workouts, t.workouts === 1 ? 'Entreno' : 'Entrenos', pt ? deltaPill(t.workouts, pt.workouts, { pct: false }) : '')}
+    ${tile(hours, 'Duración', pt ? deltaPill(t.minutes, pt.minutes) : '')}
+    ${tile(short(S.toUnit(t.volume, du)), `Volumen ${du}`, pt ? deltaPill(t.volume, pt.volume) : '')}
   </div>`;
 
-  const maxBar = Math.max(1, ...t.direct.map((d, i) => d + t.indirect[i]));
-  const pct = (v) => `${((v / maxBar) * 100).toFixed(1)}%`;
+  // Series por semana: barra verde dentro de la zona 10–20, ámbar si se queda corta.
+  const ws = weeklySets(sessions);
+  const scale = Math.max(24, ...ws.map(([, v]) => v));
+  const pctOf = (v) => `${Math.min(100, (v / scale) * 100).toFixed(1)}%`;
   html += `<section class="an-section">
-    <div class="an-head"><h3>Músculos</h3><button class="info-btn" data-action="muscle-info" aria-label="Qué significan las barras">i</button></div>
-    ${MUSCLE_BARS.map(([name], i) => `<div class="mb-row">
-      <span class="mb-name">${name}</span>
-      <span class="mb-track"><span class="mb-direct" style="width:${pct(t.direct[i])}"></span><span class="mb-indirect" style="width:${pct(t.indirect[i])}"></span></span>
-      <span class="mb-num">${Math.round(t.direct[i] + t.indirect[i])}</span>
-    </div>`).join('')}
+    <div class="an-head"><h3>Series por semana</h3><button class="info-btn" data-action="muscle-info" aria-label="Qué significan las barras">i</button></div>
+    ${ws.map(([name, v]) => {
+      const low = v < VOLUME_MIN, high = v > VOLUME_MAX;
+      return `<div class="sw-row">
+        <span class="sw-name">${name}</span>
+        <span class="sw-track" aria-hidden="true"><span class="sw-band" style="left:${pctOf(VOLUME_MIN)};width:calc(${pctOf(VOLUME_MAX)} - ${pctOf(VOLUME_MIN)})"></span><span class="sw-bar ${low ? 'low' : ''}" style="width:${pctOf(v)}"></span></span>
+        <span class="sw-num"><b>${fmtN(v, v < 10 ? 1 : 0)}</b>${low ? '<span class="sw-tag">BAJO</span>' : high ? '<span class="sw-tag high">ALTO</span>' : ''}</span>
+      </div>`;
+    }).join('')}
+    <div class="sw-legend"><span><i style="background:var(--good)"></i>En zona</span><span><i style="background:var(--warn)"></i>Por debajo</span><span><i style="background:color-mix(in srgb, var(--good) 14%, transparent);box-shadow:inset 0 0 0 1.5px var(--good)"></i>Zona 10–20</span></div>
   </section>`;
 
   const list = exerciseSeries(sessions);
@@ -1323,9 +1358,11 @@ function renderProgress() {
     ${shown.length ? shown.map(([id, pts], i) => {
       const u = isVol ? du : S.unitFor(id);
       const lastY = S.toUnit(pts[pts.length - 1].y, u);
+      const firstY = S.toUnit(pts[0].y, u);
+      const delta = isVol ? deltaPill(lastY, firstY, { cls: 'ex-delta' }) : deltaPill(lastY, firstY, { pct: false, cls: 'ex-delta', unit: ` ${u}` });
       return `<div class="ex-spark">
         <button class="ex-spark-head" data-action="ex-detail" data-id="${id}"><span class="ellipsis">${esc(S.exById(id).name)}</span>
-          <b>${isVol ? short(lastY) : fmtN(lastY)} <small>${u}</small></b></button>
+          <b>${isVol ? short(lastY) : fmtN(lastY)} <small>${u}</small>${delta}</b></button>
         <div class="spark-box"><canvas id="c-ex-${i}" role="img" aria-label="Evolución de ${esc(S.exById(id).name)}"></canvas></div>
       </div>`;
     }).join('') : '<p class="muted small" style="margin:4px 0 0">Cuando repitas un ejercicio al menos dos veces en este periodo verás aquí cómo evoluciona.</p>'}
@@ -1346,6 +1383,7 @@ function renderProgress() {
     const u = isVol ? du : S.unitFor(id);
     sparkArea(document.getElementById(`c-ex-${i}`), {
       points: pts.map((p) => ({ x: p.x, y: S.toUnit(p.y, u) })), unit: u,
+      improving: pts[pts.length - 1].y > pts[0].y,
       onPoint: (k) => actions['session-detail']({ dataset: { id: pts[k].sid } }),
     });
   });
@@ -2554,9 +2592,9 @@ const actions = {
   range: (b) => { ui.range = b.dataset.r; render(); },
   'ex-metric-p': (b) => { ui.exMetricP = b.dataset.m; render(); },
   'ex-show-all': () => { ui.exShowAll = !ui.exShowAll; render(); },
-  'muscle-info': () => openSheet('Músculos', `<p style="margin-top:0">Cada barra suma las <b>series</b> que hiciste en el periodo para ese grupo.</p>
-    <p><span class="mb-key"></span> <b>Sólido:</b> el grupo es el músculo principal del ejercicio.</p>
-    <p><span class="mb-key indirect"></span> <b>Rayado:</b> trabaja como secundario (cuenta como media serie).</p>`),
+  'muscle-info': () => openSheet('Series por semana', `<p style="margin-top:0">Cada barra es la <b>media de series por semana</b> de ese grupo en el periodo elegido (si es un grupo de varios músculos, la media de ellos).</p>
+    <p>La franja verde es la <b>zona de 10 a 20 series</b>, lo recomendado para ganar músculo. En verde, estás dentro; en <b>ámbar</b>, te quedas corto.</p>
+    <p class="muted small">Un músculo que trabaja como secundario cuenta como media serie.</p>`),
   'history-more': () => { ui.historyLimit += 20; render(); },
   'body-field': (b) => { ui.bodyField = b.dataset.f; render(); },
   'body-add': () => bodyForm(),

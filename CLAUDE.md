@@ -48,7 +48,7 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - **Poca información en pantalla**: prefiere plegar/ocultar detalles (se abren al tocar).
   Rechazó por recargados: barra −/+ sobre el teclado y calculadora de discos.
 - Colores: **carmesí** principal (`--accent`), **dorado** para logros (`--gold`), **verde** para
-  completado (series hechas, check del resumen).
+  completado (series hechas, check del resumen) y «vas bien / mejoras»; **ámbar** (`--warn`) para «te quedas corto».
 - Enseñar maquetas/propuestas antes de cambios grandes de diseño; implementar directo si pide "hazlo".
 
 ## Decisiones
@@ -105,6 +105,10 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - Límites al anotar (26-09-2026, `clampEntry`/`maxKg` en `js/store.js`): sin ceros delante; peso > 0 (0 = sin lastre solo en
   peso corporal); reps 1–100 (500 en peso corporal); máximo de peso por ejercicio algo por encima del récord mundial
   (peso muerto 510, sentadilla 510, banca 360, militar 230, prensa 1200) o por equipo (mancuernas 120 c/u, polea 250…).
+- Progreso (26-09-2026): 3 fichas con cambio vs. periodo anterior (verde si sube, gris si baja o igual; nada en «Todo»);
+  «Series por semana» = media semanal por grupo (media de sus músculos, secundario = ½) con franja 10–20: verde dentro,
+  ámbar + «BAJO» si < 10, «ALTO» gris si > 20; minigráficos de ejercicio verdes si el último valor supera al primero,
+  gris si no, con cápsula «+7,5 kg» / «↑ 12 %». Verde/ámbar validados para daltonismo (siempre con texto al lado).
 - Cuentas del dueño: la de **iCloud** es la principal (datos reales); la de **Gmail** es solo para probar la app.
   Al cerrar sesión se sincroniza y se vacía el dispositivo (`S.clearLocal()`), para cambiar de cuenta sin mezclar datos.
 

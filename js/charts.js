@@ -106,10 +106,11 @@ const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', '
 
 // Mini gráfico de evolución: línea gris con área suave, puntos en el color
 // principal, eje de valores a la derecha y fechas reales en el eje X.
-export function sparkArea(canvas, { points, unit, onPoint }) {
+export function sparkArea(canvas, { points, unit, onPoint, improving = false }) {
   if (!window.Chart || !canvas) return;
-  const accent = css('--accent');
-  const line = css('--text-3');
+  // Verde si el ejercicio mejora en el periodo; gris si está estancado o baja.
+  const line = improving ? css('--good') : css('--text-3');
+  const accent = line;
   const grid = css('--grid');
   const text3 = css('--text-3');
   const span = points[points.length - 1].x - points[0].x;
