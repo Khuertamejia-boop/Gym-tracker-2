@@ -981,7 +981,8 @@ button.pt:active { background: var(--surface-2); }
   scroll-snap-align: center; cursor: pointer; transition: width 0.2s, height 0.2s, opacity 0.2s;
 }
 .rail-item.active { width: 72px; height: 108px; border-radius: 16px; }
-.rail-item:not(.active):not(.done):not(.rail-add) { opacity: 0.6; }
+/* Hechos y pendientes, igual de suaves; el check verde de los hechos queda nítido encima. */
+.rail-item:not(.active) [data-muscle-map] { opacity: 0.6; }
 .rail-item [data-muscle-map] { display: block; width: 100%; height: 100%; }
 .rail-item svg { width: 100% !important; height: 100% !important; }
 .rail-item:not(.rail-add)::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--border); pointer-events: none; }
