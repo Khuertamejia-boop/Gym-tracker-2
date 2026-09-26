@@ -65,6 +65,10 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   propio, así que el botón «Entrar con un código» se ocultó. Para recuperarlo: SMTP propio (p. ej. iCloud con
   contraseña de app) + `{{ .Token }}` en "Magic Link or OTP" y "Confirm signup" + volver a poner el botón.
 
+- Cuentas del dueño: la de **iCloud** es la principal (datos reales); la de **Gmail** es solo para probar la app.
+  Ojo: al cerrar sesión los datos se quedan en el dispositivo y se fusionan con la siguiente cuenta que entre,
+  así que no alternar ambas cuentas en la misma app (la de pruebas, mejor en Safari u otro dispositivo).
+
 ## Pendientes (al 26-09-2026)
 
 - Confirmar en un iPhone real el pellizco/arrastre del sticker de Compartir y el menú de compartir/guardar.
