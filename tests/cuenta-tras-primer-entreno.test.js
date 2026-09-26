@@ -1,0 +1,34 @@
+// Prueba de navegador (Playwright). Se ejecuta con tests/run.sh.
+const { chromium, devices } = require('playwright'); const OUT = process.env.OUT; const FIX = process.env.FIX; let cloud = null;
+(async () => { const b = await chromium.launch();
+  const ctx = await b.newContext({ ...devices['iPhone 13'], colorScheme: 'dark' });
+  await ctx.route('**/chart.umd.min.js', r => r.fulfill({ path: FIX + '/chart.umd.min.js', contentType: 'application/javascript' }));
+  await ctx.route('**/js/config.js', r => r.fulfill({ contentType: 'application/javascript', body: "export const SUPABASE_URL='https://x.supabase.co'; export const SUPABASE_ANON_KEY='k';" }));
+  await ctx.route('**/supabase-js@*/**', r => r.fulfill({ path: FIX + '/mock-supabase.js', contentType: 'application/javascript' }));
+  await ctx.route('**/__cloud_get', r => r.fulfill({ body: JSON.stringify(cloud) }));
+  await ctx.route('**/__cloud_put', r => { cloud = JSON.parse(r.request().postData()); r.fulfill({ body: 'ok' }); });
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
+  p.on('dialog', d => d.accept());
+  const click = (sel) => p.click(sel).then(() => p.waitForTimeout(250));
+  await p.goto('http://localhost:8766/'); await p.waitForTimeout(700);
+  await click('[data-action="ob-go"][data-step="experience"]'); await click('[data-action="ob-gender"][data-v="female"]');
+  await click('[data-action="ob-level"][data-v="beginner"]');
+  for (const d of [0, 2, 4]) await click(`[data-action="ob-day"][data-d="${d}"]`);
+  await click('[data-action="ob-go"][data-step="choose"]'); await click('[data-action="ob-pick"]');
+  console.log('after pick → title:', await p.textContent('#view-title'), '(no account step)');
+  await click('.cta-bar [data-action="start"]'); await click('[data-action="log-all"]');
+  await click('.session-bar [data-action="finish"]'); await p.waitForTimeout(700);
+  console.log('signup card:', await p.locator('#win-save').count(), '|', (await p.textContent('#win-save p')).trim());
+  await p.screenshot({ path: OUT + '/v20-signup.png' });
+  await click('[data-action="win-signup"]'); console.log('sheet:', await p.textContent('#sheet h2'), '| back btn:', await p.locator('#sheet .back-btn').count());
+  await p.fill('#login-form [name="email"]', 'n@b.com'); await p.fill('#login-form [name="password"]', 'secreto1');
+  await click('#login-form button[name="mode"]'); await p.waitForTimeout(500);
+  console.log('signup msg:', await p.textContent('#login-msg'));
+  await p.evaluate(() => document.getElementById('sheet').close());
+  await click('[data-action="win-signup-later"]'); console.log('card after later:', await p.locator('#win-save').count());
+  await click('.win-done');
+  // 2º entrenamiento: sin tarjeta
+  await click('.cta-bar [data-action="start"]'); await click('[data-action="log-all"]');
+  await click('.session-bar [data-action="finish"]'); await p.waitForTimeout(700);
+  console.log('2nd workout card:', await p.locator('#win-save').count());
+  console.log('errors', JSON.stringify(errs)); await b.close(); })();

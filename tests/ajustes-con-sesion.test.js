@@ -1,0 +1,31 @@
+// Prueba de navegador (Playwright). Se ejecuta con tests/run.sh.
+const { chromium } = require('playwright');
+const OUT = process.env.OUT; const FIX = process.env.FIX; let cloud = null;
+(async () => {
+  const b = await chromium.launch();
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: 'dark' });
+  await ctx.route('**/chart.umd.min.js', r => r.fulfill({ path: FIX + '/chart.umd.min.js', contentType: 'application/javascript' }));
+  await ctx.route('**/js/config.js', r => r.fulfill({ contentType: 'application/javascript', body: "export const SUPABASE_URL='https://x.supabase.co'; export const SUPABASE_ANON_KEY='k';" }));
+  await ctx.route('**/supabase-js@*/**', r => r.fulfill({ path: FIX + '/mock-supabase.js', contentType: 'application/javascript' }));
+  await ctx.route('**/__cloud_get', r => r.fulfill({ body: JSON.stringify(cloud) }));
+  await ctx.route('**/__cloud_put', r => { cloud = JSON.parse(r.request().postData()); r.fulfill({ body: 'ok' }); });
+  const p = await ctx.newPage(); const errs = [];
+  p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
+  p.on('dialog', d => d.accept());
+  const click = (sel) => p.click(sel).then(() => p.waitForTimeout(200));
+  const rows = async () => (await p.locator('#sheet .menu-row').allTextContents()).map(t => t.replace(/\s+/g, ' ').trim()).join(' / ');
+  await p.goto('http://localhost:8766/?importar=excel'); await p.waitForTimeout(600);
+  await click('#profile-btn'); console.log('out:', await rows());
+  await click('#sheet [data-action="open-settings"]'); console.log('settings out data-links:', await p.locator('.data-links').count());
+  await p.evaluate(() => document.getElementById('sheet').close()); await p.waitForTimeout(200);
+  await click('#profile-btn');
+  await click('#sheet [data-action="open-login"]');
+  await p.fill('#login-form [name="email"]', 'a@b.com'); await p.fill('#login-form [name="password"]', 'secreto1');
+  await click('#login-form button[name="mode"]'); await p.waitForTimeout(1500);
+  await p.evaluate(() => document.getElementById('sheet').open && document.getElementById('sheet').close()); await p.waitForTimeout(200);
+  await click('#profile-btn'); console.log('in:', await rows());
+  await click('#sheet [data-action="open-settings"]'); console.log('settings in data-links:', await p.locator('.data-links').count());
+  await p.screenshot({ path: OUT + '/v16-settings.png' });
+  console.log('errors:', JSON.stringify(errs));
+  await b.close();
+})();

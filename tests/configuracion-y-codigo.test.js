@@ -1,0 +1,38 @@
+// Prueba de navegador (Playwright). Se ejecuta con tests/run.sh.
+const { chromium, devices } = require('playwright'); const OUT = process.env.OUT; const FIX = process.env.FIX; let cloud = null;
+(async () => { const b = await chromium.launch();
+  const ctx = await b.newContext({ ...devices['iPhone 13'], colorScheme: 'dark' });
+  await ctx.route('**/chart.umd.min.js', r => r.fulfill({ path: FIX + '/chart.umd.min.js', contentType: 'application/javascript' }));
+  await ctx.route('**/js/config.js', r => r.fulfill({ contentType: 'application/javascript', body: "export const SUPABASE_URL='https://x.supabase.co'; export const SUPABASE_ANON_KEY='k';" }));
+  await ctx.route('**/supabase-js@*/**', r => r.fulfill({ path: FIX + '/mock-supabase.js', contentType: 'application/javascript' }));
+  await ctx.route('**/__cloud_get', r => r.fulfill({ body: JSON.stringify(cloud) }));
+  await ctx.route('**/__cloud_put', r => { cloud = JSON.parse(r.request().postData()); r.fulfill({ body: 'ok' }); });
+  const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
+  let taps = 0;
+  const click = (sel) => { taps++; return p.click(sel).then(() => p.waitForTimeout(250)); };
+  await p.goto('http://localhost:8766/'); await p.waitForTimeout(700);
+  await p.screenshot({ path: OUT + '/v19-welcome.png' });
+  await click('[data-action="ob-go"][data-step="experience"]');
+  await p.click('[data-action="ob-level"][data-v="beginner"]'); await p.waitForTimeout(200); console.log('no gender toast:', await p.textContent('#toast'));
+  await click('[data-action="ob-gender"][data-v="male"]');
+  await p.screenshot({ path: OUT + '/v19-about.png' });
+  await click('[data-action="ob-level"][data-v="beginner"]');
+  for (const d of [0, 2, 4]) await click(`[data-action="ob-day"][data-d="${d}"]`);
+  await click('[data-action="ob-go"][data-step="choose"]');
+  await p.screenshot({ path: OUT + '/v19-choose.png' });
+  await click('[data-action="ob-pick"]');
+  console.log('after pick title/step:', await p.textContent('h1').catch(() => ''), '| taps so far', taps);
+  console.log('train title:', await p.textContent('#view-title'), '| install card:', await p.locator('.install-card').count(), '| total taps:', taps);
+  await p.screenshot({ path: OUT + '/v19-train.png' });
+  await click('[data-action="install-dismiss"]'); console.log('install dismissed:', await p.locator('.install-card').count());
+  await click('.tabbar [data-tab="progress"]'); console.log('empty progress:', await p.locator('.empty-progress').count());
+  await p.screenshot({ path: OUT + '/v19-progress.png' });
+  // login con código
+  await click('#profile-btn'); await click('#sheet [data-action="open-login"]'); await click('#sheet [data-action="code-login"]');
+  await p.fill('#code-form [name="email"]', 'a@b.com'); await click('#code-btn');
+  console.log('code msg:', await p.textContent('#code-msg'));
+  await p.fill('#code-form [name="code"]', '000000'); await click('#code-btn'); console.log('bad code:', await p.textContent('#code-msg'));
+  await p.screenshot({ path: OUT + '/v19-code.png' });
+  await p.fill('#code-form [name="code"]', '123456'); await click('#code-btn'); await p.waitForTimeout(1200);
+  console.log('logged avatar:', await p.textContent('#profile-btn'), '| sheet open', await p.evaluate(() => document.getElementById('sheet').open));
+  console.log('errors', JSON.stringify(errs)); await b.close(); })();

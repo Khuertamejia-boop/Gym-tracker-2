@@ -100,3 +100,9 @@ sw.js                 caché sin conexión
 
 ### Entrar con código por correo (Supabase)
 Para que el correo traiga el código de 6 dígitos: en Supabase → **Authentication → Emails → Magic Link**, añade `{{ .Token }}` al cuerpo del mensaje (por ejemplo: `Tu código para entrar: {{ .Token }}`). El servicio de correo incluido en Supabase tiene un límite bajo de envíos por hora; para muchos usuarios conviene configurar un SMTP propio (Authentication → Emails → SMTP).
+
+## Pruebas y registro de cambios
+
+- `tests/run.sh` ejecuta las pruebas de navegador (Playwright) de los flujos principales: configuración inicial, entrenamiento, descanso, resumen, compartir, Mi plan, Progreso y cuenta. Las capturas quedan en `tests/.out/`.
+- `CHANGELOG.md` lista cada actualización de la app.
+- `CLAUDE.md` guarda las notas del proyecto (arquitectura, estilo y decisiones) para continuar el trabajo en cualquier sesión nueva de Claude Code.
