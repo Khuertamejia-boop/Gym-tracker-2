@@ -2,7 +2,7 @@
 // Miniaturas con zoom al músculo principal de cada ejercicio (hombre y mujer, claro y oscuro).
 const { chromium, devices } = require('playwright'); const OUT = process.env.OUT;
 const IDS = ['press-banca', 'remo-barra', 'press-hombro-mancuernas', 'jalon-pecho', 'curl-barra-z', 'extension-polea',
-  'sentadilla', 'peso-muerto-rumano', 'hip-thrust', 'elevacion-talones-pie', 'elevaciones-laterales', 'face-pull'];
+  'sentadilla-bulgara', 'extension-cuadriceps', 'curl-femoral-sentado', 'elevacion-talones-pie', 'elevaciones-laterales', 'face-pull'];
 (async () => { const b = await chromium.launch(); const errs = [];
   for (const [gender, scheme] of [['male', 'light'], ['female', 'dark']]) {
     const ctx = await b.newContext({ ...devices['iPhone 13'], colorScheme: scheme });

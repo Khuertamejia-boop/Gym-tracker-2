@@ -14,8 +14,8 @@ const BOXES = {
   'female-front': { chest: [140, 121, 224, 169], shoulders: [122, 119, 241, 158], biceps: [116, 148, 247, 207], forearms: [91, 194, 272, 265], abs: [163, 165, 200, 264], obliques: [146, 167, 216, 256], upper_back: [147, 103, 217, 118], quads: [129, 242, 234, 368], calves: [152, 393, 211, 441] },
   'female-back': { shoulders: [117, 116, 245, 154], triceps: [112, 143, 251, 199], forearms: [90, 193, 272, 266], upper_back: [144, 75, 220, 172], lats: [136, 123, 227, 219], lower_back: [146, 187, 215, 243], glutes: [141, 230, 220, 289], hamstrings: [133, 282, 229, 371], calves: [124, 374, 236, 442] },
 };
-// Músculos de brazos y piernas: se enfoca un solo lado para acercar más.
-const ONE_SIDE = ['shoulders', 'biceps', 'triceps', 'forearms', 'quads', 'hamstrings', 'calves'];
+// Brazos y hombros: se enfoca un solo lado para acercar más (las piernas se ven las dos, centradas).
+const ONE_SIDE = ['shoulders', 'biceps', 'triceps', 'forearms'];
 const W = 361;
 const H = 542;
 

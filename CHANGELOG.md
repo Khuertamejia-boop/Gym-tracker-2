@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Miniaturas de pierna (sentadilla búlgara, extensión de cuádriceps, curl femoral, pantorrillas…): se ven las dos piernas, centradas.
 - Miniaturas de los ejercicios con zoom al músculo principal: primer plano del pecho, un hombro, un bíceps, la espalda, un cuádriceps, los glúteos… así cada fila se ve distinta.
 - Adiós a los emojis: los récords llevan un trofeo dorado de línea fina; Progreso vacío, una flecha de tendencia en carmesí; notas con «Nota:»; los avisos van solo con texto.
 - Mi plan: «Volumen semanal» ya no lleva el emoji 📊.
