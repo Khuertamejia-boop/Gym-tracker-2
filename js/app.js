@@ -1412,9 +1412,39 @@ const LEVELS = [
 
 const WHY = {
   'full-body': 'Trabajas todo el cuerpo en cada sesión: aprendes los ejercicios básicos más rápido y progresas aunque vayas pocos días.',
-  'torso-pierna': 'Alternas torso y pierna, así cada músculo descansa entre sesiones. Ideal para 4 días.',
-  ppl: 'Separa empuje, tracción y pierna para entrenar con más volumen. Pensada para 5-6 días.',
+  'torso-pierna': 'Alternas torso y pierna, así cada músculo descansa entre sesiones.',
+  ppl: 'Separa empuje, tracción y pierna para entrenar con más volumen.',
 };
+// Resumen de una línea para la lista de rutinas (avanzados).
+const TPL_SUB = {
+  'full-body': 'todo el cuerpo',
+  'torso-pierna': 'variantes A y B',
+  ppl: 'empuje, tracción, pierna',
+  arnold: 'exigente',
+  'excel-4-dias': 'énfasis en glúteo',
+};
+
+// Cifras de una plantilla repartida sobre los días elegidos: días, ejercicios por
+// día, series por semana y minutos por sesión (≈ 3 min por serie con descanso).
+function tplStats(t, weekdays) {
+  const n = weekdays.length || t.daysPerWeek;
+  const perDay = t.days.map((d) => d.exercises.reduce((a, e) => a + e.sets, 0));
+  const avg = (xs) => xs.reduce((a, x) => a + x, 0) / xs.length;
+  return {
+    days: n,
+    exercises: Math.round(avg(t.days.map((d) => d.exercises.length))),
+    weekSets: Array.from({ length: n }, (_, i) => perDay[i % perDay.length]).reduce((a, x) => a + x, 0),
+    minutes: Math.round((avg(perDay) * 3) / 5) * 5,
+  };
+}
+
+// Nombre corto de un día de la plantilla para la tira semanal («Torso», «Pierna», «A»…).
+function weekLabel(t, d) {
+  const words = t.days.map((x) => shortName(x.name).split(' '));
+  const shared = words.every((w) => w[0] === words[0][0]);
+  const w = shortName(d.name).split(' ');
+  return shared ? w[w.length - 1] : w[0];
+}
 
 function renderOnboarding() {
   const ob = ui.ob;
@@ -1471,34 +1501,71 @@ function renderOnboarding() {
   } else if (ob.step === 'choose') {
     const recKey = S.recommendTemplate(ob.level, ob.days.length);
     const rec = S.templateByKey(recKey);
-    const tplCard = (t, recommended) => `<div class="card ${recommended ? 'recommended' : ''}">
-        ${recommended ? '<span class="tag accent" style="margin-bottom:6px">⭐ Recomendada para ti</span>' : ''}
-        <h3>${esc(t.name)}</h3>
-        <p class="muted small" style="margin:2px 0 8px">${esc(t.description)}</p>
-        ${recommended && WHY[t.key] ? `<p class="small" style="margin:0 0 10px">${WHY[t.key]}</p>` : ''}
-        <div class="row wrap" style="gap:6px;margin-bottom:12px">${t.days.map((d) => `<span class="tag">${esc(shortName(d.name))}</span>`).join('')}</div>
-        <div class="row">
-          <button class="btn sm" data-action="preview-template" data-key="${t.key}">Ver ejercicios</button>
-          <button class="btn sm ${recommended ? 'primary' : ''}" data-action="ob-pick" data-key="${t.key}">Elegir esta</button>
+    const saved = S.getState().routines.filter((r) => !r.seeded && r.id !== S.getState().activeRoutineId);
+    const savedHTML = saved.length ? `<div class="section-title">Tus rutinas guardadas</div><div class="group-list">${saved.map((r) => `<div class="ob-row">
+        <div class="grow"><div class="ob-row-t">${esc(r.name)}</div><div class="ob-row-s">${r.days.length} días</div></div>
+        <button class="btn sm" data-action="ob-activate" data-id="${r.id}">Usar</button></div>`).join('')}</div>` : '';
+    if (ob.level === 'beginner' && !ob.showAll) {
+      // A · Principiante: solo la rutina recomendada, su semana y un botón.
+      const st = tplStats(rec, ob.days);
+      const sorted = [...ob.days].sort((x, y) => x - y);
+      const label = (wd) => { const i = sorted.indexOf(wd); return i < 0 ? '' : esc(weekLabel(rec, rec.days[i % rec.days.length])); };
+      html = `${back('days')}${progress(3)}
+      <div class="ob-rec">
+        <div class="eyebrow accent">Recomendada para ti</div>
+        <h1 class="ob-title">${esc(rec.name)}</h1>
+        <p class="ob-lead">${WHY[rec.key] || esc(rec.description)}</p>
+        <div class="ob-stats">
+          <div><b>${st.days}</b><span>${st.days === 1 ? 'Día' : 'Días'}</span></div>
+          <div><b>${st.exercises}</b><span>Ejercicios</span></div>
+          <div><b>~${st.minutes}</b><span>Minutos</span></div>
+        </div>
+        <div class="eyebrow">Tu semana</div>
+        <div class="ob-week">${S.DAY_SHORT.map((l, wd) => `<div class="${sorted.includes(wd) ? 'on' : ''}"><b>${l}</b><i>${label(wd)}</i></div>`).join('')}</div>
+        ${savedHTML}
+        <div class="ob-foot">
+          <button class="btn primary block lg" data-action="ob-pick" data-key="${rec.key}">Empezar con esta rutina</button>
+          <button class="btn block ghost" data-action="preview-template" data-key="${rec.key}">Ver ejercicios</button>
+          <button class="btn block ghost quiet" data-action="ob-show-all">Ver otras opciones</button>
         </div>
       </div>`;
-    const others = TEMPLATES.filter((t) => t.key !== recKey);
-    const saved = S.getState().routines.filter((r) => !r.seeded && r.id !== S.getState().activeRoutineId);
-    html = `${back('days')}${progress(3)}
-      <h2 class="ob-q">${ob.level === 'beginner' ? 'Esta es tu rutina recomendada' : '¿Qué rutina quieres seguir?'}</h2>
-      ${tplCard(rec, true)}
-      <p class="muted small ob-note">Podrás cambiar ejercicios, series y días cuando quieras desde <b>Mi plan → Editar</b>.</p>`;
-    if (ob.level === 'beginner' && !ob.showAll) {
-      html += `<button class="btn block ghost" data-action="ob-show-all">Ver otras opciones</button>`;
     } else {
-      html += `<div class="section-title">Otras rutinas</div>${others.map((t) => tplCard(t, false)).join('')}
-        <button class="card option" data-action="ob-pick" data-key="custom">
-          <b>✏️ Crear la mía desde cero</b><span class="muted small">Eliges tú los ejercicios de cada día</span></button>`;
-    }
-    if (saved.length) {
-      html += `<div class="section-title">Tus rutinas guardadas</div><div class="card"><div class="list">${saved.map((r) => `<div class="list-item">
-        <div class="grow"><b>${esc(r.name)}</b><div class="muted small">${r.days.length} días</div></div>
-        <button class="btn sm" data-action="ob-activate" data-id="${r.id}">Usar</button></div>`).join('')}</div></div>`;
+      // B · Avanzado: lista de rutinas; la elegida se abre con sus cifras.
+      const sel = ob.sel || recKey;
+      const others = TEMPLATES.filter((t) => t.key !== recKey);
+      const radio = (on) => `<span class="ob-radio ${on ? 'on' : ''}" aria-hidden="true"></span>`;
+      const row = (t, recommended) => {
+        const on = sel === t.key;
+        const st = tplStats(t, ob.days);
+        return `<div class="ob-item ${on ? 'open' : ''}">
+          <button class="ob-row" data-action="ob-sel" data-key="${t.key}" aria-pressed="${on}">${radio(on)}
+            <div class="grow">${recommended ? '<div class="eyebrow accent">Recomendada</div>' : ''}
+              <div class="ob-row-t">${esc(t.name)}</div>
+              <div class="ob-row-s">${t.daysPerWeek} días${TPL_SUB[t.key] ? ` · ${TPL_SUB[t.key]}` : ''}</div></div></button>
+          ${on ? `<div class="ob-detail">
+            <div class="ob-mini">
+              <div><b>${st.days}</b><span>Días</span></div>
+              <div><b>${st.exercises}</b><span>Ejerc./día</span></div>
+              <div><b>${st.weekSets}</b><span>Series/sem</span></div>
+              <div><b>~${st.minutes}</b><span>Min</span></div>
+            </div>
+            <div class="ob-days">${t.days.map((d) => esc(shortName(d.name))).join(' · ')}</div>
+            <button class="link" data-action="preview-template" data-key="${t.key}">Ver ejercicios ›</button>
+          </div>` : ''}
+        </div>`;
+      };
+      html = `${back('days')}${progress(3)}
+      <h1 class="ob-title" style="margin-bottom:20px">Elige tu rutina</h1>
+      <div class="group-list">${row(rec, true)}</div>
+      <div class="section-title">Otras rutinas</div>
+      <div class="group-list">${others.map((t) => row(t, false)).join('')}
+        <div class="ob-item ${sel === 'custom' ? 'open' : ''}"><button class="ob-row" data-action="ob-sel" data-key="custom" aria-pressed="${sel === 'custom'}">${radio(sel === 'custom')}
+          <div class="grow"><div class="ob-row-t">Crear la mía</div><div class="ob-row-s">Eliges tú los ejercicios de cada día</div></div></button></div>
+      </div>
+      ${savedHTML}
+      <div class="ob-foot sticky">
+        <button class="btn primary block lg" data-action="ob-pick" data-key="${sel}">Continuar</button>
+      </div>`;
     }
   } else if (ob.step === 'review') {
     const r = S.routineById(ob.routineId);
@@ -2298,7 +2365,8 @@ const actions = {
     ui.ob.days = days.includes(d) ? days.filter((x) => x !== d) : [...days, d].sort((a, c) => a - c);
     render();
   },
-  'ob-show-all': () => { ui.ob.showAll = true; render(); },
+  'ob-show-all': () => { ui.ob.showAll = true; render(); window.scrollTo(0, 0); },
+  'ob-sel': (b) => { ui.ob.sel = b.dataset.key; render(); },
   'ob-pick': (b) => {
     closeSheet();
     const key = b.dataset.key;

@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Elegir rutina, rediseñada. Principiante: una sola pantalla con la rutina recomendada en grande, sus cifras (días, ejercicios, minutos), tu semana y un botón «Empezar con esta rutina»; sin la estrella. Intermedio y avanzado: lista de rutinas estilo Ajustes; la elegida se abre con días, ejercicios por día, series por semana y minutos.
 - Limpieza: se quitan estilos y código de diseños anteriores que ya no se usaban (la app se ve igual, pero es más ligera).
 - Entrenar: el botón de nota 📝 se sustituye por una cápsula «+ Nota» junto a Aproximación y Por lado. Al tocarla se abre la nota justo debajo; si el ejercicio ya tiene nota se ve en carmesí como «✓ Nota».
 - Entrenar: «Aproximación» va siempre primero, a la izquierda, y «Por lado» después (antes cambiaba de sitio según el ejercicio).

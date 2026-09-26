@@ -315,7 +315,45 @@ body.onboarding { padding-bottom: 32px; }
 .day-toggle b { font-size: 1rem; color: var(--text); }
 .day-toggle.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .day-toggle.on b { color: var(--accent-ink); }
-.card.recommended { border: 1.5px solid var(--accent); }
+/* Elegir rutina: A (principiante) y B (lista para avanzados) */
+.eyebrow { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
+.eyebrow.accent { color: var(--accent); }
+.ob-title { font-size: 2rem; line-height: 1.08; letter-spacing: -0.02em; margin: 6px 0 10px; }
+.ob-rec { display: flex; flex-direction: column; min-height: calc(100dvh - 190px); padding-top: 12px; }
+.ob-lead { font-size: 1rem; line-height: 1.45; color: var(--text-2); margin: 0 0 24px; }
+.ob-stats { display: flex; justify-content: space-between; padding: 16px 0; margin-bottom: 24px;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.ob-stats div:last-child { text-align: right; }
+.ob-stats b, .ob-mini b { display: block; font-size: 1.6rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+.ob-stats span, .ob-mini span { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
+.ob-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; }
+.ob-week div { text-align: center; }
+.ob-week b { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-3); margin-bottom: 6px; }
+.ob-week i { display: block; height: 40px; line-height: 40px; border-radius: 10px; box-shadow: inset 0 0 0 1px var(--border);
+  font-style: normal; font-size: 0.62rem; font-weight: 600; color: var(--text); overflow: hidden; }
+.ob-week .on b { color: var(--text); }
+.ob-week .on i { background: var(--surface-2); box-shadow: none; }
+.ob-foot { margin-top: auto; padding-top: 28px; display: flex; flex-direction: column; gap: 2px; }
+.ob-foot.sticky { position: sticky; bottom: 0; padding: 20px 0 calc(env(safe-area-inset-bottom) + 8px);
+  background: linear-gradient(to bottom, transparent, var(--bg) 30%); }
+.btn.lg { min-height: 52px; border-radius: 14px; font-size: 1.05rem; }
+.btn.ghost.quiet { color: var(--text-2); font-weight: 500; }
+.group-list { background: var(--surface); border-radius: var(--radius); overflow: hidden; margin-bottom: 8px; box-shadow: var(--shadow); }
+.ob-item + .ob-item, .group-list > .ob-row + .ob-row { border-top: 1px solid var(--border); }
+.ob-row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 13px 16px;
+  border: 0; background: none; color: var(--text); text-align: left; }
+.ob-row-t { font-size: 1.05rem; font-weight: 500; }
+.ob-row-s { font-size: 0.82rem; color: var(--text-3); margin-top: 1px; }
+.ob-radio { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border); position: relative; }
+.ob-radio.on { background: var(--accent); border-color: var(--accent); }
+.ob-radio.on::after { content: ""; position: absolute; left: 6.5px; top: 3px; width: 5px; height: 10px;
+  border: solid var(--accent-ink); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.ob-detail { padding: 0 16px 12px 52px; }
+.ob-mini { display: grid; grid-template-columns: repeat(4, 1fr); padding: 12px 0; border-top: 1px solid var(--border); }
+.ob-mini b { font-size: 1.15rem; }
+.ob-mini span { font-size: 0.55rem; letter-spacing: 0.1em; }
+.ob-days { font-size: 0.82rem; color: var(--text-2); margin-bottom: 4px; }
+.ob-detail .link { padding: 6px 0; font-size: 0.9rem; }
 details.more { margin-top: 12px; }
 details.more > summary {
   cursor: pointer; color: var(--accent); font-weight: 600; padding: 10px 4px; list-style: none;

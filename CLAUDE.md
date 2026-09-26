@@ -72,7 +72,10 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - Login solo con correo y contraseña (26-09-2026): Supabase no deja editar las plantillas de correo sin SMTP
   propio, así que el botón «Entrar con un código» se ocultó. Para recuperarlo: SMTP propio (p. ej. iCloud con
   contraseña de app) + `{{ .Token }}` en "Magic Link or OTP" y "Confirm signup" + volver a poner el botón.
-
+- Elegir rutina (26-09-2026): principiante → pantalla «A» (solo la recomendada, en grande: etiqueta «RECOMENDADA PARA TI»
+  sin estrella, 3 cifras DÍAS · EJERCICIOS · MINUTOS, tira «Tu semana», botón «Empezar con esta rutina»); intermedio/avanzado
+  (o «Ver otras opciones») → lista «B» estilo Ajustes con selección redonda; la elegida se abre con días, ejerc./día,
+  series/semana y minutos (≈ 3 min por serie). Nada de emojis decorativos: rompen la armonía visual.
 - Cuentas del dueño: la de **iCloud** es la principal (datos reales); la de **Gmail** es solo para probar la app.
   Al cerrar sesión se sincroniza y se vacía el dispositivo (`S.clearLocal()`), para cambiar de cuenta sin mezclar datos.
 
