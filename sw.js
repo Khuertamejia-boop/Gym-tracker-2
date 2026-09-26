@@ -3,7 +3,7 @@
 // cada versión nueva cambia CACHE y se descarga completa al instalarse.
 // Librerías del CDN: primero la copia guardada (nunca cambian de versión).
 // Las peticiones a Supabase (datos y sesión) nunca se guardan en caché.
-const CACHE = 'gymtrack-v41';
+const CACHE = 'gymtrack-v42';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'manifest.webmanifest', 'icons/icon.svg',
   'js/app.js', 'js/store.js', 'js/charts.js', 'js/cloud.js', 'js/config.js',
