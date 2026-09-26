@@ -904,6 +904,7 @@ button.pt:active { background: var(--surface-2); }
   background: #0b0b0c; box-shadow: 0 16px 44px rgb(0 0 0 / 35%); touch-action: pan-y;
 }
 .share-frame.checker { background: conic-gradient(#2a2a2c 25%, #1f1f21 0 50%, #2a2a2c 0 75%, #1f1f21 0) 0 0 / 16px 16px; }
+.share-frame.checker.light { background: conic-gradient(#f2f2f4 25%, #e2e2e6 0 50%, #f2f2f4 0 75%, #e2e2e6 0) 0 0 / 16px 16px; }
 .share-frame img { width: 100%; height: 100%; display: block; object-fit: cover; transition: opacity 0.2s; }
 .share-frame.loading img { opacity: 0.35; }
 .share-spin {
@@ -916,7 +917,7 @@ button.pt:active { background: var(--surface-2); }
 .share-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
 .share-dots i.on { background: var(--text); }
 .share-hint { text-align: center; min-height: 1.4em; margin: 8px 12px 4px; }
-.share-acts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 6px 0 4px; text-align: center; }
+.share-acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 6px 0 4px; text-align: center; }
 .share-acts > * {
   display: flex; flex-direction: column; align-items: center; gap: 6px; border: 0; background: none; color: var(--text-2);
   font: inherit; font-size: 0.8rem; font-weight: 500; cursor: pointer; padding: 0;
@@ -924,6 +925,9 @@ button.pt:active { background: var(--surface-2); }
 .share-acts .ic { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--text); }
 .share-acts .ic.p { background: var(--text); color: var(--bg); }
 .share-acts svg { width: 24px; height: 24px; fill: currentColor; }
+.ink-dot { width: 24px; height: 24px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgb(128 128 128 / 55%); transition: background 0.2s; }
+.ink-dot.white { background: #fff; }
+.ink-dot.black { background: #111; }
 
 /* ---------- Resumen v2: chips, botón de compartir y ejercicios plegables ---------- */
 .win-chips { display: flex; justify-content: center; gap: 8px; margin: 4px 0 2px; }

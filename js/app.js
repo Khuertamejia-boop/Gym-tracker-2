@@ -5,7 +5,7 @@ import { TEMPLATES } from './data/templates.js';
 import { lineChart, sparkArea, destroyCharts } from './charts.js';
 import * as Cloud from './cloud.js';
 import { mountMuscleMaps, musclesFor, muscleNames } from './body.js';
-import { renderShare, renderSticker, composeShare, defaultTransform, groupNum, W as ShareW, H as ShareH } from './share.js';
+import { renderShare, renderSticker, composeShare, defaultTransform, autoInk, groupNum, W as ShareW, H as ShareH } from './share.js';
 
 const $view = document.getElementById('view');
 const $title = document.getElementById('view-title');
@@ -665,14 +665,15 @@ const NEXT_ALIGN = { left: 'center', center: 'right', right: 'left' };
 
 // Compartir: el bloque de datos es un "sticker" sobre la vista previa. Se arrastra con
 // un dedo, con dos se pellizca (tamaño) y se gira, y un toque cambia la alineación.
+// El botón «Color» alterna texto blanco/negro; con tu foto se elige solo hasta que lo toques.
 function openShare(session) {
   const st = S.getState().settings;
   const saved = st.shareLayout || {};
-  const state = { align: saved.align || 'left', t: saved.t || null, photo: null, sticker: null };
+  const state = { align: saved.align || 'left', color: saved.color || 'white', t: saved.t || null, photo: null, sticker: null, autoColor: false };
 
   openSheet('Compartir', `
     <div class="share-stage">
-      <div class="share-frame checker">
+      <div class="share-frame checker${state.color === 'black' ? ' light' : ''}">
         <img class="sf-photo" alt="" hidden>
         <img class="sf-sticker" alt="Datos del entrenamiento" draggable="false">
         <span class="sf-guide" aria-hidden="true"></span>
@@ -685,6 +686,7 @@ function openShare(session) {
       <button type="button" data-act="share"><span class="ic p">${ICON_SHARE}</span>Compartir</button>
       <button type="button" data-act="save"><span class="ic">${ICON_SAVE}</span>Guardar</button>
       <label><span class="ic">${ICON_PHOTO}</span>Usar mi foto<input type="file" accept="image/*" hidden></label>
+      <button type="button" data-act="color" aria-label="Color del texto"><span class="ic"><i class="ink-dot ${state.color}"></i></span>Color</button>
     </div>`, (root) => {
     const frame = root.querySelector('.share-frame');
     const stickerImg = root.querySelector('.sf-sticker');
@@ -702,12 +704,13 @@ function openShare(session) {
       stickerImg.style.top = `${t.cy * r - h / 2}px`;
       stickerImg.style.transform = t.r ? `rotate(${t.r}rad)` : '';
     };
-    const save = () => { st.shareLayout = { align: state.align, t: { ...state.t } }; S.save(); };
+    const save = () => { st.shareLayout = { align: state.align, color: state.color, t: { ...state.t } }; S.save(); };
+    const colorDot = root.querySelector('.ink-dot');
 
     const load = async (keepHeight) => {
       frame.classList.add('loading');
       try {
-        state.sticker = await renderSticker(session, state.align);
+        state.sticker = await renderSticker(session, state.align, state.color);
         if (!state.t) state.t = defaultTransform(state.sticker, state.align);
         else if (keepHeight) {
           // Nueva alineación: misma altura y tamaño; el lado se ajusta a la alineación.
@@ -722,6 +725,21 @@ function openShare(session) {
         frame.classList.remove('loading');
       }
     };
+
+    const setColor = async (color) => {
+      if (color === state.color) return;
+      state.color = color;
+      colorDot.className = `ink-dot ${color}`;
+      frame.classList.toggle('light', color === 'black');
+      await load(false);
+      save();
+    };
+    // Con foto: color automático según lo clara u oscura que sea la zona detrás del bloque.
+    const autoColor = () => { if (state.photo && state.autoColor && state.sticker) setColor(autoInk(state.photo, state.sticker, state.t)); };
+    root.querySelector('[data-act="color"]').addEventListener('click', () => {
+      state.autoColor = false;
+      setColor(state.color === 'white' ? 'black' : 'white');
+    });
 
     // Un toque cambia la alineación (izquierda → centro → derecha) y la muestra un momento.
     const cycleAlign = async () => {
@@ -794,6 +812,7 @@ function openShare(session) {
       }
       tap = null;
       save();
+      autoColor();
     };
     frame.addEventListener('pointerup', end);
     frame.addEventListener('pointercancel', end);
@@ -816,6 +835,8 @@ function openShare(session) {
       photoImg.src = URL.createObjectURL(file);
       photoImg.hidden = false;
       frame.classList.remove('checker');
+      state.autoColor = true;
+      autoColor();
     });
 
     const toFile = async () => {

@@ -101,7 +101,13 @@ const SHORT_MUSCLE = {
 };
 const blockX = (align, w) => (align === 'center' ? (W - w) / 2 : align === 'right' ? W - MARGIN - w : MARGIN);
 
-function brand(g, y, align, k) {
+// Colores del texto: blanco (con sombra suave) o negro (sin sombra).
+export const INKS = {
+  white: { fg: '#fff', soft: 'rgba(255,255,255,0.85)', brand: 'rgba(255,255,255,0.8)', shadow: 'rgba(0,0,0,0.45)', brandShadow: 'rgba(0,0,0,0.35)', glass: 'rgba(255,255,255,0.16)', ring: 'rgba(255,255,255,0.85)' },
+  black: { fg: '#111', soft: 'rgba(17,17,17,0.8)', brand: 'rgba(17,17,17,0.75)', shadow: 'transparent', brandShadow: 'transparent', glass: 'rgba(255,255,255,0.35)', ring: 'rgba(17,17,17,0.85)' },
+};
+
+function brand(g, y, align, k, ink = INKS.white) {
   g.font = font(600, Math.round(26 * k));
   const label = 'MI GYM TRACKER';
   const sp = 6 * k;
@@ -110,11 +116,10 @@ function brand(g, y, align, k) {
   const x = blockX(align, w);
   g.fillStyle = ACCENT;
   g.beginPath(); g.arc(x + dot / 2, y - 9 * k, dot / 2, 0, Math.PI * 2); g.fill();
-  g.fillStyle = 'rgba(255,255,255,0.8)';
+  g.fillStyle = ink.brand;
   spaced(g, label, x + dot + 14 * k, y, sp);
 }
 
-// Bloque de datos (el "sticker") dibujado a tamaño natural (k = 1).
 // Los 3 músculos con más series hechas (en empate, el orden del entrenamiento), sin repetir nombre.
 function topMuscles(session, primary) {
   const sets = new Map(primary.map((gr) => [gr, 0]));
@@ -126,7 +131,8 @@ function topMuscles(session, primary) {
   return [...new Set(names)].slice(0, 3);
 }
 
-async function drawBlock(g, session, align, y) {
+// Bloque de datos (el "sticker") dibujado a tamaño natural (k = 1).
+async function drawBlock(g, session, align, y, ink) {
   const k = 1;
   const st = sessionStats(session);
   const [primary, secondary] = sessionMuscles(session);
@@ -142,10 +148,10 @@ async function drawBlock(g, session, align, y) {
     ? mini.height + 24 + volSize * 0.8 + 50 + musclesH
     : Math.max(mini.height, volSize * 0.8 + 50 + musclesH);
 
-  g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 28; g.shadowOffsetY = 2;
+  g.shadowColor = ink.shadow; g.shadowBlur = 28; g.shadowOffsetY = 2;
   g.textAlign = 'left';
 
-  // ¡NUEVO PR! en una cápsula de cristal, con el mismo blanco que el resto.
+  // ¡NUEVO PR! en una cápsula de cristal, con el mismo color que el resto.
   if (prs) {
     const txt = prs === 1 ? '¡NUEVO PR!' : `¡${prs} NUEVOS PR!`;
     g.font = font(800, 28);
@@ -154,17 +160,17 @@ async function drawBlock(g, session, align, y) {
     const bx = blockX(align, bw);
     g.save();
     g.shadowColor = 'transparent';
-    g.fillStyle = 'rgba(255,255,255,0.16)';
-    g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = 2.5;
+    g.fillStyle = ink.glass;
+    g.strokeStyle = ink.ring; g.lineWidth = 2.5;
     g.beginPath(); g.roundRect(bx, y, bw, bh, bh / 2); g.fill(); g.stroke();
     g.restore();
-    g.fillStyle = '#fff'; g.font = font(800, 28);
+    g.fillStyle = ink.fg; g.font = font(800, 28);
     spaced(g, txt, bx + 26, y + bh / 2 + 10, 4);
     y += bh + 30;
   }
 
   // Fecha y día.
-  g.fillStyle = '#fff'; g.font = font(700, 30);
+  g.fillStyle = ink.fg; g.font = font(700, 30);
   spaced(g, eyebrow, blockX(align, spacedWidth(g, eyebrow, 5)), y + 30, 5);
   y += 68;
 
@@ -174,12 +180,12 @@ async function drawBlock(g, session, align, y) {
   if (align === 'center') {
     g.drawImage(mini, (W - mini.width) / 2, y);
     y += mini.height + 24;
-    g.fillStyle = '#fff'; g.textAlign = 'center';
+    g.fillStyle = ink.fg; g.textAlign = 'center';
     g.fillText(vol, W / 2, y + volSize * 0.8, W - 2 * MARGIN);
-    g.font = font(600, 26); g.fillStyle = 'rgba(255,255,255,0.85)';
+    g.font = font(600, 26); g.fillStyle = ink.soft;
     spaced(g, labelTxt, W / 2, y + volSize * 0.8 + 46, 6, 'center');
     if (worked) {
-      g.font = font(600, 34); g.fillStyle = '#fff';
+      g.font = font(600, 34); g.fillStyle = ink.fg;
       g.fillText(worked, W / 2, y + volSize * 0.8 + 46 + musclesH, W - 2 * MARGIN);
     }
     y += volSize * 0.8 + 50 + musclesH;
@@ -190,12 +196,12 @@ async function drawBlock(g, session, align, y) {
     const ta = align === 'left' ? 'left' : 'right';
     const tx = align === 'left' ? bodyX + mini.width + 20 : bodyX - 20;
     const maxW = align === 'left' ? W - MARGIN - tx : tx - MARGIN;
-    g.fillStyle = '#fff'; g.textAlign = ta;
+    g.fillStyle = ink.fg; g.textAlign = ta;
     g.fillText(vol, tx, base, maxW);
-    g.font = font(600, 26); g.fillStyle = 'rgba(255,255,255,0.85)';
+    g.font = font(600, 26); g.fillStyle = ink.soft;
     spaced(g, labelTxt, tx, base + 46, 6, ta);
     if (worked) {
-      g.font = font(600, 34); g.fillStyle = '#fff'; g.textAlign = ta;
+      g.font = font(600, 34); g.fillStyle = ink.fg; g.textAlign = ta;
       g.fillText(worked, tx, base + 46 + musclesH, maxW);
     }
     y += heroH;
@@ -214,31 +220,31 @@ async function drawBlock(g, session, align, y) {
   const ta = align === 'center' ? 'center' : align === 'right' ? 'right' : 'left';
   for (const c of cols) {
     const cx = align === 'center' ? x + c.w / 2 : align === 'right' ? x + c.w : x;
-    g.textAlign = ta; g.fillStyle = '#fff'; g.font = font(700, 60);
+    g.textAlign = ta; g.fillStyle = ink.fg; g.font = font(700, 60);
     g.fillText(c.v, cx, y + 60);
-    g.fillStyle = 'rgba(255,255,255,0.85)'; g.font = font(600, 22);
+    g.fillStyle = ink.soft; g.font = font(600, 22);
     spaced(g, c.l, cx, y + 102, 5, ta);
     x += c.w + colGap;
   }
   y += 176;
   g.textAlign = 'left';
-  g.shadowColor = 'rgba(0,0,0,0.35)';
-  brand(g, y, align, k);
+  g.shadowColor = ink.brandShadow;
+  brand(g, y, align, k, ink);
   g.shadowColor = 'transparent';
   return y + 30;
 }
 
-// Sticker recortado a su contenido (transparente). Se cachea por entrenamiento y alineación.
+// Sticker recortado a su contenido (transparente). Se cachea por entrenamiento, alineación y color.
 const stickers = new Map();
-export function renderSticker(session, align = 'left') {
-  const key = `${session.id}|${session.editedAt || session.finishedAt}|${align}|${bodyGender()}`;
+export function renderSticker(session, align = 'left', color = 'white') {
+  const key = `${session.id}|${session.editedAt || session.finishedAt}|${align}|${color}|${bodyGender()}`;
   if (!stickers.has(key)) {
     stickers.set(key, (async () => {
       const c = document.createElement('canvas');
       c.width = W; c.height = 1400;
       const g = c.getContext('2d');
       g.textBaseline = 'alphabetic';
-      const bottom = await drawBlock(g, session, align, 60);
+      const bottom = await drawBlock(g, session, align, 60, INKS[color] || INKS.white);
       // Recorte por los píxeles visibles (incluida la sombra).
       const { data } = g.getImageData(0, 0, W, Math.min(c.height, bottom + 60));
       let x0 = W, x1 = 0, y0 = c.height, y1 = 0;
@@ -260,6 +266,24 @@ export function renderSticker(session, align = 'left') {
   return stickers.get(key);
 }
 
+// Color automático sobre una foto: negro si la zona detrás del bloque es clara, blanco si es oscura.
+export function autoInk(photo, sticker, t) {
+  const sw = 108, sh = 192;
+  const c = document.createElement('canvas'); c.width = sw; c.height = sh;
+  const g = c.getContext('2d', { willReadFrequently: true });
+  const r = Math.max(sw / photo.width, sh / photo.height);
+  g.drawImage(photo, (sw - photo.width * r) / 2, (sh - photo.height * r) / 2, photo.width * r, photo.height * r);
+  const k = sw / W;
+  const hw = (sticker.width * t.s) / 2, hh = (sticker.height * t.s) / 2;
+  const x0 = Math.max(0, Math.floor((t.cx - hw) * k)), x1 = Math.min(sw, Math.ceil((t.cx + hw) * k));
+  const y0 = Math.max(0, Math.floor((t.cy - hh) * k)), y1 = Math.min(sh, Math.ceil((t.cy + hh) * k));
+  if (x1 <= x0 || y1 <= y0) return 'white';
+  const { data } = g.getImageData(x0, y0, x1 - x0, y1 - y0);
+  let sum = 0;
+  for (let i = 0; i < data.length; i += 4) sum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+  return sum / (data.length / 4) > 150 ? 'black' : 'white';
+}
+
 // Posición inicial: abajo, con el margen de siempre y el 80 % del tamaño natural.
 export function defaultTransform(sticker, align = 'left') {
   const s = 0.8;
@@ -269,7 +293,7 @@ export function defaultTransform(sticker, align = 'left') {
 }
 
 // Imagen final: foto (o transparente / fondo) + sticker en la posición y tamaño elegidos.
-export function composeShare({ sticker, photo, t, background }) {
+export function composeShare({ sticker, photo, t, background, backgroundTop = '#3a3f46' }) {
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
   const g = c.getContext('2d');
@@ -279,7 +303,7 @@ export function composeShare({ sticker, photo, t, background }) {
     g.drawImage(photo, (W - pw) / 2, (H - ph) / 2, pw, ph);
   } else if (background) {
     const bg = g.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0, '#3a3f46'); bg.addColorStop(1, background);
+    bg.addColorStop(0, backgroundTop); bg.addColorStop(1, background);
     g.fillStyle = bg; g.fillRect(0, 0, W, H);
   }
   const w = sticker.width * t.s, h = sticker.height * t.s;
@@ -294,7 +318,11 @@ export function composeShare({ sticker, photo, t, background }) {
 // Atajo para la miniatura del resumen.
 export async function renderShare(session, { photo, layout = {}, background } = {}) {
   const align = layout.align || 'left';
-  const sticker = await renderSticker(session, align);
+  const color = layout.color || 'white';
+  const sticker = await renderSticker(session, align, color);
   const t = layout.t || defaultTransform(sticker, align);
-  return composeShare({ sticker, photo, t, background });
+  // Con texto negro, la miniatura va sobre un fondo claro para que se lea.
+  return color === 'black'
+    ? composeShare({ sticker, photo, t, background: background && '#d9d9de', backgroundTop: '#f5f5f7' })
+    : composeShare({ sticker, photo, t, background });
 }

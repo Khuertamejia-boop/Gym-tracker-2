@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Compartir: nuevo botón «Color» para poner el texto en blanco o en negro. Al usar tu foto, el color se elige solo (negro si la zona detrás del texto es clara, blanco si es oscura) hasta que toques el botón. La app recuerda el color de la última vez.
 - Imagen para compartir: se quita la sombra (ni halo ni el degradado oscuro de abajo); la foto queda limpia.
 - Imagen para compartir: la línea de músculos bajo el volumen muestra como máximo 3 (los que más series tuvieron), para que ocupe menos.
 - Compartir: se quita el botón redondo de alineación; ahora cada toque en la imagen cambia la alineación (izquierda → centro → derecha) y se ve un momento el icono. El bloque de datos también se gira con dos dedos (con imán a la posición recta). Texto de ayuda: «Toca para alinear · arrastra, pellizca o gira».
