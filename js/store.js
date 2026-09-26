@@ -56,6 +56,13 @@ export function replaceState(next, opts) {
   save(opts);
 }
 
+// Deja el dispositivo como nuevo (al cerrar sesión) sin marcas de borrado: los datos siguen en la nube.
+export function clearLocal() {
+  state = emptyState();
+  exIndex = null;
+  save({ silent: true });
+}
+
 // Borra todo, dejando marcas de borrado para que la nube también lo elimine.
 export function resetState() {
   const deletedIds = [

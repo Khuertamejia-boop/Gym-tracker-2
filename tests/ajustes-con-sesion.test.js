@@ -26,6 +26,18 @@ const OUT = process.env.OUT; const FIX = process.env.FIX; let cloud = null;
   await click('#profile-btn'); console.log('in:', await rows());
   await click('#sheet [data-action="open-settings"]'); console.log('settings in data-links:', await p.locator('.data-links').count());
   await p.screenshot({ path: OUT + '/v16-settings.png' });
+  // cerrar sesión deja el dispositivo vacío; al volver a entrar, los datos regresan de la nube
+  const count = () => p.evaluate(() => { const st = JSON.parse(localStorage.getItem('gymtrack.v1')); return `${st.sessions.length} sesiones, ${st.routines.length} rutinas`; });
+  console.log('before logout:', await count());
+  await p.evaluate(() => document.getElementById('sheet').close()); await p.waitForTimeout(200);
+  await click('#profile-btn'); await click('#sheet [data-action="cloud-logout"]'); await p.waitForTimeout(800);
+  console.log('after logout:', await count(), '| welcome:', await p.locator('[data-step="login"]').count());
+  await p.screenshot({ path: OUT + '/v16-logout.png' });
+  await click('[data-action="ob-go"][data-step="login"]');
+  await p.fill('#login-form [name="email"]', 'a@b.com'); await p.fill('#login-form [name="password"]', 'secreto1');
+  await click('#login-form button[name="mode"]'); await p.waitForTimeout(1500);
+  console.log('after login again:', await count(), '| title:', await p.textContent('#view-title'));
+  await p.screenshot({ path: OUT + '/v16-relogin.png' });
   console.log('errors:', JSON.stringify(errs));
   await b.close();
 })();

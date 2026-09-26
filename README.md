@@ -44,7 +44,7 @@ Al tocar un ejercicio se abre su ficha: Acerca de (con la **guía muscular**: cu
 ## Datos y cuenta en la nube
 
 Los datos se guardan siempre en el navegador (`localStorage`), así que la app funciona sin conexión. La app abre al instante desde la copia guardada, aunque en el gym no haya señal; las versiones nuevas se descargan solas en segundo plano.
-Si inicias sesión (botón de perfil, arriba a la derecha), además se sincronizan con Supabase y puedes usarlos en cualquier dispositivo.
+Si inicias sesión (botón de perfil, arriba a la derecha), además se sincronizan con Supabase y puedes usarlos en cualquier dispositivo. Al **cerrar sesión** se guarda todo en la nube y el dispositivo queda vacío, para poder entrar con otra cuenta sin mezclar datos.
 Al sincronizar se fusionan las copias: no se pierde ningún entrenamiento de ningún dispositivo, y lo que borras se borra en todos.
 
 ### Configurar Supabase (una sola vez)

@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Cerrar sesión deja el iPhone vacío (vuelve a la pantalla de bienvenida): así se puede cambiar de cuenta sin mezclar entrenos. Antes de cerrar se guarda todo en la nube, y al volver a entrar los datos regresan.
 - Iniciar sesión: se quita el botón «Entrar con un código por correo» (Supabase ya no deja poner el código en el correo sin un servicio de correo propio). Se entra con correo y contraseña.
 - Días de la semana: el miércoles se muestra como «M» (antes «X»).
 - Botón de compartir: el subtítulo ahora dice «Crea una imagen para tus historias».

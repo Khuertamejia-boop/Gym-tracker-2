@@ -2388,9 +2388,18 @@ const actions = {
 
   // Ajustes
   'cloud-sync': () => Cloud.sync(),
+  // Al cerrar sesión se vacía el dispositivo para que otra cuenta no mezcle datos; todo sigue en la nube.
   'cloud-logout': async () => {
-    if (!confirm('¿Cerrar sesión? Tus datos seguirán en la nube y en este dispositivo.')) return;
-    await Cloud.signOut(); closeSheet(); updateAvatar(); toast('Sesión cerrada'); render();
+    const inSession = Boolean(S.getState().draft);
+    if (!confirm(`¿Cerrar sesión? Tus datos seguirán guardados en la nube y volverán al entrar.${inSession ? ' El entrenamiento en curso se descartará.' : ''}`)) return;
+    await Cloud.sync();
+    if (Cloud.getInfo().status !== 'ok'
+      && !confirm('No se pudo guardar en la nube. Si cierras sesión ahora perderás los cambios que no se hayan subido. ¿Cerrar sesión igualmente?')) return;
+    await Cloud.signOut();
+    S.clearLocal();
+    ui.ob = null; ui.editRoutineId = null; ui.tab = 'train';
+    closeSheet(); updateAvatar(); render(); window.scrollTo(0, 0);
+    toast('Sesión cerrada');
   },
   'cloud-reset': async () => {
     const email = document.querySelector('#login-form [name="email"]').value;

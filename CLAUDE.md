@@ -66,8 +66,7 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   contraseña de app) + `{{ .Token }}` en "Magic Link or OTP" y "Confirm signup" + volver a poner el botón.
 
 - Cuentas del dueño: la de **iCloud** es la principal (datos reales); la de **Gmail** es solo para probar la app.
-  Ojo: al cerrar sesión los datos se quedan en el dispositivo y se fusionan con la siguiente cuenta que entre,
-  así que no alternar ambas cuentas en la misma app (la de pruebas, mejor en Safari u otro dispositivo).
+  Al cerrar sesión se sincroniza y se vacía el dispositivo (`S.clearLocal()`), para cambiar de cuenta sin mezclar datos.
 
 ## Pendientes (al 26-09-2026)
 
