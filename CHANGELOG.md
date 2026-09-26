@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Imagen para compartir: la línea de músculos bajo el volumen muestra como máximo 3 (los que más series tuvieron), para que ocupe menos.
 - Compartir: se quita el botón redondo de alineación; ahora cada toque en la imagen cambia la alineación (izquierda → centro → derecha) y se ve un momento el icono. El bloque de datos también se gira con dos dedos (con imán a la posición recta). Texto de ayuda: «Toca para alinear · arrastra, pellizca o gira».
 - Cerrar sesión deja el iPhone vacío (vuelve a la pantalla de bienvenida): así se puede cambiar de cuenta sin mezclar entrenos. Antes de cerrar se guarda todo en la nube, y al volver a entrar los datos regresan.
 - Iniciar sesión: se quita el botón «Entrar con un código por correo» (Supabase ya no deja poner el código en el correo sin un servicio de correo propio). Se entra con correo y contraseña.

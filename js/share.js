@@ -4,7 +4,7 @@
 // mapa muscular, para que salga nítido en la imagen.
 import * as S from './store.js';
 import { getMuscles, defaultBody, PX2MM, VIEWBOX_WIDTH, VIEWBOX_HEIGHT } from './vendor/muscle-map/index.js';
-import { bodyGender, sessionMuscles } from './body.js';
+import { bodyGender, sessionMuscles, musclesFor } from './body.js';
 
 export const W = 1080;
 export const H = 1920;
@@ -115,6 +115,17 @@ function brand(g, y, align, k) {
 }
 
 // Bloque de datos (el "sticker") dibujado a tamaño natural (k = 1).
+// Los 3 músculos con más series hechas (en empate, el orden del entrenamiento), sin repetir nombre.
+function topMuscles(session, primary) {
+  const sets = new Map(primary.map((gr) => [gr, 0]));
+  for (const e of session.exercises) {
+    const done = e.sets.filter((x) => x.done).length || e.sets.length;
+    for (const gr of musclesFor(e.exId)[0]) if (sets.has(gr)) sets.set(gr, sets.get(gr) + done);
+  }
+  const names = [...sets.entries()].sort((a, b) => b[1] - a[1]).map(([gr]) => SHORT_MUSCLE[gr] || gr);
+  return [...new Set(names)].slice(0, 3);
+}
+
 async function drawBlock(g, session, align, y) {
   const k = 1;
   const st = sessionStats(session);
@@ -125,7 +136,7 @@ async function drawBlock(g, session, align, y) {
   const mini = await bodyCanvas('front', primary, secondary, align === 'center' ? 130 : 150);
   const prs = session.exercises.reduce((a, e) => a + e.sets.filter((x) => x.pr).length, 0);
   const stats = [[st.time, 'Tiempo'], [String(st.sets), 'Series']];
-  const worked = primary.slice(0, 4).map((gr) => SHORT_MUSCLE[gr] || gr).join(' · ');
+  const worked = topMuscles(session, primary).join(' · ');
   const musclesH = worked ? 50 : 0;
   const heroH = align === 'center'
     ? mini.height + 24 + volSize * 0.8 + 50 + musclesH

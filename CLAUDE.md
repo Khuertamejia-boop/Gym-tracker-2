@@ -60,7 +60,7 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - Compartir: solo plantilla "Sobre foto" (PNG transparente o sobre foto). El bloque de datos es un
   sticker: se arrastra con un dedo, con dos se pellizca (tamaño, imán al centro) y se gira (imán a recto);
   un toque cambia la alineación izquierda → centro → derecha (sin botón; el icono aparece un momento).
-  Nada de botones sobre la imagen. Muestra los músculos trabajados y una cápsula
+  Nada de botones sobre la imagen. Muestra los músculos trabajados (en texto, máx. 3: los de más series) y una cápsula
   de cristal «¡NUEVO PR!» (sin emoji, texto blanco) si hubo récords. Botón protagonista en el resumen.
 - Login solo con correo y contraseña (26-09-2026): Supabase no deja editar las plantillas de correo sin SMTP
   propio, así que el botón «Entrar con un código» se ocultó. Para recuperarlo: SMTP propio (p. ej. iCloud con
