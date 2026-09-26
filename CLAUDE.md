@@ -58,8 +58,9 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - La cuenta **no** se pide en la configuración inicial: se ofrece tras el 1.er entrenamiento (y el 5.º y 15.º).
 - Temporizador de descanso automático al marcar serie; se detiene tras la última serie del entreno.
 - Compartir: solo plantilla "Sobre foto" (PNG transparente o sobre foto). El bloque de datos es un
-  sticker: se arrastra con un dedo, se pellizca para el tamaño (imán al centro) y un botón redondo en la
-  esquina cambia la alineación; nada de filas de botones. Muestra los músculos trabajados y una cápsula
+  sticker: se arrastra con un dedo, con dos se pellizca (tamaño, imán al centro) y se gira (imán a recto);
+  un toque cambia la alineación izquierda → centro → derecha (sin botón; el icono aparece un momento).
+  Nada de botones sobre la imagen. Muestra los músculos trabajados y una cápsula
   de cristal «¡NUEVO PR!» (sin emoji, texto blanco) si hubo récords. Botón protagonista en el resumen.
 - Login solo con correo y contraseña (26-09-2026): Supabase no deja editar las plantillas de correo sin SMTP
   propio, así que el botón «Entrar con un código» se ocultó. Para recuperarlo: SMTP propio (p. ej. iCloud con
@@ -70,7 +71,7 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 
 ## Pendientes (al 26-09-2026)
 
-- Confirmar en un iPhone real el pellizco/arrastre del sticker de Compartir y el menú de compartir/guardar.
+- Confirmar en un iPhone real el giro con dos dedos y el toque para alinear del sticker de Compartir.
 - Ideas de fase 4 (no pedidas aún): superseries, recordatorios los días de entreno, semana de descarga.
 - Ahorro: los chats muy largos consumen muchos créditos de la nube; conviene empezar chats nuevos
   (este archivo da el contexto) y agrupar cambios pequeños en un solo mensaje.

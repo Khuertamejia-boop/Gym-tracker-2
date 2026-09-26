@@ -33,9 +33,28 @@ const OUT = process.env.OUT; const FIX = process.env.FIX;
   for (let i = 0; i < 6; i++) await p.mouse.wheel(0, -100);
   await p.waitForTimeout(150); const b2 = await box(); console.log('scaled', (b2.width / b1.width).toFixed(2));
   await p.screenshot({ path: OUT + '/share-2-movido.png' });
-  // Alineación centrada
-  await click('.sf-align'); await p.waitForTimeout(800);
-  console.log('layout', JSON.stringify(await p.evaluate(() => JSON.parse(localStorage.getItem('gymtrack.v1')).settings.shareLayout.align)));
+  // Sin botón de alineación: cada toque cambia izquierda → centro → derecha → izquierda
+  console.log('align button:', await p.locator('button.sf-align').count());
+  const align = () => p.evaluate(() => JSON.parse(localStorage.getItem('gymtrack.v1')).settings.shareLayout.align);
+  const fb = await p.locator('.share-frame').boundingBox();
+  const seq = [];
+  for (let i = 0; i < 3; i++) { await p.mouse.click(fb.x + 30, fb.y + 40); await p.waitForTimeout(700); seq.push(await align()); }
+  console.log('taps:', seq.join(' → '));
+  await p.mouse.click(fb.x + 30, fb.y + 40); await p.waitForTimeout(200);
+  await p.screenshot({ path: OUT + '/share-2b-toque.png' });
+  await p.waitForTimeout(900);
+  // Girar con dos dedos (eventos de puntero simulados)
+  await p.evaluate(() => {
+    const f = document.querySelector('.share-frame'); const r = f.getBoundingClientRect();
+    const cx = r.x + r.width / 2, cy = r.y + r.height / 2;
+    const ev = (type, id, x, y) => f.dispatchEvent(new PointerEvent(type, { pointerId: id, clientX: x, clientY: y, bubbles: true, pointerType: 'touch' }));
+    ev('pointerdown', 11, cx - 60, cy); ev('pointerdown', 12, cx + 60, cy);
+    for (let k = 1; k <= 10; k++) { const a = (k / 10) * (Math.PI / 6); ev('pointermove', 12, cx + 60 * Math.cos(a), cy + 60 * Math.sin(a)); ev('pointermove', 11, cx - 60 * Math.cos(a), cy - 60 * Math.sin(a)); }
+    ev('pointerup', 12, 0, 0); ev('pointerup', 11, 0, 0);
+  });
+  await p.waitForTimeout(200);
+  console.log('rotation deg:', await p.evaluate(() => Math.round(JSON.parse(localStorage.getItem('gymtrack.v1')).settings.shareLayout.t.r * 180 / Math.PI)));
+  await p.screenshot({ path: OUT + '/share-2c-girado.png' });
   await p.setInputFiles('.share-acts input[type=file]', FIX + '/gymphoto.jpg'); await p.waitForTimeout(600);
   await p.screenshot({ path: OUT + '/share-3-foto.png' });
   const dl = p.waitForEvent('download', { timeout: 5000 }).catch(() => null);

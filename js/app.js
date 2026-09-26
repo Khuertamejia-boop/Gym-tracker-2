@@ -664,7 +664,7 @@ const ICON_AL = {
 const NEXT_ALIGN = { left: 'center', center: 'right', right: 'left' };
 
 // Compartir: el bloque de datos es un "sticker" sobre la vista previa. Se arrastra con
-// un dedo, se pellizca para cambiar el tamaño y el botón de la esquina cambia la alineación.
+// un dedo, con dos se pellizca (tamaño) y se gira, y un toque cambia la alineación.
 function openShare(session) {
   const st = S.getState().settings;
   const saved = st.shareLayout || {};
@@ -676,11 +676,11 @@ function openShare(session) {
         <img class="sf-photo" alt="" hidden>
         <img class="sf-sticker" alt="Datos del entrenamiento" draggable="false">
         <span class="sf-guide" aria-hidden="true"></span>
-        <button type="button" class="sf-align" aria-label="Cambiar alineación del texto">${ICON_AL[state.align]}</button>
+        <span class="sf-align" aria-hidden="true">${ICON_AL[state.align]}</span>
         <span class="share-spin" aria-hidden="true"></span>
       </div>
     </div>
-    <p class="share-hint muted small">Arrastra para moverlo · pellizca para cambiar el tamaño</p>
+    <p class="share-hint muted small">Toca para alinear · arrastra, pellizca o gira</p>
     <div class="share-acts">
       <button type="button" data-act="share"><span class="ic p">${ICON_SHARE}</span>Compartir</button>
       <button type="button" data-act="save"><span class="ic">${ICON_SAVE}</span>Guardar</button>
@@ -700,6 +700,7 @@ function openShare(session) {
       stickerImg.style.width = `${w}px`;
       stickerImg.style.left = `${t.cx * r - w / 2}px`;
       stickerImg.style.top = `${t.cy * r - h / 2}px`;
+      stickerImg.style.transform = t.r ? `rotate(${t.r}rad)` : '';
     };
     const save = () => { st.shareLayout = { align: state.align, t: { ...state.t } }; S.save(); };
 
@@ -722,24 +723,33 @@ function openShare(session) {
       }
     };
 
-    alignBtn.addEventListener('click', async () => {
+    // Un toque cambia la alineación (izquierda → centro → derecha) y la muestra un momento.
+    const cycleAlign = async () => {
       state.align = NEXT_ALIGN[state.align];
       alignBtn.innerHTML = ICON_AL[state.align];
+      alignBtn.classList.remove('on'); void alignBtn.offsetWidth; alignBtn.classList.add('on');
       await load(true);
       save();
-    });
+    };
 
-    // Gestos: un dedo mueve, dos dedos (pellizco) cambian el tamaño. Doble toque: posición inicial.
+    // Gestos: un dedo mueve; dos dedos pellizcan (tamaño) y giran. Un toque corto: alineación.
     const pts = new Map();
     let start = null;
+    let tap = null;
     const snapshot = () => {
       const [a, b] = [...pts.values()];
-      start = { t: { ...state.t }, a: { ...a }, dist: b ? Math.hypot(b.x - a.x, b.y - a.y) : 0, mid: b ? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } : { ...a } };
+      start = {
+        t: { ...state.t }, a: { ...a },
+        dist: b ? Math.hypot(b.x - a.x, b.y - a.y) : 0,
+        ang: b ? Math.atan2(b.y - a.y, b.x - a.x) : 0,
+        mid: b ? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } : { ...a },
+      };
     };
     frame.addEventListener('pointerdown', (e) => {
-      if (e.target === alignBtn || alignBtn.contains(e.target) || !state.sticker) return;
-      frame.setPointerCapture(e.pointerId);
+      if (!state.sticker) return;
+      try { frame.setPointerCapture(e.pointerId); } catch { /* puntero ya liberado */ }
       pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      tap = pts.size === 1 ? { x: e.clientX, y: e.clientY, time: Date.now() } : null;
       snapshot();
     });
     frame.addEventListener('pointermove', (e) => {
@@ -751,6 +761,10 @@ function openShare(session) {
       if (b && start.dist) {
         const dist = Math.hypot(b.x - a.x, b.y - a.y);
         t.s = Math.min(1.5, Math.max(0.35, start.t.s * (dist / start.dist)));
+        // Giro con imán a la posición recta (±6°).
+        let rot = (start.t.r || 0) + Math.atan2(b.y - a.y, b.x - a.x) - start.ang;
+        rot = Math.atan2(Math.sin(rot), Math.cos(rot));
+        t.r = Math.abs(rot) < 0.105 ? 0 : rot;
         const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
         t.cx += (mid.x - start.mid.x) / r; t.cy += (mid.y - start.mid.y) / r;
       } else {
@@ -770,11 +784,19 @@ function openShare(session) {
       if (!pts.has(e.pointerId)) return;
       pts.delete(e.pointerId);
       guide.classList.remove('on');
-      if (pts.size) snapshot(); else { start = null; save(); }
+      if (pts.size) { tap = null; snapshot(); return; }
+      start = null;
+      const moved = tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y);
+      if (e.type === 'pointerup' && tap && moved < 8 && Date.now() - tap.time < 350) {
+        tap = null;
+        cycleAlign();
+        return;
+      }
+      tap = null;
+      save();
     };
     frame.addEventListener('pointerup', end);
     frame.addEventListener('pointercancel', end);
-    frame.addEventListener('dblclick', () => { state.t = defaultTransform(state.sticker, state.align); place(); save(); });
     frame.addEventListener('wheel', (e) => {
       if (!state.sticker) return;
       e.preventDefault();

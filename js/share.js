@@ -277,7 +277,11 @@ export function composeShare({ sticker, photo, t, background }) {
     g.fillStyle = bg; g.fillRect(0, 0, W, H);
   }
   const w = sticker.width * t.s, h = sticker.height * t.s;
-  g.drawImage(sticker, t.cx - w / 2, t.cy - h / 2, w, h);
+  g.save();
+  g.translate(t.cx, t.cy);
+  if (t.r) g.rotate(t.r);
+  g.drawImage(sticker, -w / 2, -h / 2, w, h);
+  g.restore();
   return c;
 }
 
