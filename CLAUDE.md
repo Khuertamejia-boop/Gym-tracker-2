@@ -57,7 +57,8 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   días de entreno en 2×2 y volumen semanal plegado (zona 10–20 series para hipertrofia).
 - La cuenta **no** se pide en la configuración inicial: se ofrece tras el 1.er entrenamiento (y el 5.º y 15.º).
 - Temporizador de descanso automático al marcar serie; se detiene tras la última serie del entreno.
-- Compartir: solo plantilla "Sobre foto" (PNG transparente o sobre foto), con alineación,
-  tamaño (3 tamaños contenidos) y posición ajustables; muestra los músculos trabajados y una cápsula
-  dorada «¡NUEVO PR!» si hubo récords; botón protagonista en el resumen con miniatura de la historia.
+- Compartir: solo plantilla "Sobre foto" (PNG transparente o sobre foto). El bloque de datos es un
+  sticker: se arrastra con un dedo, se pellizca para el tamaño (imán al centro) y un botón redondo en la
+  esquina cambia la alineación; nada de filas de botones. Muestra los músculos trabajados y una cápsula
+  de cristal «¡NUEVO PR!» (sin emoji, texto blanco) si hubo récords. Botón protagonista en el resumen.
 - Supabase: para el código por correo hay que añadir `{{ .Token }}` a la plantilla "Magic Link".

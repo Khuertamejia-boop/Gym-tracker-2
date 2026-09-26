@@ -5,7 +5,7 @@ import { TEMPLATES } from './data/templates.js';
 import { lineChart, sparkArea, destroyCharts } from './charts.js';
 import * as Cloud from './cloud.js';
 import { mountMuscleMaps, musclesFor, muscleNames } from './body.js';
-import { renderShare, groupNum } from './share.js';
+import { renderShare, renderSticker, composeShare, defaultTransform, groupNum, W as ShareW, H as ShareH } from './share.js';
 
 const $view = document.getElementById('view');
 const $title = document.getElementById('view-title');
@@ -660,58 +660,128 @@ const ICON_AL = {
   left: '<svg viewBox="0 0 24 24"><path d="M4 5h16v2H4V5Zm0 4h10v2H4V9Zm0 4h16v2H4v-2Zm0 4h10v2H4v-2Z"/></svg>',
   center: '<svg viewBox="0 0 24 24"><path d="M4 5h16v2H4V5Zm3 4h10v2H7V9Zm-3 4h16v2H4v-2Zm3 4h10v2H7v-2Z"/></svg>',
   right: '<svg viewBox="0 0 24 24"><path d="M4 5h16v2H4V5Zm6 4h10v2H10V9Zm-6 4h16v2H4v-2Zm6 4h10v2H10v-2Z"/></svg>',
-  top: '<svg viewBox="0 0 24 24"><path d="M4 3h16v2H4V3Zm4 4h8v6H8V7Z"/></svg>',
-  bottom: '<svg viewBox="0 0 24 24"><path d="M4 19h16v2H4v-2Zm4-8h8v6H8v-6Z"/></svg>',
 };
+const NEXT_ALIGN = { left: 'center', center: 'right', right: 'left' };
 
+// Compartir: el bloque de datos es un "sticker" sobre la vista previa. Se arrastra con
+// un dedo, se pellizca para cambiar el tamaño y el botón de la esquina cambia la alineación.
 function openShare(session) {
   const st = S.getState().settings;
-  const layout = { align: 'left', size: 'm', pos: 'bottom', ...(st.shareLayout || {}) };
-  const state = { photo: null, canvas: null, token: 0 };
-  const seg = (key, opts) => `<div class="segmented share-seg" role="group">${opts.map(([v, label, aria]) =>
-    `<button type="button" data-l="${key}" data-v="${v}" aria-label="${aria}">${label}</button>`).join('')}</div>`;
+  const saved = st.shareLayout || {};
+  const state = { align: saved.align || 'left', t: saved.t || null, photo: null, sticker: null };
 
   openSheet('Compartir', `
-    <div class="share-stage"><div class="share-frame checker"><img alt="Vista previa de la imagen"><span class="share-spin" aria-hidden="true"></span></div></div>
-    <div class="share-tools">
-      ${seg('align', [['left', ICON_AL.left, 'Alinear a la izquierda'], ['center', ICON_AL.center, 'Centrar'], ['right', ICON_AL.right, 'Alinear a la derecha']])}
-      ${seg('size', [['s', '<span class="a-s">A</span>', 'Texto pequeño'], ['m', '<span class="a-m">A</span>', 'Texto mediano'], ['l', '<span class="a-l">A</span>', 'Texto grande']])}
-      ${seg('pos', [['top', ICON_AL.top, 'Arriba'], ['bottom', ICON_AL.bottom, 'Abajo']])}
+    <div class="share-stage">
+      <div class="share-frame checker">
+        <img class="sf-photo" alt="" hidden>
+        <img class="sf-sticker" alt="Datos del entrenamiento" draggable="false">
+        <span class="sf-guide" aria-hidden="true"></span>
+        <button type="button" class="sf-align" aria-label="Cambiar alineación del texto">${ICON_AL[state.align]}</button>
+        <span class="share-spin" aria-hidden="true"></span>
+      </div>
     </div>
-    <p class="share-hint muted small"></p>
+    <p class="share-hint muted small">Arrastra para moverlo · pellizca para cambiar el tamaño</p>
     <div class="share-acts">
       <button type="button" data-act="share"><span class="ic p">${ICON_SHARE}</span>Compartir</button>
       <button type="button" data-act="save"><span class="ic">${ICON_SAVE}</span>Guardar</button>
       <label><span class="ic">${ICON_PHOTO}</span>Usar mi foto<input type="file" accept="image/*" hidden></label>
     </div>`, (root) => {
-    const img = root.querySelector('.share-frame img');
     const frame = root.querySelector('.share-frame');
-    const hint = root.querySelector('.share-hint');
+    const stickerImg = root.querySelector('.sf-sticker');
+    const photoImg = root.querySelector('.sf-photo');
+    const guide = root.querySelector('.sf-guide');
+    const alignBtn = root.querySelector('.sf-align');
+    const ratio = () => frame.clientWidth / ShareW;
 
-    const draw = async () => {
-      const token = ++state.token;
+    const place = () => {
+      if (!state.sticker) return;
+      const r = ratio(), t = state.t;
+      const w = state.sticker.width * t.s * r, h = state.sticker.height * t.s * r;
+      stickerImg.style.width = `${w}px`;
+      stickerImg.style.left = `${t.cx * r - w / 2}px`;
+      stickerImg.style.top = `${t.cy * r - h / 2}px`;
+    };
+    const save = () => { st.shareLayout = { align: state.align, t: { ...state.t } }; S.save(); };
+
+    const load = async (keepHeight) => {
       frame.classList.add('loading');
-      root.querySelectorAll('[data-l]').forEach((b) => b.classList.toggle('active', layout[b.dataset.l] === b.dataset.v));
-      frame.classList.toggle('checker', !state.photo);
-      hint.textContent = state.photo ? 'Tu foto con los datos del entrenamiento.' : 'PNG transparente: pégalo sobre tu foto en Instagram, o toca "Usar mi foto".';
       try {
-        const c = await renderShare(session, { photo: state.photo, layout });
-        if (token !== state.token) return;
-        state.canvas = c;
-        img.src = c.toDataURL('image/png');
+        state.sticker = await renderSticker(session, state.align);
+        if (!state.t) state.t = defaultTransform(state.sticker, state.align);
+        else if (keepHeight) {
+          // Nueva alineación: misma altura y tamaño; el lado se ajusta a la alineación.
+          const w = state.sticker.width * state.t.s;
+          state.t = { ...state.t, cx: state.align === 'center' ? ShareW / 2 : state.align === 'right' ? ShareW - 60 - w / 2 : 60 + w / 2 };
+        }
+        stickerImg.src = state.sticker.toDataURL('image/png');
+        place();
       } catch {
         toast('No se pudo crear la imagen');
       } finally {
-        if (token === state.token) frame.classList.remove('loading');
+        frame.classList.remove('loading');
       }
     };
 
-    root.querySelectorAll('[data-l]').forEach((b) => b.addEventListener('click', () => {
-      layout[b.dataset.l] = b.dataset.v;
-      st.shareLayout = { ...layout }; // se recuerda para la próxima vez
-      S.save();
-      draw();
-    }));
+    alignBtn.addEventListener('click', async () => {
+      state.align = NEXT_ALIGN[state.align];
+      alignBtn.innerHTML = ICON_AL[state.align];
+      await load(true);
+      save();
+    });
+
+    // Gestos: un dedo mueve, dos dedos (pellizco) cambian el tamaño. Doble toque: posición inicial.
+    const pts = new Map();
+    let start = null;
+    const snapshot = () => {
+      const [a, b] = [...pts.values()];
+      start = { t: { ...state.t }, a: { ...a }, dist: b ? Math.hypot(b.x - a.x, b.y - a.y) : 0, mid: b ? { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } : { ...a } };
+    };
+    frame.addEventListener('pointerdown', (e) => {
+      if (e.target === alignBtn || alignBtn.contains(e.target) || !state.sticker) return;
+      frame.setPointerCapture(e.pointerId);
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      snapshot();
+    });
+    frame.addEventListener('pointermove', (e) => {
+      if (!pts.has(e.pointerId) || !start) return;
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const r = ratio();
+      const [a, b] = [...pts.values()];
+      const t = { ...start.t };
+      if (b && start.dist) {
+        const dist = Math.hypot(b.x - a.x, b.y - a.y);
+        t.s = Math.min(1.5, Math.max(0.35, start.t.s * (dist / start.dist)));
+        const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        t.cx += (mid.x - start.mid.x) / r; t.cy += (mid.y - start.mid.y) / r;
+      } else {
+        t.cx += (a.x - start.a.x) / r; t.cy += (a.y - start.a.y) / r;
+      }
+      // Imán al centro con guía, como en Instagram.
+      const snap = Math.abs(t.cx - ShareW / 2) < 24;
+      if (snap) t.cx = ShareW / 2;
+      guide.classList.toggle('on', snap);
+      const hw = (state.sticker.width * t.s) / 2, hh = (state.sticker.height * t.s) / 2;
+      t.cx = Math.min(ShareW - hw * 0.3, Math.max(hw * 0.3, t.cx));
+      t.cy = Math.min(ShareH - hh * 0.3, Math.max(hh * 0.3, t.cy));
+      state.t = t;
+      place();
+    });
+    const end = (e) => {
+      if (!pts.has(e.pointerId)) return;
+      pts.delete(e.pointerId);
+      guide.classList.remove('on');
+      if (pts.size) snapshot(); else { start = null; save(); }
+    };
+    frame.addEventListener('pointerup', end);
+    frame.addEventListener('pointercancel', end);
+    frame.addEventListener('dblclick', () => { state.t = defaultTransform(state.sticker, state.align); place(); save(); });
+    frame.addEventListener('wheel', (e) => {
+      if (!state.sticker) return;
+      e.preventDefault();
+      state.t = { ...state.t, s: Math.min(1.5, Math.max(0.35, state.t.s * (e.deltaY < 0 ? 1.05 : 0.95))) };
+      place(); save();
+    }, { passive: false });
+    window.addEventListener('resize', place);
 
     root.querySelector('input[type=file]').addEventListener('change', async (e) => {
       const file = e.target.files[0];
@@ -719,14 +789,16 @@ function openShare(session) {
       try {
         state.photo = await createImageBitmap(file);
       } catch {
-        const url = URL.createObjectURL(file);
-        state.photo = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = url; });
+        state.photo = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = URL.createObjectURL(file); });
       }
-      draw();
+      photoImg.src = URL.createObjectURL(file);
+      photoImg.hidden = false;
+      frame.classList.remove('checker');
     });
 
     const toFile = async () => {
-      const blob = await new Promise((r) => state.canvas.toBlob(r, 'image/png'));
+      const c = composeShare({ sticker: state.sticker, photo: state.photo, t: state.t });
+      const blob = await new Promise((r) => c.toBlob(r, 'image/png'));
       return new File([blob], `entrenamiento-${session.date}.png`, { type: 'image/png' });
     };
     const download = (file) => {
@@ -746,18 +818,18 @@ function openShare(session) {
       return false;
     };
     root.querySelector('[data-act="share"]').addEventListener('click', async () => {
-      if (!state.canvas) return;
+      if (!state.sticker) return;
       const file = await toFile();
       if (!(await share(file))) download(file);
     });
     // En el iPhone, "Guardar imagen" está en el menú de compartir (guarda en Fotos, con transparencia).
     root.querySelector('[data-act="save"]').addEventListener('click', async () => {
-      if (!state.canvas) return;
+      if (!state.sticker) return;
       const file = await toFile();
       if (isIOS() && (await share(file))) return;
       download(file);
     });
-    draw();
+    load(false);
   });
 }
 

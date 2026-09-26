@@ -1,5 +1,5 @@
-// Imágenes para compartir un entrenamiento (formato historia 1080 × 1920).
-// Plantillas: 'card' (tarjeta), 'photo' (sobre foto o PNG transparente) y 'record'.
+// Imagen para compartir un entrenamiento (formato historia 1080 × 1920): un "sticker"
+// con los datos que se coloca sobre una foto o se guarda como PNG transparente.
 // El cuerpo con los músculos se dibuja en el canvas con los mismos contornos del
 // mapa muscular, para que salga nítido en la imagen.
 import * as S from './store.js';
@@ -114,147 +114,177 @@ function brand(g, y, align, k) {
   spaced(g, label, x + dot + 14 * k, y, sp);
 }
 
-// Plantilla "Sobre foto": PNG transparente o sobre una foto de la galería.
-// layout: { align: 'left'|'center'|'right', size: 's'|'m'|'l', pos: 'bottom'|'top' }
-async function drawPhoto(g, session, photo, layout = {}) {
-  const align = layout.align || 'left';
-  // Tamaños: la grande es la antigua mediana; la mediana, la antigua pequeña.
-  const k = { s: 0.65, m: 0.8, l: 1 }[layout.size || 'm'];
-  const top = layout.pos === 'top';
+// Bloque de datos (el "sticker") dibujado a tamaño natural (k = 1).
+async function drawBlock(g, session, align, y) {
+  const k = 1;
   const st = sessionStats(session);
   const [primary, secondary] = sessionMuscles(session);
-
-  if (photo) {
-    const r = Math.max(W / photo.width, H / photo.height);
-    const pw = photo.width * r, ph = photo.height * r;
-    g.drawImage(photo, (W - pw) / 2, (H - ph) / 2, pw, ph);
-    const shade = top ? g.createLinearGradient(0, H * 0.55, 0, 0) : g.createLinearGradient(0, H * 0.45, 0, H);
-    shade.addColorStop(0, 'rgba(0,0,0,0)'); shade.addColorStop(1, 'rgba(0,0,0,0.6)');
-    g.fillStyle = shade; g.fillRect(0, 0, W, H);
-  }
-
-  // Medidas del bloque.
   const eyebrow = `${shortDay(session.dayName).toUpperCase()} · ${upperDate(session.date).replace(/^\S+\s/, '')}`;
   const vol = `${st.volume} ${st.unit}`;
-  const volSize = Math.round(120 * k);
-  const bodyW = Math.round((align === 'center' ? 130 : 150) * k);
-  const mini = await bodyCanvas('front', primary, secondary, bodyW);
+  const volSize = 120;
+  const mini = await bodyCanvas('front', primary, secondary, align === 'center' ? 130 : 150);
   const prs = session.exercises.reduce((a, e) => a + e.sets.filter((x) => x.pr).length, 0);
   const stats = [[st.time, 'Tiempo'], [String(st.sets), 'Series']];
   const worked = primary.slice(0, 4).map((gr) => SHORT_MUSCLE[gr] || gr).join(' · ');
-  const musclesH = worked ? 50 * k : 0;
-  const badgeH = prs ? 58 * k + 30 * k : 0;
-
-  g.font = font(800, volSize);
-  const volW = Math.min(g.measureText(vol).width, W - 2 * MARGIN - (align === 'center' ? 0 : bodyW + 30 * k));
+  const musclesH = worked ? 50 : 0;
   const heroH = align === 'center'
-    ? mini.height + 24 * k + volSize * 0.8 + 50 * k + musclesH
-    : Math.max(mini.height, volSize * 0.8 + 50 * k + musclesH);
-  const eyebrowH = 32 * k + 36 * k;
-  const statsH = 64 * k + 48 * k;
-  const blockH = badgeH + eyebrowH + heroH + 56 * k + statsH + 64 * k + 26 * k;
-  let y = top ? 250 : H - 110 - blockH;
+    ? mini.height + 24 + volSize * 0.8 + 50 + musclesH
+    : Math.max(mini.height, volSize * 0.8 + 50 + musclesH);
 
   g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 28; g.shadowOffsetY = 2;
   g.textAlign = 'left';
 
-  // ¡NUEVO PR! en una cápsula dorada.
+  // ¡NUEVO PR! en una cápsula de cristal, con el mismo blanco que el resto.
   if (prs) {
-    const txt = prs === 1 ? '🏆 ¡NUEVO PR!' : `🏆 ¡${prs} NUEVOS PR!`;
-    g.font = font(800, Math.round(28 * k));
-    const tw = spacedWidth(g, txt, 3 * k);
-    const bw = tw + 52 * k, bh = 58 * k;
+    const txt = prs === 1 ? '¡NUEVO PR!' : `¡${prs} NUEVOS PR!`;
+    g.font = font(800, 28);
+    const tw = spacedWidth(g, txt, 4);
+    const bw = tw + 52, bh = 58;
     const bx = blockX(align, bw);
-    const gold = g.createLinearGradient(bx, y, bx + bw, y + bh);
-    gold.addColorStop(0, '#f6dc97'); gold.addColorStop(1, '#c8962e');
-    g.fillStyle = gold;
-    g.beginPath(); g.roundRect(bx, y, bw, bh, bh / 2); g.fill();
-    g.save(); g.shadowColor = 'transparent';
-    g.fillStyle = '#1a1206';
-    spaced(g, txt, bx + 26 * k, y + bh / 2 + 10 * k, 3 * k);
+    g.save();
+    g.shadowColor = 'transparent';
+    g.fillStyle = 'rgba(255,255,255,0.16)';
+    g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = 2.5;
+    g.beginPath(); g.roundRect(bx, y, bw, bh, bh / 2); g.fill(); g.stroke();
     g.restore();
-    y += badgeH;
+    g.fillStyle = '#fff'; g.font = font(800, 28);
+    spaced(g, txt, bx + 26, y + bh / 2 + 10, 4);
+    y += bh + 30;
   }
 
   // Fecha y día.
-  g.fillStyle = '#fff'; g.font = font(700, Math.round(30 * k));
-  const eyW = spacedWidth(g, eyebrow, 5 * k);
-  spaced(g, eyebrow, blockX(align, eyW), y + 30 * k, 5 * k);
-  y += eyebrowH;
+  g.fillStyle = '#fff'; g.font = font(700, 30);
+  spaced(g, eyebrow, blockX(align, spacedWidth(g, eyebrow, 5)), y + 30, 5);
+  y += 68;
 
-  // Cuerpo + volumen.
+  // Cuerpo + volumen + músculos.
   g.font = font(800, volSize);
   const labelTxt = 'VOLUMEN LEVANTADO';
   if (align === 'center') {
     g.drawImage(mini, (W - mini.width) / 2, y);
-    y += mini.height + 24 * k;
+    y += mini.height + 24;
     g.fillStyle = '#fff'; g.textAlign = 'center';
     g.fillText(vol, W / 2, y + volSize * 0.8, W - 2 * MARGIN);
-    g.font = font(600, Math.round(26 * k)); g.fillStyle = 'rgba(255,255,255,0.85)';
-    spaced(g, labelTxt, W / 2, y + volSize * 0.8 + 46 * k, 6 * k, 'center');
+    g.font = font(600, 26); g.fillStyle = 'rgba(255,255,255,0.85)';
+    spaced(g, labelTxt, W / 2, y + volSize * 0.8 + 46, 6, 'center');
     if (worked) {
-      g.font = font(600, Math.round(34 * k)); g.fillStyle = '#fff';
-      g.fillText(worked, W / 2, y + volSize * 0.8 + 46 * k + musclesH, W - 2 * MARGIN);
+      g.font = font(600, 34); g.fillStyle = '#fff';
+      g.fillText(worked, W / 2, y + volSize * 0.8 + 46 + musclesH, W - 2 * MARGIN);
     }
-    y += volSize * 0.8 + 50 * k + musclesH;
+    y += volSize * 0.8 + 50 + musclesH;
   } else {
-    const rowH = heroH;
-    const bodyX = align === 'left' ? MARGIN - 16 * k : W - MARGIN - mini.width + 16 * k;
-    g.drawImage(mini, bodyX, y + rowH - mini.height);
-    const base = y + rowH - 50 * k - musclesH;
-    g.fillStyle = '#fff';
+    const bodyX = align === 'left' ? MARGIN - 16 : W - MARGIN - mini.width + 16;
+    g.drawImage(mini, bodyX, y + heroH - mini.height);
+    const base = y + heroH - 50 - musclesH;
     const ta = align === 'left' ? 'left' : 'right';
-    g.textAlign = ta;
-    const tx = align === 'left' ? bodyX + mini.width + 20 * k : bodyX - 20 * k;
-    g.fillText(vol, tx, base, volW);
-    g.font = font(600, Math.round(26 * k)); g.fillStyle = 'rgba(255,255,255,0.85)';
-    spaced(g, labelTxt, tx, base + 46 * k, 6 * k, ta);
+    const tx = align === 'left' ? bodyX + mini.width + 20 : bodyX - 20;
+    const maxW = align === 'left' ? W - MARGIN - tx : tx - MARGIN;
+    g.fillStyle = '#fff'; g.textAlign = ta;
+    g.fillText(vol, tx, base, maxW);
+    g.font = font(600, 26); g.fillStyle = 'rgba(255,255,255,0.85)';
+    spaced(g, labelTxt, tx, base + 46, 6, ta);
     if (worked) {
-      g.font = font(600, Math.round(34 * k)); g.fillStyle = '#fff'; g.textAlign = ta;
-      g.fillText(worked, tx, base + 46 * k + musclesH, W - MARGIN - (align === 'left' ? tx : W - tx));
+      g.font = font(600, 34); g.fillStyle = '#fff'; g.textAlign = ta;
+      g.fillText(worked, tx, base + 46 + musclesH, maxW);
     }
-    y += rowH;
+    y += heroH;
   }
-  y += 56 * k;
+  y += 56;
 
-  // Tiempo, series y récords.
-  g.textAlign = 'left';
-  const colGap = 64 * k;
+  // Tiempo y series.
+  const colGap = 64;
   const cols = stats.map(([v, l]) => {
-    g.font = font(700, Math.round(60 * k)); const vw = g.measureText(v).width;
-    g.font = font(600, Math.round(22 * k)); const lw = spacedWidth(g, l.toUpperCase(), 5 * k);
+    g.font = font(700, 60); const vw = g.measureText(v).width;
+    g.font = font(600, 22); const lw = spacedWidth(g, l.toUpperCase(), 5);
     return { v, l: l.toUpperCase(), w: Math.max(vw, lw) };
   });
   const rowW = cols.reduce((a, c) => a + c.w, 0) + colGap * (cols.length - 1);
   let x = blockX(align, rowW);
+  const ta = align === 'center' ? 'center' : align === 'right' ? 'right' : 'left';
   for (const c of cols) {
     const cx = align === 'center' ? x + c.w / 2 : align === 'right' ? x + c.w : x;
-    const ta = align === 'center' ? 'center' : align === 'right' ? 'right' : 'left';
-    g.textAlign = ta; g.fillStyle = '#fff'; g.font = font(700, Math.round(60 * k));
-    g.fillText(c.v, cx, y + 60 * k);
-    g.fillStyle = 'rgba(255,255,255,0.85)'; g.font = font(600, Math.round(22 * k));
-    spaced(g, c.l, cx, y + 60 * k + 42 * k, 5 * k, ta);
+    g.textAlign = ta; g.fillStyle = '#fff'; g.font = font(700, 60);
+    g.fillText(c.v, cx, y + 60);
+    g.fillStyle = 'rgba(255,255,255,0.85)'; g.font = font(600, 22);
+    spaced(g, c.l, cx, y + 102, 5, ta);
     x += c.w + colGap;
   }
-  y += statsH + 64 * k;
+  y += 176;
   g.textAlign = 'left';
   g.shadowColor = 'rgba(0,0,0,0.35)';
   brand(g, y, align, k);
   g.shadowColor = 'transparent';
+  return y + 30;
 }
 
-// Devuelve el canvas de la imagen. photo: imagen de la galería (opcional).
-// background: color de fondo (para miniaturas); sin él, PNG transparente.
-export async function renderShare(session, { photo, layout, background } = {}) {
+// Sticker recortado a su contenido (transparente). Se cachea por entrenamiento y alineación.
+const stickers = new Map();
+export function renderSticker(session, align = 'left') {
+  const key = `${session.id}|${session.editedAt || session.finishedAt}|${align}|${bodyGender()}`;
+  if (!stickers.has(key)) {
+    stickers.set(key, (async () => {
+      const c = document.createElement('canvas');
+      c.width = W; c.height = 1400;
+      const g = c.getContext('2d');
+      g.textBaseline = 'alphabetic';
+      const bottom = await drawBlock(g, session, align, 60);
+      // Recorte por los píxeles visibles (incluida la sombra).
+      const { data } = g.getImageData(0, 0, W, Math.min(c.height, bottom + 60));
+      let x0 = W, x1 = 0, y0 = c.height, y1 = 0;
+      const rows = Math.min(c.height, bottom + 60);
+      for (let yy = 0; yy < rows; yy++) {
+        for (let xx = 0; xx < W; xx++) {
+          if (data[(yy * W + xx) * 4 + 3] > 8) {
+            if (xx < x0) x0 = xx; if (xx > x1) x1 = xx;
+            if (yy < y0) y0 = yy; if (yy > y1) y1 = yy;
+          }
+        }
+      }
+      const out = document.createElement('canvas');
+      out.width = Math.max(1, x1 - x0 + 1); out.height = Math.max(1, y1 - y0 + 1);
+      out.getContext('2d').drawImage(c, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
+      return out;
+    })());
+  }
+  return stickers.get(key);
+}
+
+// Posición inicial: abajo, con el margen de siempre y el 80 % del tamaño natural.
+export function defaultTransform(sticker, align = 'left') {
+  const s = 0.8;
+  const w = sticker.width * s, h = sticker.height * s;
+  const cx = align === 'center' ? W / 2 : align === 'right' ? W - 60 - w / 2 : 60 + w / 2;
+  return { cx, cy: H - 130 - h / 2, s };
+}
+
+// Imagen final: foto (o transparente / fondo) + sticker en la posición y tamaño elegidos.
+export function composeShare({ sticker, photo, t, background }) {
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
   const g = c.getContext('2d');
-  g.textBaseline = 'alphabetic';
-  if (background && !photo) {
+  if (photo) {
+    const r = Math.max(W / photo.width, H / photo.height);
+    const pw = photo.width * r, ph = photo.height * r;
+    g.drawImage(photo, (W - pw) / 2, (H - ph) / 2, pw, ph);
+    // Oscurece suavemente el lado donde está el texto para que se lea.
+    const low = t.cy > H / 2;
+    const shade = low ? g.createLinearGradient(0, H * 0.4, 0, H) : g.createLinearGradient(0, H * 0.6, 0, 0);
+    shade.addColorStop(0, 'rgba(0,0,0,0)'); shade.addColorStop(1, 'rgba(0,0,0,0.55)');
+    g.fillStyle = shade; g.fillRect(0, 0, W, H);
+  } else if (background) {
     const bg = g.createLinearGradient(0, 0, 0, H);
     bg.addColorStop(0, '#3a3f46'); bg.addColorStop(1, background);
     g.fillStyle = bg; g.fillRect(0, 0, W, H);
   }
-  await drawPhoto(g, session, photo, layout);
+  const w = sticker.width * t.s, h = sticker.height * t.s;
+  g.drawImage(sticker, t.cx - w / 2, t.cy - h / 2, w, h);
   return c;
+}
+
+// Atajo para la miniatura del resumen.
+export async function renderShare(session, { photo, layout = {}, background } = {}) {
+  const align = layout.align || 'left';
+  const sticker = await renderSticker(session, align);
+  const t = layout.t || defaultTransform(sticker, align);
+  return composeShare({ sticker, photo, t, background });
 }
