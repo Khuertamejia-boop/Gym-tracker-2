@@ -82,6 +82,9 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   5 → Torso/Pierna (principiante) o «Torso / Pierna + PPL» (resto); 6-7 → PPL (principiante/intermedio) o Arnold (avanzado).
   La semana es fija (no rota): un ciclo de 3 días (PPL, Arnold) con 5 días deja la pierna 1 vez/semana, por eso no se usa con 5.
   Con 7 días se avisa de dejar uno de descanso.
+- Logo (26-09-2026, opción A de 4): pesa blanca redondeada sobre degradado carmesí (#e8354b → #a50d24), estilo iconos de Apple.
+  `icons/icon.svg` lleva esquinas redondeadas (favicon, bienvenida); los PNG (`icon-180` para iPhone, 192, 512) van
+  cuadrados a sangre porque iOS/Android recortan las esquinas. Reutilizar la misma pesa en la app de Xcode.
 - Cuentas del dueño: la de **iCloud** es la principal (datos reales); la de **Gmail** es solo para probar la app.
   Al cerrar sesión se sincroniza y se vacía el dispositivo (`S.clearLocal()`), para cambiar de cuenta sin mezclar datos.
 

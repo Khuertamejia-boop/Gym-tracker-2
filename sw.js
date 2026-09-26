@@ -3,9 +3,9 @@
 // cada versión nueva cambia CACHE y se descarga completa al instalarse.
 // Librerías del CDN: primero la copia guardada (nunca cambian de versión).
 // Las peticiones a Supabase (datos y sesión) nunca se guardan en caché.
-const CACHE = 'gymtrack-v50';
+const CACHE = 'gymtrack-v51';
 const SHELL = [
-  './', 'index.html', 'css/styles.css', 'manifest.webmanifest', 'icons/icon.svg',
+  './', 'index.html', 'css/styles.css', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png',
   'js/app.js', 'js/store.js', 'js/charts.js', 'js/cloud.js', 'js/config.js',
   'js/data/exercises.js', 'js/data/templates.js', 'js/data/muscles.js', 'js/body.js', 'js/share.js',
   'js/vendor/muscle-map/index.js', 'js/vendor/muscle-map/chunk-CGKLCEZK.js',
