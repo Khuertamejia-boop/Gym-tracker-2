@@ -975,6 +975,7 @@ button.pt:active { background: var(--surface-2); }
 /* Vista previa interactiva de la imagen para compartir */
 .share-frame { touch-action: none; user-select: none; -webkit-user-select: none; }
 .sf-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.sf-halo { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .share-frame .sf-sticker { position: absolute; width: auto; height: auto; object-fit: fill; cursor: grab; -webkit-user-drag: none; }
 .sf-guide { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: #f6dc97; opacity: 0; transition: opacity 0.15s; pointer-events: none; }
 .sf-guide.on { opacity: 0.9; }

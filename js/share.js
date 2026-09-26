@@ -268,6 +268,27 @@ export function defaultTransform(sticker, align = 'left') {
   return { cx, cy: H - 130 - h / 2, s };
 }
 
+// Halo: sombra difuminada detrás del bloque que lo sigue al moverlo, cambiar el tamaño o girarlo.
+// Caída gaussiana (sin borde visible) y más leve en el PNG transparente.
+export const HALO_PHOTO = 0.5;
+export const HALO_CLEAR = 0.3;
+export function drawHalo(g, sticker, t, alpha) {
+  const w = sticker.width * t.s, h = sticker.height * t.s;
+  const rx = w * 1.0, ry = h * 1.3;
+  g.save();
+  g.translate(t.cx, t.cy);
+  if (t.r) g.rotate(t.r);
+  g.scale(1, ry / rx);
+  const grad = g.createRadialGradient(0, 0, 0, 0, 0, rx);
+  for (let i = 0; i <= 12; i++) {
+    const x = i / 12;
+    grad.addColorStop(x, `rgba(0,0,0,${i === 12 ? 0 : (alpha * Math.exp(-4 * x * x)).toFixed(3)})`);
+  }
+  g.fillStyle = grad;
+  g.fillRect(-rx, -rx, 2 * rx, 2 * rx);
+  g.restore();
+}
+
 // Imagen final: foto (o transparente / fondo) + sticker en la posición y tamaño elegidos.
 export function composeShare({ sticker, photo, t, background }) {
   const c = document.createElement('canvas');
@@ -277,16 +298,12 @@ export function composeShare({ sticker, photo, t, background }) {
     const r = Math.max(W / photo.width, H / photo.height);
     const pw = photo.width * r, ph = photo.height * r;
     g.drawImage(photo, (W - pw) / 2, (H - ph) / 2, pw, ph);
-    // Oscurece suavemente el lado donde está el texto para que se lea.
-    const low = t.cy > H / 2;
-    const shade = low ? g.createLinearGradient(0, H * 0.4, 0, H) : g.createLinearGradient(0, H * 0.6, 0, 0);
-    shade.addColorStop(0, 'rgba(0,0,0,0)'); shade.addColorStop(1, 'rgba(0,0,0,0.55)');
-    g.fillStyle = shade; g.fillRect(0, 0, W, H);
   } else if (background) {
     const bg = g.createLinearGradient(0, 0, 0, H);
     bg.addColorStop(0, '#3a3f46'); bg.addColorStop(1, background);
     g.fillStyle = bg; g.fillRect(0, 0, W, H);
   }
+  drawHalo(g, sticker, t, photo || background ? HALO_PHOTO : HALO_CLEAR);
   const w = sticker.width * t.s, h = sticker.height * t.s;
   g.save();
   g.translate(t.cx, t.cy);

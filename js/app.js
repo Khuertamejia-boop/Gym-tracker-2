@@ -5,7 +5,7 @@ import { TEMPLATES } from './data/templates.js';
 import { lineChart, sparkArea, destroyCharts } from './charts.js';
 import * as Cloud from './cloud.js';
 import { mountMuscleMaps, musclesFor, muscleNames } from './body.js';
-import { renderShare, renderSticker, composeShare, defaultTransform, groupNum, W as ShareW, H as ShareH } from './share.js';
+import { renderShare, renderSticker, composeShare, defaultTransform, drawHalo, HALO_PHOTO, HALO_CLEAR, groupNum, W as ShareW, H as ShareH } from './share.js';
 
 const $view = document.getElementById('view');
 const $title = document.getElementById('view-title');
@@ -674,6 +674,7 @@ function openShare(session) {
     <div class="share-stage">
       <div class="share-frame checker">
         <img class="sf-photo" alt="" hidden>
+        <canvas class="sf-halo" aria-hidden="true"></canvas>
         <img class="sf-sticker" alt="Datos del entrenamiento" draggable="false">
         <span class="sf-guide" aria-hidden="true"></span>
         <span class="sf-align" aria-hidden="true">${ICON_AL[state.align]}</span>
@@ -691,6 +692,7 @@ function openShare(session) {
     const photoImg = root.querySelector('.sf-photo');
     const guide = root.querySelector('.sf-guide');
     const alignBtn = root.querySelector('.sf-align');
+    const halo = root.querySelector('.sf-halo');
     const ratio = () => frame.clientWidth / ShareW;
 
     const place = () => {
@@ -701,6 +703,12 @@ function openShare(session) {
       stickerImg.style.left = `${t.cx * r - w / 2}px`;
       stickerImg.style.top = `${t.cy * r - h / 2}px`;
       stickerImg.style.transform = t.r ? `rotate(${t.r}rad)` : '';
+      // La sombra de la vista previa usa el mismo dibujo que la imagen final.
+      const dpr = window.devicePixelRatio || 1;
+      halo.width = Math.round(frame.clientWidth * dpr); halo.height = Math.round(frame.clientHeight * dpr);
+      const hg = halo.getContext('2d');
+      hg.setTransform(halo.width / ShareW, 0, 0, halo.height / ShareH, 0, 0);
+      drawHalo(hg, state.sticker, t, state.photo ? HALO_PHOTO : HALO_CLEAR);
     };
     const save = () => { st.shareLayout = { align: state.align, t: { ...state.t } }; S.save(); };
 
@@ -816,6 +824,7 @@ function openShare(session) {
       photoImg.src = URL.createObjectURL(file);
       photoImg.hidden = false;
       frame.classList.remove('checker');
+      place();
     });
 
     const toFile = async () => {
