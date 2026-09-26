@@ -633,11 +633,6 @@ body.in-session .toast.show { transform: translateX(-50%) translateY(0); }
 }
 .step-btn:disabled { color: var(--text-3); opacity: 0.5; box-shadow: none; }
 .step-count { min-width: 28px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
-.note-btn {
-  width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface-2);
-  font-size: 1.1rem; display: grid; place-items: center; opacity: 0.8;
-}
-.note-btn.on { border-color: var(--accent); background: var(--accent-soft); opacity: 1; }
 
 /* Ajustes con sesión iniciada: acciones de datos discretas al final */
 .data-links { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; padding: 0 4px; }
@@ -1008,4 +1003,4 @@ button.pt:active { background: var(--surface-2); }
 }
 .step-btn + .step-btn { border-left: 1px solid var(--border); }
 .step-btn:disabled { color: var(--text-3); opacity: 0.45; }
-.note-btn { width: 34px; height: 34px; font-size: 0.95rem; }
+.stage textarea.note { margin: 6px 0 2px; }

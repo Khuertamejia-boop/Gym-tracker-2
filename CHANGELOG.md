@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Entrenar: el botón de nota 📝 se sustituye por una cápsula «+ Nota» junto a Aproximación y Por lado. Al tocarla se abre la nota justo debajo; si el ejercicio ya tiene nota se ve en carmesí como «✓ Nota».
 - Entrenar: «Aproximación» va siempre primero, a la izquierda, y «Por lado» después (antes cambiaba de sitio según el ejercicio).
 - Entrenar: botones más pequeños y al estilo iPhone. «Aproximación» y «Por lado» son cápsulas grises («+ Aproximación») que se tiñen de carmesí al activarlas («✓ Aproximación»). El contador de series es una pastilla fina − | + con el número en la etiqueta («4 series»). El botón de nota, más pequeño.
 - Compartir: nuevo botón «Color» para poner el texto en blanco o en negro. Al usar tu foto, el color se elige solo (negro si la zona detrás del texto es clara, blanco si es oscura) hasta que toques el botón. La app recuerda el color de la última vez.

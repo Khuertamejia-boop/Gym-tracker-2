@@ -20,9 +20,13 @@ const OUT = process.env.OUT; const FIX = process.env.FIX;
   await click('.step-btn[data-action="remove-set"]'); await click('.step-btn[data-action="remove-set"]'); await click('.step-btn[data-action="remove-set"]');
   console.log('after 3x −', await count(), '| minus disabled', await p.locator('.step-btn[data-action="remove-set"]').isDisabled());
   await click('.step-btn[data-action="add-set"]'); await click('.step-btn[data-action="add-set"]');
-  await click('.note-btn'); console.log('note open', await p.locator('textarea.note').count());
-  await click('.note-btn'); console.log('note closed (empty)', await p.locator('textarea.note').count());
+  await click('[data-action="note-open"]'); console.log('note open', await p.locator('textarea.note').count());
+  await click('[data-action="note-open"]'); console.log('note closed (empty)', await p.locator('textarea.note').count());
   await p.screenshot({ path: OUT + '/v15-stepper.png' });
+  await click('[data-action="note-open"]'); await p.fill('textarea.note', 'Agarre ancho'); await p.dispatchEvent('textarea.note', 'input');
+  await click('[data-action="go-ex"][data-i="2"]'); await click('[data-action="go-ex"][data-i="1"]');
+  console.log('note chip on:', await p.locator('[data-action="note-open"].on').count(), '| text:', (await p.textContent('[data-action="note-open"]')).trim());
+  await p.screenshot({ path: OUT + '/v15-nota.png' });
   // búlgara por lado: pares
   await click('[data-action="go-ex"][data-i="0"]');
   console.log('bulgara count', await count(), 'rows', await p.locator('.stage .set-row').count());

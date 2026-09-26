@@ -59,7 +59,8 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - Controles del ejercicio (estilo iPhone): «Aproximación» y «Por lado» son cápsulas pequeñas «+ …» que se tiñen
   de carmesí con «✓» al activarlas (sin interruptor verde); contador de series tipo UIStepper (− | +, sin sombra) con
   el número en la etiqueta «4 series». Elegido entre 3 maquetas (26-09-2026).
-  «Aproximación» siempre la primera (izquierda) para que no cambie de sitio; «Por lado» detrás.
+  Orden de cápsulas: «Aproximación» siempre la primera (izquierda), «Por lado» y «Nota» (sustituye al 📝;
+  «✓ Nota» en carmesí si hay texto; la nota se abre bajo las cápsulas).
 - Temporizador de descanso automático al marcar serie; se detiene tras la última serie del entreno.
 - Compartir: solo plantilla "Sobre foto" (PNG transparente o sobre foto). El bloque de datos es un
   sticker: se arrastra con un dedo, con dos se pellizca (tamaño, imán al centro) y se gira (imán a recto);

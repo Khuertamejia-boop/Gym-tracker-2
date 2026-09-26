@@ -18,7 +18,7 @@ La app tiene **tres pestañas**:
 - **Mi plan**: anillo con los entrenamientos de la semana (p. ej. 2/4), tira L–D con toda la semana (✓ hechos, hoy marcado), botón **Próximo entrenamiento** que lleva directo a él, y solo tus días de entreno en una cuadrícula 2×2. Toca un día (en la cuadrícula o en la tira) para **moverlo solo esta semana** o entrenar en un día de descanso; **Volver al plan original** deshace los cambios. El **volumen semanal** por músculo (zona 10–20 series para hipertrofia) está plegado y se abre al tocarlo. Abajo, **Cambiar de rutina**.
 - **Entrenar**: la vista de tu plan con una pestaña por día (✓ en los hechos esta semana), cada ejercicio con su miniatura de músculos, series, reps y tu último peso, y el botón **Empezar**.
   - Por cada serie anotas kg y reps (y RIR/RPE fuera del modo simple).
-  - Sugerencias de progresión, notas por ejercicio y aviso 🏆 de récord personal.
+  - Sugerencias de progresión, notas por ejercicio (cápsula «+ Nota») y aviso 🏆 de récord personal.
   - **Modo enfoque**: un ejercicio por pantalla, cronómetro arriba y un carrusel horizontal con la miniatura de músculos de cada ejercicio (✓ en los terminados). Se cambia de ejercicio tocando el carrusel o deslizando a los lados.
   - Opción **Por lado (unilateral)** en ejercicios como step-up, búlgaras, zancadas, jalones, remo con mancuerna o curls: cada serie se registra para la izquierda (I) y la derecha (D). Step-up, búlgaras, remo con mancuerna y curl concentrado vienen activados; la elección se recuerda por ejercicio.
   - En modo avanzado, al tocar el número de una serie se puede convertir en aproximación (o volver a efectiva) o eliminar.

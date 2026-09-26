@@ -576,7 +576,10 @@ function exerciseStage(e, i, effort, d) {
         <span class="chip-mark" aria-hidden="true">${e.warmupOn ? '✓' : '+'}</span>Aproximación</button>
       ${S.canUnilateral(e.exId) ? `<button class="toggle-chip ${perSide ? 'on' : ''}" data-action="uni-toggle" data-i="${i}" role="switch" aria-checked="${perSide}" title="Registra cada serie para la izquierda (I) y la derecha (D)">
         <span class="chip-mark" aria-hidden="true">${perSide ? '✓' : '+'}</span>Por lado</button>` : ''}
+      <button class="toggle-chip ${e.note ? 'on' : ''}" data-action="note-open" data-i="${i}" aria-expanded="${Boolean(noteOpen)}" aria-label="${e.note ? 'Nota del ejercicio' : 'Añadir nota'}">
+        <span class="chip-mark" aria-hidden="true">${e.note ? '✓' : '+'}</span>Nota</button>
     </div>
+    ${noteOpen ? `<textarea class="note" rows="2" maxlength="300" placeholder="Nota: agarre, sensaciones, molestias…" data-note="${i}" aria-label="Nota del ejercicio">${esc(e.note || '')}</textarea>` : ''}
     <div class="set-grid ${effort ? 'with-effort' : ''}">
       <div class="set-labels"><span>Serie</span><span>Reps</span><span class="unit-label">Peso ${unitSwitch(e.exId, u)}</span>${effort ? `<span>${effort}</span>` : ''}<span></span></div>
       ${e.warmupOn ? (e.warmup || []).map((w, j) => `<div class="set-row warm ${w.done ? 'done' : ''}">
@@ -607,10 +610,7 @@ function exerciseStage(e, i, effort, d) {
         <button class="step-btn" data-action="remove-set" data-i="${i}" aria-label="Quitar una serie" ${e.sets.length > (perSide ? 2 : 1) ? '' : 'disabled'}>−</button>
         <button class="step-btn" data-action="add-set" data-i="${i}" aria-label="Añadir una serie">+</button>
       </div>
-      <span class="grow"></span>
-      <button class="note-btn ${noteOpen ? 'on' : ''}" data-action="note-open" data-i="${i}" aria-label="${noteOpen ? 'Nota del ejercicio' : 'Añadir nota'}" title="Nota">📝</button>
     </div>
-    ${noteOpen ? `<textarea class="note" rows="2" maxlength="300" placeholder="Nota: agarre, sensaciones, molestias…" data-note="${i}" aria-label="Nota del ejercicio">${esc(e.note || '')}</textarea>` : ''}
   </div>`;
 }
 
