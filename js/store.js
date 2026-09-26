@@ -388,7 +388,7 @@ export function resetWeek(routine) {
 }
 
 export const DAY_NAMES = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-export const DAY_SHORT = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+export const DAY_SHORT = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 export const MONTHS_SHORT = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
 export function formatDate(iso) {

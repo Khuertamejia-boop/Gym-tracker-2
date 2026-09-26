@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Días de la semana: el miércoles se muestra como «M» (antes «X»).
 - Botón de compartir: el subtítulo ahora dice «Crea una imagen para tus historias».
 - Compartir: el bloque de datos se arrastra con el dedo y se pellizca para cambiar el tamaño (con imán al centro), un botón en la esquina cambia la alineación; «¡NUEVO PR!» sin emoji, en blanco con cápsula de cristal. Se quitan los botones de tamaño y posición.
 - Imagen para compartir: línea con los músculos trabajados (p. ej. Cuádriceps · Glúteos) bajo el volumen, cápsula dorada «¡NUEVO PR!» / «¡2 NUEVOS PR!» y tamaños de texto más contenidos (la grande es la antigua mediana, y hay una nueva más pequeña).
