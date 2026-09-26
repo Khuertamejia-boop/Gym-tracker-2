@@ -1414,11 +1414,14 @@ const WHY = {
   'full-body': 'Trabajas todo el cuerpo en cada sesión: aprendes los ejercicios básicos más rápido y progresas aunque vayas pocos días.',
   'torso-pierna': 'Alternas torso y pierna, así cada músculo descansa entre sesiones.',
   ppl: 'Separa empuje, tracción y pierna para entrenar con más volumen.',
+  'torso-pierna-ppl': 'Cada músculo se entrena dos veces por semana, repartido en 5 días.',
+  arnold: 'Más volumen por músculo, pensado para quien ya tiene experiencia.',
 };
 // Resumen de una línea para la lista de rutinas (avanzados).
 const TPL_SUB = {
   'full-body': 'todo el cuerpo',
   'torso-pierna': 'variantes A y B',
+  'torso-pierna-ppl': 'cada músculo 2 veces',
   ppl: 'empuje, tracción, pierna',
   arnold: 'exigente',
   'excel-4-dias': 'énfasis en glúteo',
@@ -1495,7 +1498,7 @@ function renderOnboarding() {
       <div class="day-picker">${S.DAY_NAMES.map((name, i) => `<button class="day-toggle ${ob.days.includes(i) ? 'on' : ''}" data-action="ob-day" data-d="${i}" aria-pressed="${ob.days.includes(i)}">
         <b>${S.DAY_SHORT[i]}</b><span>${name.slice(0, 3)}</span></button>`).join('')}</div>
       <p class="small" style="min-height:2.6em">${n ? `<b>${n} ${n === 1 ? 'día' : 'días'} por semana.</b> ${n === 1 ? 'Con 2 o 3 días progresarás más rápido.' : ''}
-        ${ob.level === 'beginner' && n > 4 ? 'Para empezar, 3-4 días bastan: el descanso también hace crecer el músculo.' : ''}` : 'Elige al menos un día.'}</p>
+        ${n === 7 ? 'Deja al menos un día de descanso: el músculo crece mientras descansas.' : ob.level === 'beginner' && n > 4 ? 'Para empezar, 3-4 días bastan: el descanso también hace crecer el músculo.' : ''}` : 'Elige al menos un día.'}</p>
       <button class="btn primary block" data-action="ob-go" data-step="choose" ${n ? '' : 'disabled'}>Continuar</button>`;
     void rec;
   } else if (ob.step === 'choose') {

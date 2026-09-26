@@ -36,6 +36,18 @@ const { chromium, devices } = require('playwright'); const OUT = process.env.OUT
     await p.screenshot({ path: OUT + `/rutina-B2-${scheme}.png`, fullPage: true });
     await click('.ob-foot [data-action="ob-pick"]');
     console.log(scheme, 'routine:', await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('gymtrack.v1')); return s.routines.find(r => r.id === s.activeRoutineId).name; }));
+    if (scheme === 'dark') {
+      // Tabla de recomendaciones: nivel × días (1-7)
+      const table = await p.evaluate(async () => { const S = await import('/js/store.js');
+        return ['beginner', 'intermediate', 'advanced'].map(l => l + ': ' + [1, 2, 3, 4, 5, 6, 7].map(n => S.recommendTemplate(l, n)).join(' ')); });
+      console.log(table.join('\n'));
+      await setup('intermediate', [0, 1, 2, 3, 4]);
+      console.log('5 días intermedio →', await p.textContent('.ob-item.open .ob-row-t'), '|', await p.textContent('.ob-item.open .ob-days'));
+      await p.screenshot({ path: OUT + '/rutina-5dias.png' });
+      await setup('advanced', [0, 1, 2, 3, 4, 5, 6]);
+      await click('[data-action="ob-go"][data-step="days"]');
+      console.log('7 días nota:', await p.textContent('.ob p.small'));
+    }
     await ctx.close();
   }
   console.log('errors', JSON.stringify(errs)); await b.close(); })();

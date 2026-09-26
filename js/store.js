@@ -319,10 +319,13 @@ export function setProfile(profile) {
 export const isSimple = () => Boolean(state.profile?.simple);
 
 // Recomendación según experiencia y días disponibles.
+// Rutina recomendada según experiencia y días. La semana es fija (no rota), así que un
+// ciclo de 3 días solo cuadra con 3 o 6 días; con 5 se usa Torso/Pierna + PPL.
 export function recommendTemplate(level, dayCount) {
   if (dayCount <= 3) return 'full-body';
-  if (level === 'beginner' || dayCount === 4) return 'torso-pierna';
-  return 'ppl';
+  if (dayCount === 4) return 'torso-pierna';
+  if (dayCount === 5) return level === 'beginner' ? 'torso-pierna' : 'torso-pierna-ppl';
+  return level === 'advanced' ? 'arnold' : 'ppl';
 }
 
 export const templateByKey = (key) => TEMPLATES.find((t) => t.key === key);

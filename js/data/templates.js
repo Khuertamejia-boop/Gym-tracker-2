@@ -7,7 +7,7 @@ export const TEMPLATES = [
   {
     key: 'ppl',
     name: 'Push / Pull / Legs',
-    description: 'Empuje, tracción y pierna. Ideal para 5-6 días por semana.',
+    description: 'Empuje, tracción y pierna, dos veces por semana. Ideal para 6 días.',
     daysPerWeek: 6,
     days: [
       { name: 'Push (empuje)', exercises: [
@@ -113,6 +113,54 @@ export const TEMPLATES = [
       ] },
     ],
     week: [0, 1, null, 2, 3, null, null],
+  },
+  {
+    // Con 5 días, un ciclo de 3 (PPL, Arnold) dejaría la pierna una sola vez por semana:
+    // torso + pierna al principio y empuje/tracción/pierna al final reparte todo 2 veces.
+    key: 'torso-pierna-ppl',
+    name: 'Torso / Pierna + PPL',
+    description: 'Torso y pierna, y luego empuje, tracción y pierna. Ideal para 5 días.',
+    daysPerWeek: 5,
+    days: [
+      { name: 'Torso', exercises: [
+        ex('press-banca', 4, '6-8'),
+        ex('remo-barra', 4, '6-8'),
+        ex('press-hombro-mancuernas', 3, '8-10'),
+        ex('jalon-pecho', 3, '8-10'),
+        ex('curl-barra-z', 2, '10-12'),
+        ex('extension-polea', 2, '10-12'),
+      ] },
+      { name: 'Pierna A', exercises: [
+        ex('sentadilla', 4, '6-8'),
+        ex('peso-muerto-rumano', 3, '8-10'),
+        ex('prensa', 3, '10-12'),
+        ex('curl-femoral-sentado', 3, '10-12'),
+        ex('elevacion-talones-pie', 4, '10-15'),
+      ] },
+      { name: 'Push (empuje)', exercises: [
+        ex('press-inclinado-mancuernas', 4, '8-10'),
+        ex('press-pecho-maquina', 3, '10-12'),
+        ex('elevaciones-laterales', 4, '12-15'),
+        ex('cruce-poleas', 3, '12-15'),
+        ex('extension-sobre-cabeza-polea', 3, '10-12'),
+      ] },
+      { name: 'Pull (tracción)', exercises: [
+        ex('dominadas', 4, '6-10'),
+        ex('remo-sentado-polea', 3, '10-12'),
+        ex('remo-mancuerna', 3, '10-12'),
+        ex('face-pull', 3, '12-15'),
+        ex('curl-martillo', 3, '10-12'),
+      ] },
+      { name: 'Pierna B', exercises: [
+        ex('peso-muerto', 3, '4-6'),
+        ex('sentadilla-bulgara', 3, '8-10'),
+        ex('hip-thrust', 3, '8-12'),
+        ex('extension-cuadriceps', 3, '12-15'),
+        ex('curl-femoral-tumbado', 3, '10-12'),
+        ex('elevacion-talones-sentado', 4, '12-15'),
+      ] },
+    ],
+    week: [0, 1, null, 2, 3, 4, null],
   },
   {
     key: 'full-body',

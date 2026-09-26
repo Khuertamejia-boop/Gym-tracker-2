@@ -6,7 +6,7 @@ Está pensada para usarse desde el celular en el gym.
 ## Funciones
 
 **Configuración inicial (3 pasos, ~9 toques).** Un usuario nuevo indica en una sola pantalla si es hombre o mujer (para la guía muscular) y cuánto tiempo lleva entrenando, luego qué días puede ir:
-- Principiante: recibe una rutina recomendada (Full Body con 2-3 días, Torso/Pierna con 4 o más) en una pantalla sencilla: cifras clave, su semana y un botón. Intermedio/avanzado: lista de rutinas; la elegida muestra días, ejercicios por día, series por semana y minutos.
+- Principiante: recibe una rutina recomendada (Full Body con 1-3 días, Torso/Pierna con 4-5, Push/Pull/Legs con 6-7) en una pantalla sencilla: cifras clave, su semana y un botón. Intermedio/avanzado: con 5 días, Torso / Pierna + PPL; con 6-7, Push/Pull/Legs (intermedio) o Arnold Split (avanzado); lista de rutinas; la elegida muestra días, ejercicios por día, series por semana y minutos.
 - Intermedio o avanzado: elige entre Push/Pull/Legs, Arnold Split, Torso/Pierna, Full Body, Torso/Pierna · glúteo, o crea la suya desde cero.
 - Al elegir una rutina hecha empieza directamente (se personaliza cuando quiera en **Mi plan → Editar**); solo la rutina propia pasa por el editor. No se pide cuenta al empezar: al terminar el **primer entrenamiento** el resumen invita a crear una cuenta gratis para no perder el progreso (y lo recuerda solo tras el 5.º y el 15.º).
 - Quien ya tiene cuenta toca **Ya tengo cuenta** y recupera todo, con su correo y contraseña.
