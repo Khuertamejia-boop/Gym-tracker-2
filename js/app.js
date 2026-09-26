@@ -5,6 +5,7 @@ import { TEMPLATES } from './data/templates.js';
 import { lineChart, sparkArea, destroyCharts } from './charts.js';
 import * as Cloud from './cloud.js';
 import { mountMuscleMaps, musclesFor, muscleNames } from './body.js';
+import { renderShare, bestRecord, groupNum } from './share.js';
 
 const $view = document.getElementById('view');
 const $title = document.getElementById('view-title');
@@ -50,6 +51,8 @@ const ICON_CLOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a1
 const ICON_BACK = '<svg viewBox="0 0 24 24"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4L10.8 12l4.6-4.6Z"/></svg>';
 const ICON_BARS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h4v7H4v-7Zm6-5h4v12h-4V8Zm6-4h4v16h-4V4Z"/></svg>';
 const ICON_SHARE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 7.5 7.5l1.4 1.4L11 6.8V15h2V6.8l2.1 2.1 1.4-1.4L12 3ZM5 11v9h14v-9h-3v2h1v5H7v-5h1v-2H5Z"/></svg>';
+const ICON_SAVE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v9.2l3.1-3.1 1.4 1.4L12 16l-5.5-5.5 1.4-1.4 3.1 3.1V3ZM5 18h14v2H5v-2Z"/></svg>';
+const ICON_PHOTO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm1 2v8.6l4-4 3.5 3.5 2-2L19 17.6V7H5Zm11 1.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Z"/></svg>';
 const ICON_PERSON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.4 0-8 2.2-8 5v2h16v-2c0-2.8-3.6-5-8-5Z"/></svg>';
 
 function toast(msg) {
@@ -649,74 +652,109 @@ function afterMarking(anyPr) {
   }
 }
 
-// ---------- Compartir el resumen como imagen ----------
+// ---------- Compartir el entrenamiento (plantillas tipo historia) ----------
 
-async function shareSummary(session) {
-  const W = 1080, H = 1350;
-  const c = document.createElement('canvas');
-  c.width = W; c.height = H;
-  const g = c.getContext('2d');
-  const font = (w, s) => `${w} ${s}px -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif`;
-  g.fillStyle = '#0f1011'; g.fillRect(0, 0, W, H);
-  const glow = g.createRadialGradient(W / 2, 0, 40, W / 2, 0, 760);
-  glow.addColorStop(0, 'rgba(34,177,76,0.35)'); glow.addColorStop(1, 'rgba(34,177,76,0)');
-  g.fillStyle = glow; g.fillRect(0, 0, W, H);
-  // Check
-  g.fillStyle = 'rgba(34,177,76,0.22)'; g.beginPath(); g.arc(W / 2, 190, 92, 0, Math.PI * 2); g.fill();
-  g.fillStyle = '#22b14c'; g.beginPath(); g.arc(W / 2, 190, 66, 0, Math.PI * 2); g.fill();
-  g.strokeStyle = '#fff'; g.lineWidth = 12; g.lineCap = 'round'; g.lineJoin = 'round';
-  g.beginPath(); g.moveTo(W / 2 - 28, 192); g.lineTo(W / 2 - 6, 214); g.lineTo(W / 2 + 32, 170); g.stroke();
-  g.textAlign = 'center';
-  g.fillStyle = '#fff'; g.font = font(800, 64); g.fillText('Entrenamiento completado', W / 2, 360);
-  g.fillStyle = '#9a9990'; g.font = font(500, 34); g.fillText(`${shortName(session.dayName)} · ${S.formatDate(session.date)}`, W / 2, 415);
-  // Fichas
-  const mins = Math.max(1, Math.round((session.finishedAt - session.startedAt) / 60000));
-  const u = S.defaultUnit();
-  const stats = [
-    [mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : `${mins} min`, 'Tiempo'],
-    [String(S.doneSets(session)), 'Series'],
-    [`${Math.round(S.toUnit(S.sessionVolume(session), u)).toLocaleString('es')} ${u}`, 'Volumen'],
-  ];
-  const bw = 300, gap = 30, x0 = (W - (bw * 3 + gap * 2)) / 2;
-  stats.forEach(([v, l], k) => {
-    const x = x0 + k * (bw + gap);
-    g.fillStyle = '#1e1f20'; g.beginPath(); g.roundRect(x, 480, bw, 170, 32); g.fill();
-    g.fillStyle = '#fff'; g.font = font(800, 48); g.fillText(v, x + bw / 2, 570);
-    g.fillStyle = '#9a9990'; g.font = font(500, 30); g.fillText(l, x + bw / 2, 618);
-  });
-  // Ejercicios
-  g.textAlign = 'left';
-  g.fillStyle = '#fff'; g.font = font(700, 38); g.fillText(`Ejercicios · ${session.exercises.length}`, 90, 740);
-  const list = session.exercises.slice(0, 5);
-  list.forEach((e, k) => {
-    const y = 815 + k * 92;
-    const sets = e.sets.filter((x) => x.side !== 'R').length;
-    const top = Math.max(...e.sets.map((x) => Number(x.kg) || 0));
-    const name = S.exById(e.exId).name;
-    g.fillStyle = '#fff'; g.font = font(600, 34);
-    g.fillText(name.length > 34 ? `${name.slice(0, 33)}…` : name, 90, y);
-    g.fillStyle = '#9a9990'; g.font = font(500, 28);
-    g.fillText(`${series(sets)}${top ? ` · ${wt(top, S.unitFor(e.exId))}` : ''}${e.sets.some((x) => x.pr) ? '  🏆' : ''}`, 90, y + 36);
-  });
-  if (session.exercises.length > 5) { g.fillStyle = '#9a9990'; g.font = font(500, 28); g.fillText(`y ${session.exercises.length - 5} más`, 90, 815 + 5 * 92); }
-  g.textAlign = 'center'; g.fillStyle = '#d9233a'; g.font = font(800, 30); g.fillText('Mi Gym Tracker', W / 2, H - 44);
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-  const blob = await new Promise((r) => c.toBlob(r, 'image/png'));
-  const file = new File([blob], `entrenamiento-${session.date}.png`, { type: 'image/png' });
-  try {
-    if (navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ files: [file], title: 'Entrenamiento completado' });
-      return;
-    }
-  } catch (err) {
-    if (err?.name === 'AbortError') return;
-  }
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = file.name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  toast('Imagen guardada');
+function openShare(session) {
+  const kinds = [['card', 'Tarjeta'], ['photo', 'Sobre foto']];
+  if (bestRecord(session)) kinds.push(['record', 'Récord']);
+  const state = { kind: 'card', photo: null, canvas: null, token: 0 };
+
+  openSheet('Compartir', `
+    <div class="segmented share-tabs" role="tablist">${kinds.map(([k, l]) => `<button type="button" data-kind="${k}" role="tab">${l}</button>`).join('')}</div>
+    <div class="share-stage"><div class="share-frame"><img alt="Vista previa de la imagen"><span class="share-spin" aria-hidden="true"></span></div></div>
+    <div class="share-dots" aria-hidden="true">${kinds.map(() => '<i></i>').join('')}</div>
+    <p class="share-hint muted small"></p>
+    <div class="share-acts">
+      <button type="button" data-act="share"><span class="ic p">${ICON_SHARE}</span>Compartir</button>
+      <button type="button" data-act="save"><span class="ic">${ICON_SAVE}</span>Guardar</button>
+      <label><span class="ic">${ICON_PHOTO}</span>Usar mi foto<input type="file" accept="image/*" hidden></label>
+    </div>`, (root) => {
+    const img = root.querySelector('.share-frame img');
+    const frame = root.querySelector('.share-frame');
+    const hint = root.querySelector('.share-hint');
+
+    const draw = async () => {
+      const token = ++state.token;
+      frame.classList.add('loading');
+      root.querySelectorAll('[data-kind]').forEach((b) => b.classList.toggle('active', b.dataset.kind === state.kind));
+      root.querySelectorAll('.share-dots i').forEach((d, k) => d.classList.toggle('on', kinds[k][0] === state.kind));
+      frame.classList.toggle('checker', state.kind === 'photo' && !state.photo);
+      hint.textContent = state.kind === 'photo'
+        ? (state.photo ? 'Tu foto con los datos del entrenamiento.' : 'PNG transparente: pégalo sobre tu foto en Instagram, o toca "Usar mi foto".')
+        : '';
+      try {
+        const c = await renderShare(state.kind, session, { photo: state.kind === 'photo' ? state.photo : null });
+        if (token !== state.token) return;
+        state.canvas = c;
+        img.src = c.toDataURL('image/png');
+      } catch {
+        toast('No se pudo crear la imagen');
+      } finally {
+        if (token === state.token) frame.classList.remove('loading');
+      }
+    };
+
+    root.querySelectorAll('[data-kind]').forEach((b) => b.addEventListener('click', () => { state.kind = b.dataset.kind; draw(); }));
+    // Deslizar a los lados para cambiar de plantilla.
+    let x0 = null;
+    frame.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
+    frame.addEventListener('touchend', (e) => {
+      if (x0 === null) return;
+      const dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) < 50) return;
+      const k = kinds.findIndex(([kk]) => kk === state.kind) + (dx < 0 ? 1 : -1);
+      if (k >= 0 && k < kinds.length) { state.kind = kinds[k][0]; draw(); }
+    });
+
+    root.querySelector('input[type=file]').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        state.photo = await createImageBitmap(file);
+      } catch {
+        const url = URL.createObjectURL(file);
+        state.photo = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = url; });
+      }
+      state.kind = 'photo';
+      draw();
+    });
+
+    const toFile = async () => {
+      const blob = await new Promise((r) => state.canvas.toBlob(r, 'image/png'));
+      return new File([blob], `entrenamiento-${session.date}-${state.kind}.png`, { type: 'image/png' });
+    };
+    const download = (file) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(file);
+      a.download = file.name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      toast('Imagen guardada');
+    };
+    const share = async (file) => {
+      try {
+        if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file] }); return true; }
+      } catch (err) {
+        if (err?.name === 'AbortError') return true;
+      }
+      return false;
+    };
+    root.querySelector('[data-act="share"]').addEventListener('click', async () => {
+      if (!state.canvas) return;
+      const file = await toFile();
+      if (!(await share(file))) download(file);
+    });
+    // En el iPhone, "Guardar imagen" está en el menú de compartir (guarda en Fotos, con transparencia).
+    root.querySelector('[data-act="save"]').addEventListener('click', async () => {
+      if (!state.canvas) return;
+      const file = await toFile();
+      if (isIOS() && (await share(file))) return;
+      download(file);
+    });
+    draw();
+  });
 }
 
 // =====================================================================
@@ -1477,17 +1515,6 @@ function finishOnboarding() {
 // RESUMEN AL TERMINAR
 // =====================================================================
 
-const PHRASES = [
-  'La constancia gana a la intensidad.',
-  'Cada serie cuenta. Hoy sumaste muchas.',
-  'Tu yo del futuro te lo agradecerá.',
-  'Lo difícil ya está hecho: presentarte.',
-  'Un entrenamiento más cerca de tu objetivo.',
-  'Pequeños progresos, grandes resultados.',
-  'Hoy fuiste mejor que ayer.',
-  'La disciplina es tu superpoder.',
-];
-
 // Cuenta: se ofrece tras el 1.er entrenamiento (cuando ya vio que la app le sirve)
 // y se recuerda solo un par de veces más, nunca en la configuración inicial.
 const askSignup = (session) => Cloud.isConfigured() && !Cloud.getUser() && !session.editedAt
@@ -1515,18 +1542,10 @@ function showSummary(session) {
   const stat = (icon, value, label) => `<div class="win-stat">${icon}<b>${value}</b><span>${label}</span></div>`;
   const u = S.defaultUnit();
   const exRows = session.exercises.map((e) => {
-    const perSide = e.sets.some((x) => x.side);
-    const sets = e.sets.filter((x) => x.side !== 'R');
-    const reps = e.sets.map((x) => Number(x.reps)).filter(Boolean);
-    const lo = Math.min(...reps), hi = Math.max(...reps);
+    const sets = e.sets.filter((x) => x.side !== 'R').length;
     const top = Math.max(...e.sets.map((x) => Number(x.kg) || 0));
-    const meta = [
-      `${series(sets.length)}${perSide ? ' por lado' : ''}`,
-      reps.length ? `${lo === hi ? lo : `${lo}–${hi}`} reps` : '',
-      top ? wt(top, S.unitFor(e.exId)) : '',
-    ].filter(Boolean).join(' · ');
-    return `<div class="win-ex"><span class="thumb" data-muscle-map="${e.exId}" data-thumb></span>
-      <span class="grow"><span class="name">${esc(S.exById(e.exId).name)}${e.sets.some((x) => x.pr) ? ' <span class="win-pr" title="Récord">🏆</span>' : ''}</span><span class="meta">${meta}</span></span></div>`;
+    return `<div class="win-ex"><span class="grow">${esc(S.exById(e.exId).name)}${e.sets.some((x) => x.pr) ? ' <span class="win-pr" title="Récord">🏆</span>' : ''}</span>
+      <span class="win-ex-val">${sets}${top ? ` × ${wt(top, S.unitFor(e.exId))}` : ` ${sets === 1 ? 'serie' : 'series'}`}</span></div>`;
   }).join('');
   const overlay = document.createElement('div');
   overlay.className = 'celebrate';
@@ -1542,23 +1561,22 @@ function showSummary(session) {
       <div class="win-stats">
         ${stat(ICON_CLOCK, mins >= 60 ? `${Math.floor(mins / 60)} h ${mins % 60} min` : `${mins} min`, 'Tiempo')}
         ${stat(ICON_CHECK, S.doneSets(session), 'Series')}
-        ${stat(ICON_BARS, `${Math.round(S.toUnit(volume, u)).toLocaleString('es')} ${u}`, 'Volumen')}
+        ${stat(ICON_BARS, `${groupNum(S.toUnit(volume, u))} ${u}`, 'Volumen')}
       </div>
       ${pct > 0 && pct <= 200 ? `<div class="win-note">📈 +${pct}% de volumen frente a la última vez</div>` : ''}
       ${prs.length ? `<div class="win-note">🏆 ${prs.length === 1 ? '¡Nuevo récord!' : `¡${prs.length} récords nuevos!`}</div>` : ''}
+      <button class="share-cta" data-share>${ICON_SHARE}<span>Compartir entrenamiento</span></button>
       ${askSignup(session) ? `<div class="win-save" id="win-save">
         <b>💾 Guarda tu progreso</b>
         <p>${S.getState().sessions.length === 1 ? '¡Primer entrenamiento hecho!' : `Llevas ${S.getState().sessions.length} entrenamientos.`} Crea una cuenta gratis para no perder tu progreso y verlo en cualquier teléfono.</p>
         <div class="row"><button class="btn primary grow" data-action="win-signup">Crear cuenta</button><button class="btn ghost" data-action="win-signup-later">Ahora no</button></div>
       </div>` : ''}
-      <div class="win-list-head">Ejercicios · ${session.exercises.length}</div>
       <div class="win-list">${exRows}</div>
       ${goal ? `<div class="win-week"><span class="muted">Esta semana</span>
         <span class="dots">${Array.from({ length: goal }, (_, i) => `<i class="${i < trained ? 'on' : ''}"></i>`).join('')}</span>
         <b>${trained} de ${goal}</b></div>` : ''}
-      <p class="win-phrase">${PHRASES[Math.floor(Math.random() * PHRASES.length)]}</p>
     </div>
-    <div class="win-foot"><button class="btn win-share" aria-label="Compartir resumen">${ICON_SHARE}</button><button class="btn primary grow win-done">Listo</button></div>`;
+    <div class="win-foot"><button class="btn block win-done">Listo</button></div>`;
   document.body.appendChild(overlay);
   document.body.classList.add('no-scroll');
   mountMuscleMaps(overlay);
@@ -1570,7 +1588,7 @@ function showSummary(session) {
   const onKey = (e) => { if (e.key === 'Escape') close(); };
   document.addEventListener('keydown', onKey);
   overlay.querySelector('.win-done').addEventListener('click', close);
-  overlay.querySelector('.win-share').addEventListener('click', () => shareSummary(session).catch(() => toast('No se pudo crear la imagen')));
+  overlay.querySelector('[data-share]').addEventListener('click', () => openShare(session));
   overlay.querySelector('.win-done').focus({ preventScroll: true });
   overlay.scrollTop = 0;
   if (navigator.vibrate) navigator.vibrate(80);

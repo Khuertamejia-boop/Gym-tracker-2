@@ -28,7 +28,8 @@ La app tiene **tres pestañas**:
   - El descanso se detiene solo al completar la última serie del entrenamiento.
   - La pantalla se mantiene encendida mientras entrenas.
   - Cuando toca subir de peso, aparece **↑ +2,5 kg** con el motivo.
-  - Resumen limpio al terminar (con botón para **compartir** una imagen del entrenamiento): check verde, tiempo, series y volumen en tarjetas, la lista de ejercicios hechos (series, reps, peso y 🏆 si hubo récord), el progreso de la semana y una frase motivadora.
+  - **Compartir entrenamiento** (botón protagonista del resumen, estilo Strava): hoja con vista previa en formato historia 9:16 y 3 plantillas que se deslizan — **Tarjeta** (cuerpo de frente y espalda con los músculos trabajados y las cifras), **Sobre foto** (PNG transparente para pegar en tu historia, o directamente sobre una foto de tu galería con *Usar mi foto*) y **Récord** (solo si batiste una marca: medalla, peso nuevo y mejora). Botones: Compartir, Guardar y Usar mi foto.
+  - Resumen limpio al terminar: check verde, tiempo, series y volumen en tarjetas, la lista de ejercicios hechos (series, reps, peso y 🏆 si hubo récord), el progreso de la semana y una frase motivadora.
   - Los entrenamientos terminados se pueden editar.
 - **Progreso**: analíticas por periodo (1M · 3M · 1A · Todo): 6 fichas (entrenos, duración, ejercicios, series, reps, volumen), barras de **músculos** (sólido = series directas, rayado = secundarias), mini‑gráficos de **evolución de cada ejercicio** (Máx = peso máximo, Vol = volumen por sesión), constancia con racha, peso corporal y medidas, e historial.
 
