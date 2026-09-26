@@ -62,3 +62,13 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   esquina cambia la alineación; nada de filas de botones. Muestra los músculos trabajados y una cápsula
   de cristal «¡NUEVO PR!» (sin emoji, texto blanco) si hubo récords. Botón protagonista en el resumen.
 - Supabase: para el código por correo hay que añadir `{{ .Token }}` a la plantilla "Magic Link".
+
+## Pendientes (al 26-09-2026)
+
+- Supabase: falta que el dueño añada `{{ .Token }}` a la plantilla de correo "Magic Link" para que
+  llegue el código de 6 dígitos (sin eso, el correo solo trae un enlace).
+- Confirmar en un iPhone real el pellizco/arrastre del sticker de Compartir y el menú de compartir/guardar.
+- Pregunta abierta al dueño: en la rutina importada del Excel, el "75" de press inclinado, ¿era kg o lb?
+- Ideas de fase 4 (no pedidas aún): superseries, recordatorios los días de entreno, semana de descarga.
+- Ahorro: los chats muy largos consumen muchos créditos de la nube; conviene empezar chats nuevos
+  (este archivo da el contexto) y agrupar cambios pequeños en un solo mensaje.
