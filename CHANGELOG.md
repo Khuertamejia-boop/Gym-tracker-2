@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Peso y repeticiones con límites: se quitan los ceros de delante (025 → 25), el peso tiene que ser mayor que 0 (salvo lastre en ejercicios de peso corporal), las repeticiones al menos 1 y hay un máximo por ejercicio basado en los récords mundiales (p. ej. peso muerto 510 kg, press de banca 360 kg, mancuernas 120 kg cada una).
 - Resumen final: el botón «Listo» ahora es carmesí y el de «Comparte tu entrenamiento» pasa a una tarjeta blanca más discreta (sin brillo animado).
 - Compartir: nuevo botón «Fondo» para compartir solo los datos, sin foto: transparente → oscuro → claro. El sticker ahora firma «GYM TRACKER APP» (con el punto rojo).
 - Entreno: la fila de ejercicios de arriba es más ligera. Tarjetas pequeñas y en color (antes grises), solo la del ejercicio actual es grande con borde carmesí; las terminadas llevan un check verde pequeño en la esquina.

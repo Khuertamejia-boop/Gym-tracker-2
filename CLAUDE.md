@@ -93,6 +93,9 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   quedan para la app de Xcode (en la web solo hay dibujos de frente y espalda).
 - Carrusel del entreno (26-09-2026, opción C de 3): tarjetas 52×78 en color, la actual 72×108 con borde carmesí,
   pendientes al 60 % de opacidad, hechas con check verde pequeño en la esquina. Descartadas: círculos (A) y barra de progreso (B).
+- Límites al anotar (26-09-2026, `clampEntry`/`maxKg` en `js/store.js`): sin ceros delante; peso > 0 (0 = sin lastre solo en
+  peso corporal); reps 1–100 (500 en peso corporal); máximo de peso por ejercicio algo por encima del récord mundial
+  (peso muerto 510, sentadilla 510, banca 360, militar 230, prensa 1200) o por equipo (mancuernas 120 c/u, polea 250…).
 - Cuentas del dueño: la de **iCloud** es la principal (datos reales); la de **Gmail** es solo para probar la app.
   Al cerrar sesión se sincroniza y se vacía el dispositivo (`S.clearLocal()`), para cambiar de cuenta sin mezclar datos.
 

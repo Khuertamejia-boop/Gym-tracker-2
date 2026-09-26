@@ -2585,14 +2585,16 @@ document.addEventListener('input', (e) => {
   if (t.dataset.warm) {
     const ex = S.getState().draft.exercises[t.dataset.i];
     const w = ex.warmup[t.dataset.j];
-    w[t.dataset.warm] = t.dataset.warm === 'kg' ? S.fromUnit(num(t.value), S.unitFor(ex.exId)) : num(t.value);
+    const raw = t.dataset.warm === 'kg' ? S.fromUnit(num(t.value), S.unitFor(ex.exId)) : num(t.value);
+    w[t.dataset.warm] = S.clampEntry(ex.exId, t.dataset.warm, raw).value;
     S.save();
     return;
   }
   if (t.dataset.set) {
     const ex = S.getState().draft.exercises[t.dataset.i];
     const s = ex.sets[t.dataset.j];
-    s[t.dataset.set] = t.dataset.set === 'kg' ? S.fromUnit(num(t.value), S.unitFor(ex.exId)) : num(t.value);
+    const raw = t.dataset.set === 'kg' ? S.fromUnit(num(t.value), S.unitFor(ex.exId)) : num(t.value);
+    s[t.dataset.set] = S.clampEntry(ex.exId, t.dataset.set, raw).value;
     if (t.dataset.set === 'kg') s.kgTouched = true;
     S.save();
     if (s.done) updateLiveStats();
@@ -2616,6 +2618,19 @@ document.addEventListener('input', (e) => {
 
 document.addEventListener('change', (e) => {
   const t = e.target;
+  // Al terminar de escribir peso o reps: quita ceros de delante (025 → 25) y aplica los límites.
+  if ((t.dataset.set || t.dataset.warm) && t.value !== '') {
+    const field = t.dataset.set || t.dataset.warm;
+    const ex = S.getState().draft?.exercises[t.dataset.i];
+    if (ex) {
+      const u = S.unitFor(ex.exId);
+      const raw = field === 'kg' ? S.fromUnit(Number(t.value), u) : Number(t.value);
+      const { value, note } = S.clampEntry(ex.exId, field, raw);
+      t.value = value === '' ? '' : field === 'kg' ? S.toUnit(value, u) : value;
+      if (note) toast(u === 'lb' ? note.replace(/Máximo (\d+) kg/, (_, k) => `Máximo ${S.toUnit(Number(k), 'lb')} lb`) : note);
+    }
+    return;
+  }
   if (t.dataset.rweek !== undefined) {
     const r = S.routineById(ui.editRoutineId);
     r.week[t.dataset.rweek] = t.value || null;

@@ -139,6 +139,53 @@ export function exById(id) {
   return exIndex.get(id) || { id, name: 'Ejercicio eliminado', muscle: 'Otro', equipment: '' };
 }
 
+// ---------- Límites de lo que se puede anotar ----------
+// Peso máximo por serie (kg), un poco por encima del récord mundial para no bloquear a nadie real:
+// peso muerto 501 kg (H. Björnsson, 2020), sentadilla ~490 kg sin equipo, press de banca 355 kg sin
+// equipo (J. Maddox), press militar estricto ~230 kg (con tronco). Para el resto, según el equipo;
+// en mancuernas el peso es de cada mancuerna y en peso corporal, el lastre añadido.
+const MAX_KG = {
+  'peso-muerto': 510, 'rack-pull': 600, sentadilla: 510, 'sentadilla-frontal': 330,
+  'press-banca': 360, 'press-inclinado-barra': 330, 'press-declinado': 360, 'press-cerrado': 330,
+  'press-militar': 230, 'remo-barra': 330, 'remo-pendlay': 330, 'remo-t': 330,
+  'hip-thrust': 520, 'peso-muerto-rumano': 420, 'peso-muerto-piernas-rigidas': 420, 'buenos-dias': 320,
+  'encogimientos-barra': 500, 'curl-barra': 150, 'curl-barra-z': 150, 'curl-predicador': 150,
+  'press-frances': 180, 'remo-al-menton': 200, 'curl-muneca': 150, 'curl-muneca-inverso': 120, 'curl-inverso': 150,
+  prensa: 1200, 'prensa-gluteos': 1200, 'sentadilla-hack': 700, 'pendulum-squat': 600, 'hip-thrust-maquina': 600,
+};
+const MAX_KG_BY_EQUIPMENT = { Barra: 360, Mancuernas: 120, 'Máquina': 400, Smith: 500, Polea: 250, 'Peso corporal': 200 };
+export const MAX_REPS = 100;
+
+export function maxKg(exId) {
+  return MAX_KG[exId] || MAX_KG_BY_EQUIPMENT[exById(exId).equipment] || 500;
+}
+// Con peso corporal, 0 kg significa «sin lastre»; en el resto el peso tiene que ser mayor que 0.
+export const allowsZeroKg = (exId) => exById(exId).equipment === 'Peso corporal';
+export const maxReps = (exId) => (exById(exId).equipment === 'Peso corporal' ? 500 : MAX_REPS);
+
+// Deja un valor anotado dentro de lo posible. Devuelve { value, note } (note: aviso si se corrigió).
+export function clampEntry(exId, field, value) {
+  if (value === '' || value === null || value === undefined || Number.isNaN(value)) return { value: '' };
+  if (field === 'kg') {
+    const max = maxKg(exId);
+    if (value < 0 || (value === 0 && !allowsZeroKg(exId))) return { value: '', note: 'El peso tiene que ser mayor que 0' };
+    if (value > max) return { value: max, note: `Máximo ${max} kg en este ejercicio` };
+    return { value: Math.round(value * 100) / 100 };
+  }
+  if (field === 'reps') {
+    const max = maxReps(exId);
+    const v = Math.round(value);
+    if (v < 1) return { value: '', note: 'Las repeticiones tienen que ser al menos 1' };
+    if (v > max) return { value: max, note: `Máximo ${max} repeticiones por serie` };
+    return { value: v };
+  }
+  if (field === 'effort') {
+    if (value < 0) return { value: 0 };
+    if (value > 10) return { value: 10 };
+  }
+  return { value };
+}
+
 export function addCustomExercise(name, muscle, equipment) {
   const e = { id: 'c-' + uid(), name: name.trim(), muscle, equipment, custom: true };
   state.customExercises.push(e);
