@@ -22,7 +22,7 @@ La app tiene **tres pestañas**:
   - **Modo enfoque**: un ejercicio por pantalla, cronómetro arriba y un carrusel horizontal con la miniatura de músculos de cada ejercicio (✓ en los terminados). Se cambia de ejercicio tocando el carrusel o deslizando a los lados.
   - Opción **Por lado (unilateral)** en ejercicios como step-up, búlgaras, zancadas, jalones, remo con mancuerna o curls: cada serie se registra para la izquierda (I) y la derecha (D). Step-up, búlgaras, remo con mancuerna y curl concentrado vienen activados; la elección se recuerda por ejercicio.
   - En modo avanzado, al tocar el número de una serie se puede convertir en aproximación (o volver a efectiva) o eliminar.
-  - Series de aproximación opcionales (interruptor por ejercicio, filas «A»): no cuentan en volumen, récords ni progresión, y se recuerdan para la próxima vez.
+  - Series de aproximación opcionales (cápsula «+ Aproximación» por ejercicio, filas «A»): no cuentan en volumen, récords ni progresión, y se recuerdan para la próxima vez.
   - Series en filas redondeadas (serie, reps, peso, ✓) y un botón inferior que guía: *Marcar todas las series* → *Siguiente ejercicio* → *Terminar entrenamiento*. Descartar queda en el menú ⋯.
   - **Temporizador de descanso**: arranca solo al marcar una serie (en ejercicios por lado, tras el lado derecho). Duración según las reps objetivo (≤6: 2:30, ≤10: 2:00, resto: 1:30); con −15 / +15 la app recuerda tu descanso para ese ejercicio. Suena y vibra al terminar (si el teléfono lo permite). Se puede desactivar en Ajustes.
   - El descanso se detiene solo al completar la última serie del entrenamiento.

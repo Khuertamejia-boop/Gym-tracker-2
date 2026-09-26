@@ -36,7 +36,7 @@ const OUT = process.env.OUT; const FIX = process.env.FIX;
   await click('[data-action="session-add-ex"]'); await p.fill('#pick-search', 'step'); await p.waitForTimeout(200);
   console.log('search step:', (await p.locator('#pick-results .list-item .grow > div:first-child').allTextContents()).join(' | '));
   await click('#pick-results [data-action="pick"]');
-  console.log('step-up rows:', await p.locator('.stage .set-row:not(.warm)').count(), '| toggle on:', await p.locator('[data-action="uni-toggle"] .switch.on').count());
+  console.log('step-up rows:', await p.locator('.stage .set-row:not(.warm)').count(), '| toggle on:', await p.locator('[data-action="uni-toggle"].on').count());
   await click('[data-action="ex-menu"]'); await click('#sheet [data-action="ex-remove"]');
   await click('.session-bar [data-action="finish"]'); await p.waitForTimeout(400);
   const sess = (await st()).sessions.slice(-1)[0];
@@ -53,7 +53,7 @@ const OUT = process.env.OUT; const FIX = process.env.FIX;
   // Jalón: activar por lado y recordar
   await day('Torso A'); await click('.cta-bar [data-action="start"]'); await p.waitForTimeout(300);
   await click('[data-action="go-ex"][data-i="1"]');
-  console.log('jalón toggle present:', await p.locator('[data-action="uni-toggle"]').count(), '| on:', await p.locator('[data-action="uni-toggle"] .switch.on').count());
+  console.log('jalón toggle present:', await p.locator('[data-action="uni-toggle"]').count(), '| on:', await p.locator('[data-action="uni-toggle"].on').count());
   await click('[data-action="uni-toggle"]');
   console.log('jalón rows now:', await p.locator('.stage .set-row:not(.warm)').count());
   await p.screenshot({ path: OUT + '/v10-jalon.png' });

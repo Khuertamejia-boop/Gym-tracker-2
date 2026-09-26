@@ -55,7 +55,7 @@ const OUT = process.env.OUT; const FIX = process.env.FIX;
   // Siguiente vez: aproximación recordada
   await p.evaluate(() => { [...document.querySelectorAll('[data-action="plan-day"]')].find(x => x.textContent.includes('Pierna A')).click(); });
   await p.waitForTimeout(200); await click('.cta-bar [data-action="start"]'); await p.waitForTimeout(400);
-  console.log('remembered warm on:', await p.locator('.warm-toggle .switch.on').count(), '| rows', await p.locator('.set-row.warm').count());
+  console.log('remembered warm on:', await p.locator('[data-action="warm-toggle"].on').count(), '| rows', await p.locator('.set-row.warm').count());
   await click('[data-action="session-menu"]'); await click('#sheet [data-action="discard"]');
   // Historial muestra aproximación
   await click('.tabbar [data-tab="progress"]'); await click('[data-action="session-detail"]');

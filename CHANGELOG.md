@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Entrenar: botones más pequeños y al estilo iPhone. «Aproximación» y «Por lado» son cápsulas grises («+ Aproximación») que se tiñen de carmesí al activarlas («✓ Aproximación»). El contador de series es una pastilla fina − | + con el número en la etiqueta («4 series»). El botón de nota, más pequeño.
 - Compartir: nuevo botón «Color» para poner el texto en blanco o en negro. Al usar tu foto, el color se elige solo (negro si la zona detrás del texto es clara, blanco si es oscura) hasta que toques el botón. La app recuerda el color de la última vez.
 - Imagen para compartir: se quita la sombra (ni halo ni el degradado oscuro de abajo); la foto queda limpia.
 - Imagen para compartir: la línea de músculos bajo el volumen muestra como máximo 3 (los que más series tuvieron), para que ocupe menos.

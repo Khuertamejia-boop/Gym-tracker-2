@@ -573,9 +573,9 @@ function exerciseStage(e, i, effort, d) {
     ${!last && !d.editing && S.isSimple() ? `<div class="hint">👋 Primera vez: elige un peso con el que puedas hacer ${esc(S.parseRange(e.target)?.hi || 10)} repeticiones con buena técnica, sin llegar al límite.</div>` : ''}
     <div class="toggles">
       ${S.canUnilateral(e.exId) ? `<button class="toggle-chip ${perSide ? 'on' : ''}" data-action="uni-toggle" data-i="${i}" role="switch" aria-checked="${perSide}" title="Registra cada serie para la izquierda (I) y la derecha (D)">
-        <span class="switch sm ${perSide ? 'on' : ''}" aria-hidden="true"></span>Por lado</button>` : ''}
+        <span class="chip-mark" aria-hidden="true">${perSide ? '✓' : '+'}</span>Por lado</button>` : ''}
       <button class="toggle-chip ${e.warmupOn ? 'on' : ''}" data-action="warm-toggle" data-i="${i}" role="switch" aria-checked="${Boolean(e.warmupOn)}" title="Series de calentamiento con menos peso; no cuentan en tus estadísticas">
-        <span class="switch sm ${e.warmupOn ? 'on' : ''}" aria-hidden="true"></span>Aproximación</button>
+        <span class="chip-mark" aria-hidden="true">${e.warmupOn ? '✓' : '+'}</span>Aproximación</button>
     </div>
     <div class="set-grid ${effort ? 'with-effort' : ''}">
       <div class="set-labels"><span>Serie</span><span>Reps</span><span class="unit-label">Peso ${unitSwitch(e.exId, u)}</span>${effort ? `<span>${effort}</span>` : ''}<span></span></div>
@@ -602,10 +602,9 @@ function exerciseStage(e, i, effort, d) {
       }).join('')}
     </div>
     <div class="set-actions">
-      <span class="stepper-label">Series</span>
+      <span class="stepper-label"><span class="step-count" aria-live="polite">${total}</span> ${total === 1 ? 'serie' : 'series'}</span>
       <div class="stepper" role="group" aria-label="Número de series">
         <button class="step-btn" data-action="remove-set" data-i="${i}" aria-label="Quitar una serie" ${e.sets.length > (perSide ? 2 : 1) ? '' : 'disabled'}>−</button>
-        <span class="step-count" aria-live="polite">${total}</span>
         <button class="step-btn" data-action="add-set" data-i="${i}" aria-label="Añadir una serie">+</button>
       </div>
       <span class="grow"></span>
