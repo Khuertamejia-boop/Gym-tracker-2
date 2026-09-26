@@ -89,6 +89,8 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - Miniaturas de ejercicios (26-09-2026): zoom automático al músculo principal (`zoomBox` en `js/body.js`, cajas medidas
   en `BOXES`; brazos y hombros se enfocan en un solo lado; piernas, las dos y centradas, lo pidió el dueño). Ilustraciones por ejercicio y cuerpo 3D girable
   quedan para la app de Xcode (en la web solo hay dibujos de frente y espalda).
+- Carrusel del entreno (26-09-2026, opción C de 3): tarjetas 52×78 en color, la actual 72×108 con borde carmesí,
+  pendientes al 60 % de opacidad, hechas con check verde pequeño en la esquina. Descartadas: círculos (A) y barra de progreso (B).
 - Cuentas del dueño: la de **iCloud** es la principal (datos reales); la de **Gmail** es solo para probar la app.
   Al cerrar sesión se sincroniza y se vacía el dispositivo (`S.clearLocal()`), para cambiar de cuenta sin mezclar datos.
 
