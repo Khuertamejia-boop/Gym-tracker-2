@@ -794,10 +794,14 @@ button.plan-day:active { background: var(--surface-2); }
 
 /* Invitación a crear cuenta tras el primer entrenamiento */
 .win-save {
-  text-align: left; margin: 16px 0 4px; padding: 14px 16px; border-radius: 18px;
-  background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  text-align: left; margin: 16px 0 4px; padding: 16px; border-radius: 18px;
+  background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow);
 }
-.win-save p { margin: 4px 0 12px; font-size: 0.9rem; color: var(--text-2); }
+.win-save .ws-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.win-save .ws-ico { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--accent-soft); display: grid; place-items: center; }
+.win-save .ws-ico svg { width: 22px; height: 22px; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.win-save b { font-size: 1rem; }
+.win-save p { margin: 2px 0 0; font-size: 0.9rem; line-height: 1.35; color: var(--text-2); }
 .win-save .row { gap: 8px; }
 
 /* ---------- Cabecera centrada en las 3 pestañas ---------- */

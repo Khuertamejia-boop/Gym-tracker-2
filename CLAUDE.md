@@ -56,6 +56,8 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - 3 pestañas; la app abre en **Entrenar**. Mi plan: anillo semanal, tira L–D, próximo entreno,
   días de entreno en 2×2 y volumen semanal plegado (zona 10–20 series para hipertrofia).
 - La cuenta **no** se pide en la configuración inicial: se ofrece tras el 1.er entrenamiento (y el 5.º y 15.º).
+  Tarjeta «Guarda tu progreso» (opción A, 26-09-2026): fondo neutro, icono de nube con check (línea carmesí sobre círculo
+  suave), una frase y «Ahora no» en gris; nada rosa ni rojo que compita con el banner de Compartir.
 - Controles del ejercicio (estilo iPhone): «Aproximación» y «Por lado» son cápsulas pequeñas «+ …» que se tiñen
   de carmesí con «✓» al activarlas (sin interruptor verde); contador de series tipo UIStepper (− | +, sin sombra) con
   el número en la etiqueta «4 series». Elegido entre 3 maquetas (26-09-2026).

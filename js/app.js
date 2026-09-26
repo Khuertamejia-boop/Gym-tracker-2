@@ -42,6 +42,7 @@ const num = (v) => (v === '' || v === null || v === undefined ? '' : Number(v));
 const series = (n) => `${n} ${n === 1 ? 'serie' : 'series'}`;
 const fmtN = (v, d = 1) => Number(v).toLocaleString('es', { maximumFractionDigits: d });
 
+const ICON_CLOUD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.4 9.1 4.5 4.5 0 0 0 7 18Z"/><path d="m9.5 13.5 2 2 3.5-4"/></svg>';
 const ICON_CHECK = '<svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>';
 const ICON_X = '<svg viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12 19 6.4Z"/></svg>';
 const ICON_UP = '<svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5H7Z"/></svg>';
@@ -1751,9 +1752,9 @@ function showSummary(session) {
         <span class="sc-go" aria-hidden="true">${ICON_SHARE}</span>
       </button>
       ${askSignup(session) ? `<div class="win-save" id="win-save">
-        <b>💾 Guarda tu progreso</b>
-        <p>${S.getState().sessions.length === 1 ? '¡Primer entrenamiento hecho!' : `Llevas ${S.getState().sessions.length} entrenamientos.`} Crea una cuenta gratis para no perder tu progreso y verlo en cualquier teléfono.</p>
-        <div class="row"><button class="btn primary grow" data-action="win-signup">Crear cuenta</button><button class="btn ghost" data-action="win-signup-later">Ahora no</button></div>
+        <div class="ws-top"><span class="ws-ico">${ICON_CLOUD}</span>
+          <div><b>Guarda tu progreso</b><p>Crea una cuenta gratis y no lo pierdas nunca.</p></div></div>
+        <div class="row"><button class="btn primary grow" data-action="win-signup">Crear cuenta</button><button class="btn ghost quiet" data-action="win-signup-later">Ahora no</button></div>
       </div>` : ''}
       <details class="win-exs">
         <summary><span class="grow">Ejercicios</span><span class="muted">${session.exercises.length}</span><span class="acc-chev" aria-hidden="true">⌄</span></summary>

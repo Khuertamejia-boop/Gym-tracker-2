@@ -20,6 +20,7 @@ const { chromium, devices } = require('playwright'); const OUT = process.env.OUT
   await click('.session-bar [data-action="finish"]'); await p.waitForTimeout(700);
   console.log('signup card:', await p.locator('#win-save').count(), '|', (await p.textContent('#win-save p')).trim());
   await p.screenshot({ path: OUT + '/v20-signup.png' });
+  await p.emulateMedia({ colorScheme: 'light' }); await p.waitForTimeout(200); await p.screenshot({ path: OUT + '/v20-signup-light.png' }); await p.emulateMedia({ colorScheme: 'dark' });
   await click('[data-action="win-signup"]'); console.log('sheet:', await p.textContent('#sheet h2'), '| back btn:', await p.locator('#sheet .back-btn').count());
   await p.fill('#login-form [name="email"]', 'n@b.com'); await p.fill('#login-form [name="password"]', 'secreto1');
   await click('#login-form button[name="mode"]'); await p.waitForTimeout(500);
