@@ -35,6 +35,8 @@ La app tiene **tres pestañas**:
 
 Al tocar un ejercicio se abre su ficha: Acerca de (con la **guía muscular**: cuerpo realista de frente y de espalda con los músculos principales en rojo intenso y los secundarios en rojo suave), Historial, Gráficos y Récords. El cuerpo es de hombre o de mujer según el perfil (se cambia en tu perfil → Ajustes). El catálogo tiene más de 110 ejercicios con buscador (se abre arriba para que el teclado no tape los resultados), y puedes crear los tuyos. Los ejercicios con variantes (prensa, sentadilla búlgara, sentadilla en Smith) aparecen una sola vez y al elegirlos se escoge el enfoque: cuádriceps o glúteos.
 
+**Editar la rutina**: al elegirla (paso «Tu rutina»), con «Editar» en Entrenar o en Mi plan. Tocas un ejercicio para cambiar series, repeticiones, cambiarlo por otro, pasarlo a otro día o quitarlo; arrastras ≡ para ordenar. Nombre, semana y días, en «Más opciones».
+
 **Ejercicios propios**: se crean desde el buscador y se pueden editar o borrar desde su ficha (al borrarlos, el historial conserva su nombre).
 
 **Kilos o libras**: en tu perfil → Ajustes eliges la unidad por defecto, y cada ejercicio puede tener la suya (por ejemplo, máquinas en libras) con el selector kg/lb del menú ⋯ durante el entreno o de su ficha. Los pesos se guardan siempre en kg, así que récords y gráficos no se mezclan.

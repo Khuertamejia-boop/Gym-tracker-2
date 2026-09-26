@@ -21,6 +21,8 @@ const { chromium, devices } = require('playwright'); const OUT = process.env.OUT
   await click('[data-action="ob-go"][data-step="choose"]');
   await p.screenshot({ path: OUT + '/v19-choose.png' });
   await click('[data-action="ob-pick"]');
+  await p.screenshot({ path: OUT + '/v19-review.png' });
+  await click('[data-action="ob-review-done"]');
   console.log('after pick title/step:', await p.textContent('h1').catch(() => ''), '| taps so far', taps);
   console.log('train title:', await p.textContent('#view-title'), '| install card:', await p.locator('.install-card').count(), '| total taps:', taps);
   await p.screenshot({ path: OUT + '/v19-train.png' });

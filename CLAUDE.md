@@ -109,6 +109,10 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   «Series por semana» = media semanal por grupo (media de sus músculos, secundario = ½) con franja 10–20: verde dentro,
   ámbar + «BAJO» si < 10, «ALTO» gris si > 20; minigráficos de ejercicio verdes si el último valor supera al primero,
   gris si no, con cápsula «+7,5 kg» / «↑ 12 %». Verde/ámbar validados para daltonismo (siempre con texto al lado).
+- Editor de rutina (26-09-2026, `routineEditorHTML` + `bindRoutineDrag` + `openRoutineExercise`): uno solo para el paso
+  «Tu rutina» (tras elegir cualquier plantilla), «Editar» en Entrenar (`edit-day`, vuelve a Entrenar) y en Mi plan.
+  Cápsulas de días, filas con miniatura (toque = hoja: series −/+, reps, cambiar por otro del mismo músculo, pasar a otro
+  día, quitar) y ≡ para arrastrar. Nombre/semana/días plegados en «Más opciones». Se quitaron las flechas ↑↓.
 - Cuentas del dueño: la de **iCloud** es la principal (datos reales); la de **Gmail** es solo para probar la app.
   Al cerrar sesión se sincroniza y se vacía el dispositivo (`S.clearLocal()`), para cambiar de cuenta sin mezclar datos.
 

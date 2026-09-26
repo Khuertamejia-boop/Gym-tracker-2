@@ -34,7 +34,7 @@ const { chromium, devices } = require('playwright'); const OUT = process.env.OUT
     await click('[data-action="ob-sel"][data-key="full-body"]');
     console.log(scheme, 'B selected:', await p.textContent('.ob-item.open .ob-row-t'), '| continuar key:', await p.getAttribute('.ob-foot [data-action="ob-pick"]', 'data-key'));
     await p.screenshot({ path: OUT + `/rutina-B2-${scheme}.png`, fullPage: true });
-    await click('.ob-foot [data-action="ob-pick"]');
+    await click('.ob-foot [data-action="ob-pick"]'); await click('[data-action="ob-review-done"]');
     console.log(scheme, 'routine:', await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('gymtrack.v1')); return s.routines.find(r => r.id === s.activeRoutineId).name; }));
     if (scheme === 'dark') {
       // Tabla de recomendaciones: nivel × días (1-7)

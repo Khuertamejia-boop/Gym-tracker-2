@@ -3,6 +3,10 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Editar la rutina, fácil y en cualquier momento:
+  - Al elegir una rutina (también la recomendada) aparece el paso «Tu rutina»: los ejercicios de cada día con su miniatura. Arrastras ≡ para ordenarlos y abajo pulsas «Empezar con esta rutina».
+  - Al tocar un ejercicio se abre una hoja con series (− / +), repeticiones, «Cambiar por otro ejercicio» (primero los del mismo músculo), «Pasar a otro día» y «Quitar de la rutina».
+  - En Entrenar, «Editar» junto a los ejercicios del día abre la misma pantalla; en Mi plan, el «Editar» de la rutina también. Nombre, semana y días quedan en «Más opciones».
 - Progreso con colores que significan algo: verde = vas bien o mejoras, ámbar = te quedas corto.
   - Arriba, 3 fichas (entrenos, duración, volumen) con el cambio frente al periodo anterior («↑ 18 %» en verde).
   - «Músculos» pasa a «Series por semana»: media semanal por grupo con la zona 10–20 dibujada; verde dentro, ámbar y «BAJO» si se queda corto.

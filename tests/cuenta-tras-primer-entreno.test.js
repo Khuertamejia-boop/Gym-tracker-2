@@ -14,7 +14,7 @@ const { chromium, devices } = require('playwright'); const OUT = process.env.OUT
   await click('[data-action="ob-go"][data-step="experience"]'); await click('[data-action="ob-gender"][data-v="female"]');
   await click('[data-action="ob-level"][data-v="beginner"]');
   for (const d of [0, 2, 4]) await click(`[data-action="ob-day"][data-d="${d}"]`);
-  await click('[data-action="ob-go"][data-step="choose"]'); await click('[data-action="ob-pick"]');
+  await click('[data-action="ob-go"][data-step="choose"]'); await click('[data-action="ob-pick"]'); await click('[data-action="ob-review-done"]');
   console.log('after pick → title:', await p.textContent('#view-title'), '(no account step)');
   await click('.cta-bar [data-action="start"]'); await click('[data-action="log-all"]');
   await click('.session-bar [data-action="session-menu"]'); await click('#sheet [data-action="finish"]'); await p.waitForTimeout(700);

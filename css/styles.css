@@ -1036,3 +1036,23 @@ textarea.note, .small-input, .set-row .small-input, .pill.pill-input, input, sel
 .ex-spark-head .ex-delta { margin-left: 8px; padding: 1px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 700;
   background: var(--surface-2); color: var(--text-3); white-space: nowrap; }
 .ex-spark-head .ex-delta.up { background: var(--good-soft); color: var(--good); }
+
+/* Editor de rutina (26-09-2026): lista del día con miniatura, toque = hoja, ≡ = arrastrar. */
+.red-list { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
+.red-item { display: flex; align-items: center; border-bottom: 1px solid var(--border); background: var(--surface); }
+.red-item.dragging { position: relative; z-index: 2; box-shadow: 0 8px 24px rgb(0 0 0 / 18%); transform: scale(1.02); }
+.red-main { flex: 1; display: flex; align-items: center; gap: 14px; min-width: 0; padding: 10px 0 10px 12px; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+.red-main .thumb { width: 52px; height: 52px; border-radius: 12px; }
+.red-main .name { display: block; }
+.red-main .meta { display: block; color: var(--text-2); font-size: 0.85rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.red-handle { flex: none; display: grid; place-items: center; width: 48px; align-self: stretch; color: var(--text-3); touch-action: none; cursor: grab; }
+.red-handle svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.red-add { display: block; width: 100%; padding: 14px; border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; text-align: left; }
+.red-more { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.red-more > summary { display: flex; align-items: center; padding: 14px 16px; list-style: none; cursor: pointer; font-weight: 600; }
+.red-more > summary::-webkit-details-marker { display: none; }
+.red-more[open] .acc-chev { transform: rotate(180deg); }
+.red-more-body { padding: 0 16px 16px; }
+#sheet .menu-row .rex-reps { flex: none; width: 96px; min-height: 36px; text-align: right; border: 0; border-radius: 8px; background: var(--surface); font-weight: 600; color: var(--text); padding: 4px 10px; }
+#sheet .menu-row .rex-reps:focus { outline: 2px solid var(--accent); }
+.plan-head .link { margin-left: 12px; padding: 0; }

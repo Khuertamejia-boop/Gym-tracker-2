@@ -53,6 +53,7 @@ const fmtN = (v, d = 1) => Number(v).toLocaleString('es', { maximumFractionDigit
 const ICON_CLOUD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.4 9.1 4.5 4.5 0 0 0 7 18Z"/><path d="m9.5 13.5 2 2 3.5-4"/></svg>';
 const ICON_TROPHY = '<svg class="ico-trophy" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 6H5v1.5A3 3 0 0 0 8 10.5M16 6h3v1.5a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg>';
 const ICON_TREND = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="m5 15 4.5-4.5 3.5 3L19 7"/><path d="M15 7h4v4"/></svg>';
+const ICON_GRIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16M4 12h16M4 16h16"/></svg>';
 const ICON_CHECK = '<svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>';
 const ICON_X = '<svg viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12 19 6.4Z"/></svg>';
 const ICON_UP = '<svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5H7Z"/></svg>';
@@ -91,6 +92,11 @@ function openSheet(title, body, onMount, back) {
 }
 const closeSheet = () => $sheet.open && $sheet.close();
 $sheet.addEventListener('click', (e) => { if (e.target === $sheet) closeSheet(); });
+$sheet.addEventListener('close', () => {
+  if (!ui.rexOpen) return;
+  ui.rexOpen = false;
+  const y = window.scrollY; render(); window.scrollTo(0, y);
+});
 
 // ---------- Navegación ----------
 
@@ -147,7 +153,10 @@ function renderPlan() {
   const editing = ui.editRoutineId && S.routineById(ui.editRoutineId);
   if (editing) {
     $view.innerHTML = `<button class="btn ghost" data-action="close-editor" style="padding-left:0">‹ Volver</button>
+      <h2 class="ob-q" style="margin-top:0">${esc(editing.name)}</h2>
+      <p class="muted small" style="margin-top:-6px">Toca un ejercicio para cambiarlo · arrastra ≡ para ordenar</p>
       ${routineEditorHTML(editing)}`;
+    bindRoutineDrag($view);
     return;
   }
   const routine = S.activeRoutine();
@@ -343,7 +352,7 @@ function renderTrain() {
   html += `<p class="muted small" style="margin:0 4px 8px">${S.DAY_NAMES[wd]} · ${todayDay ? `hoy toca <b>${esc(shortName(todayDay.name))}</b>` : 'hoy toca descanso'}</p>
     <div class="chips plan-chips" role="tablist">${ordered.map((d) => `<button class="chip ${d.id === selected.id ? 'active' : ''}" role="tab" aria-selected="${d.id === selected.id}" data-action="plan-day" data-id="${d.id}">
       ${esc(shortName(d.name))}${doneThisWeek.has(d.name) ? ' <span class="ok">✓</span>' : ''}</button>`).join('')}</div>
-    <div class="plan-head"><b>Ejercicios · ${selected.exercises.length}</b>${selected.exercises.length ? `<span class="muted small">~ ${minutes} min</span>` : ''}</div>`;
+    <div class="plan-head"><b>Ejercicios · ${selected.exercises.length}</b><span class="grow"></span>${selected.exercises.length ? `<span class="muted small">~ ${minutes} min</span>` : ''}<button class="link" data-action="edit-day" data-id="${selected.id}">Editar</button></div>`;
   html += selected.exercises.length
     ? `<div class="plan-list">${selected.exercises.map((e) => {
         const ex = S.exById(e.exId);
@@ -354,7 +363,7 @@ function renderTrain() {
           <span class="grow"><span class="name">${esc(ex.name)}</span>
           <span class="meta">${series(Number(e.sets))}${S.unilateralFor(e.exId) ? ' por lado' : ''}${e.reps ? ` · ${esc(e.reps)} reps` : ''}${top && Number(top.kg) ? ` · ${wt(top.kg, S.unitFor(e.exId))}` : ''}</span></span></button>`;
       }).join('')}</div>`
-    : `<div class="card empty small">Este día no tiene ejercicios todavía. Tócalo en la pestaña <b>Mi plan → Editar</b> para añadirlos.</div>`;
+    : `<div class="card empty small">Este día no tiene ejercicios todavía. Toca <b>Editar</b> para añadirlos.</div>`;
   if (selected.exercises.length) {
     html += `<div class="cta-bar"><button class="btn primary block cta" data-action="start" data-day="${selected.id}">Empezar ${esc(shortName(selected.name))}</button></div>`;
   }
@@ -928,49 +937,126 @@ function openShare(session) {
 // =====================================================================
 
 // embedded: dentro de la configuración inicial (sin botones de gestión).
+// Editor de rutina (el mismo al elegirla, desde Entrenar y desde Mi plan): cápsulas de días,
+// ejercicios del día con miniatura (tocar = hoja para cambiarlo; ≡ = arrastrar para ordenar)
+// y, plegado, nombre, semana y días.
 function routineEditorHTML(r, { embedded = false } = {}) {
+  if (!r.days.some((d) => d.id === ui.editDay)) ui.editDay = r.days[0]?.id || null;
+  const di = r.days.findIndex((d) => d.id === ui.editDay);
+  const day = r.days[di];
   return `
-    <div class="card">
-      <label class="field"><span>Nombre de la rutina</span>
-        <input type="text" value="${esc(r.name)}" data-rfield="name" maxlength="60"></label>
-    </div>
+    ${r.days.length ? `<div class="chips plan-chips" role="tablist">${r.days.map((d) => `<button class="chip ${d.id === ui.editDay ? 'active' : ''}" role="tab" aria-selected="${d.id === ui.editDay}" data-action="red-day" data-id="${d.id}">${esc(shortName(d.name))}</button>`).join('')}</div>` : ''}
+    ${day ? `<div class="red-list" id="red-list" data-di="${di}">
+      ${day.exercises.map((e, ei) => `<div class="red-item" data-ei="${ei}">
+        <button class="red-main" data-action="rex-open" data-di="${di}" data-ei="${ei}">
+          <span class="thumb" data-muscle-map="${e.exId}" data-thumb></span>
+          <span class="grow"><span class="name">${esc(S.exById(e.exId).name)}</span>
+          <span class="meta">${Number(e.sets) || 0} × ${esc(e.reps || '—')}</span></span></button>
+        <span class="red-handle" aria-label="Arrastra para ordenar" role="img">${ICON_GRIP}</span>
+      </div>`).join('')}
+      <button class="red-add" data-action="day-add-ex" data-di="${di}">+ Añadir ejercicio</button>
+    </div>` : '<p class="muted small">Esta rutina no tiene días. Añade uno en «Más opciones».</p>'}
 
-    <div class="section-title">Semana</div>
-    <div class="card stack">
-      ${S.DAY_NAMES.map((name, i) => `<div class="row">
-        <div style="width:92px" class="small"><b>${name}</b></div>
-        <select class="grow" data-rweek="${i}" aria-label="Entrenamiento del ${name}">
-          <option value="">Descanso</option>
-          ${r.days.map((d) => `<option value="${d.id}" ${r.week[i] === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}
-        </select></div>`).join('')}
-    </div>
-
-    <div class="section-title">Días de entrenamiento</div>
-    ${r.days.map((d, di) => `<div class="card">
-      <div class="row" style="margin-bottom:8px">
-        <input type="text" class="grow" value="${esc(d.name)}" data-dfield="name" data-di="${di}" aria-label="Nombre del día" maxlength="40">
-        <button class="icon-btn" data-action="day-remove" data-di="${di}" aria-label="Eliminar día">${ICON_X}</button>
+    <details class="red-more"${r.days.length ? '' : ' open'}>
+      <summary><span class="grow">Más opciones</span><span class="acc-chev" aria-hidden="true">⌄</span></summary>
+      <div class="red-more-body">
+        <label class="field"><span>Nombre de la rutina</span>
+          <input type="text" value="${esc(r.name)}" data-rfield="name" maxlength="60"></label>
+        <div class="section-title">Semana</div>
+        <div class="stack">
+          ${S.DAY_NAMES.map((name, i) => `<div class="row">
+            <div style="width:92px" class="small"><b>${name}</b></div>
+            <select class="grow" data-rweek="${i}" aria-label="Entrenamiento del ${name}">
+              <option value="">Descanso</option>
+              ${r.days.map((d) => `<option value="${d.id}" ${r.week[i] === d.id ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}
+            </select></div>`).join('')}
+        </div>
+        <div class="section-title">Días de entrenamiento</div>
+        <div class="stack">
+          ${r.days.map((d, k) => `<div class="row">
+            <input type="text" class="grow" value="${esc(d.name)}" data-dfield="name" data-di="${k}" aria-label="Nombre del día" maxlength="40">
+            <button class="icon-btn" data-action="day-remove" data-di="${k}" aria-label="Eliminar ${esc(d.name)}">${ICON_X}</button>
+          </div>`).join('')}
+          <button class="btn block" data-action="day-add">+ Añadir día</button>
+        </div>
       </div>
-      ${d.exercises.length ? `<div class="list">${d.exercises.map((e, ei) => `
-        <div class="list-item" style="flex-wrap:wrap">
-          <div class="grow" style="min-width:140px"><b class="small">${esc(S.exById(e.exId).name)}</b>
-            <div class="muted small">${esc(S.exById(e.exId).muscle)}</div></div>
-          <div class="row" style="gap:4px">
-            <input type="number" inputmode="numeric" min="1" max="20" value="${e.sets}" data-efield="sets" data-di="${di}" data-ei="${ei}" style="width:52px;text-align:center" aria-label="Series">
-            <span class="muted small">×</span>
-            <input type="text" value="${esc(e.reps)}" data-efield="reps" data-di="${di}" data-ei="${ei}" style="width:70px;text-align:center" aria-label="Repeticiones" placeholder="8-12">
-            <button class="icon-btn" data-action="rex-up" data-di="${di}" data-ei="${ei}" aria-label="Subir">${ICON_UP}</button>
-            <button class="icon-btn" data-action="rex-down" data-di="${di}" data-ei="${ei}" aria-label="Bajar">${ICON_DOWN}</button>
-            <button class="icon-btn" data-action="rex-remove" data-di="${di}" data-ei="${ei}" aria-label="Quitar">${ICON_X}</button>
-          </div>
-        </div>`).join('')}</div>` : '<p class="muted small">Sin ejercicios todavía.</p>'}
-      <button class="btn sm" data-action="day-add-ex" data-di="${di}" style="margin-top:8px">+ Añadir ejercicio</button>
-    </div>`).join('')}
-    <button class="btn block" data-action="day-add">+ Añadir día</button>
+    </details>
     ${embedded ? '' : `<div class="stack" style="margin-top:20px">
       <button class="btn primary block" data-action="close-editor">Listo</button>
       <button class="btn block ghost" data-action="change-routine">Cambiar a otra rutina</button>
     </div>`}`;
+}
+
+// Arrastrar ≡ para ordenar los ejercicios del día (como en Recordatorios del iPhone).
+function bindRoutineDrag(root = document) {
+  const list = root.querySelector('#red-list');
+  if (!list) return;
+  list.querySelectorAll('.red-handle').forEach((h) => {
+    h.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const item = h.closest('.red-item');
+      try { h.setPointerCapture(e.pointerId); } catch { /* ya liberado */ }
+      item.classList.add('dragging');
+      let lastY = e.clientY;
+      const move = (ev) => {
+        const dy = ev.clientY - lastY;
+        const sib = dy < 0 ? item.previousElementSibling : item.nextElementSibling;
+        if (sib && sib.classList.contains('red-item')) {
+          const box = sib.getBoundingClientRect();
+          const mid = box.top + box.height / 2;
+          if ((dy < 0 && ev.clientY < mid) || (dy > 0 && ev.clientY > mid)) {
+            list.insertBefore(item, dy < 0 ? sib : sib.nextElementSibling);
+            lastY = ev.clientY;
+          }
+        }
+      };
+      const up = () => {
+        h.removeEventListener('pointermove', move);
+        h.removeEventListener('pointerup', up);
+        h.removeEventListener('pointercancel', up);
+        item.classList.remove('dragging');
+        const order = [...list.querySelectorAll('.red-item')].map((x) => Number(x.dataset.ei));
+        if (order.some((v, k) => v !== k)) {
+          const r = S.routineById(ui.editRoutineId);
+          const d = r.days[Number(list.dataset.di)];
+          d.exercises = order.map((k) => d.exercises[k]);
+          S.save();
+        }
+        const y = window.scrollY; render(); window.scrollTo(0, y);
+      };
+      h.addEventListener('pointermove', move);
+      h.addEventListener('pointerup', up);
+      h.addEventListener('pointercancel', up);
+    });
+  });
+}
+
+// Hoja de un ejercicio de la rutina: series, repeticiones, cambiarlo, pasarlo a otro día o quitarlo.
+function openRoutineExercise(di, ei) {
+  const r = S.routineById(ui.editRoutineId);
+  const day = r.days[di];
+  const e = day?.exercises[ei];
+  if (!e) return;
+  const ex = S.exById(e.exId);
+  ui.rexOpen = true;
+  openSheet(ex.name, `
+    <div class="menu-list" data-menu="rex">
+      <div class="menu-row"><span class="grow">Series</span>
+        <div class="stepper" role="group" aria-label="Series">
+          <button class="step-btn" data-action="rex-sets" data-di="${di}" data-ei="${ei}" data-d="-1" aria-label="Quitar una serie">−</button>
+          <span class="step-count">${Number(e.sets) || 0}</span>
+          <button class="step-btn" data-action="rex-sets" data-di="${di}" data-ei="${ei}" data-d="1" aria-label="Añadir una serie">+</button></div></div>
+      <label class="menu-row"><span class="grow">Repeticiones</span>
+        <input type="text" class="rex-reps" value="${esc(e.reps)}" placeholder="8-12" data-efield="reps" data-di="${di}" data-ei="${ei}" aria-label="Repeticiones" maxlength="9"></label>
+    </div>
+    <div class="menu-list" style="margin-top:12px">
+      <button class="menu-row" data-action="rex-swap" data-di="${di}" data-ei="${ei}"><span class="grow">Cambiar por otro ejercicio</span><span class="chev" aria-hidden="true">›</span></button>
+      ${r.days.length > 1 ? `<button class="menu-row" data-action="rex-day-menu" data-di="${di}" data-ei="${ei}"><span class="grow">Pasar a otro día</span><span class="chev" aria-hidden="true">›</span></button>` : ''}
+      <button class="menu-row" data-action="ex-detail" data-id="${e.exId}"><span class="grow">Ver músculos y técnica</span><span class="chev" aria-hidden="true">›</span></button>
+    </div>
+    <div class="menu-list" style="margin-top:12px">
+      <button class="menu-row danger-row" data-action="rex-remove" data-di="${di}" data-ei="${ei}"><span class="grow">Quitar de la rutina</span></button>
+    </div>`);
 }
 
 // =====================================================================
@@ -1064,9 +1150,9 @@ function showExerciseDetail(id, tab = ui.exTab) {
 // Selector reutilizable: busca un ejercicio y ejecuta onPick(id).
 // Se abre desde arriba para que el teclado del teléfono no tape los resultados, y
 // los ejercicios con variantes (p. ej. prensa) aparecen una sola vez: al tocarlos se elige el enfoque.
-function openPicker(onPick, initialQuery = '') {
-  let query = initialQuery, muscle = '';
-  openSheet('Añadir ejercicio', `
+function openPicker(onPick, initialQuery = '', opts = {}) {
+  let query = initialQuery, muscle = opts.muscle || '';
+  openSheet(opts.title || 'Añadir ejercicio', `
     <input type="search" id="pick-search" placeholder="Buscar ejercicio" aria-label="Buscar ejercicio" value="${esc(query)}" style="margin-bottom:8px" autocomplete="off">
     <div id="pick-chips"></div>
     <div id="pick-results" class="pick-results"></div>
@@ -1137,7 +1223,7 @@ function openVariantPicker(key, onPick, query) {
       const b = e.target.closest('[data-action]');
       if (!b) return;
       if (b.dataset.action === 'pick') { root.onclick = null; closeSheet(); onPick(b.dataset.id); }
-      if (b.dataset.action === 'variant-back') { root.onclick = null; openPicker(onPick, query); }
+      if (b.dataset.action === 'variant-back') { root.onclick = null; openPicker(onPick, query, opts); }
     };
   }, 'variant-back');
 }
@@ -1680,15 +1766,19 @@ function renderOnboarding() {
     ui.editRoutineId = r.id;
     const empty = r.days.every((d) => !d.exercises.length);
     html = `${back('choose')}${progress(3)}
-      <h2 class="ob-q">${empty ? 'Arma tu rutina' : 'Revisa tu rutina'}</h2>
-      <p class="muted" style="margin-top:0">${empty
-        ? 'Añade los ejercicios de cada día. Abajo puedes cambiar qué día entrenas cada uno.'
-        : 'Estos son los ejercicios recomendados. Puedes cambiar ejercicios, series y días ahora o cuando quieras desde la pestaña <b>Mi plan</b>.'}</p>
+      <h1 class="ob-title">${empty ? 'Arma tu rutina' : 'Tu rutina'}</h1>
+      <p class="ob-lead" style="margin-bottom:16px">${empty
+        ? 'Añade los ejercicios de cada día. En «Más opciones» eliges qué días entrenas.'
+        : 'Toca un ejercicio para cambiarlo. Mantén ≡ y arrastra para ordenar.'}</p>
       ${routineEditorHTML(r, { embedded: true })}
-      <button class="btn primary block" data-action="ob-review-done" style="margin-top:16px">Continuar</button>`;
+      <div class="ob-foot sticky">
+        <button class="btn primary block lg" data-action="ob-review-done">Empezar con esta rutina</button>
+        <p class="muted small" style="text-align:center;margin:6px 0 0">Podrás cambiarla cuando quieras</p>
+      </div>`;
   }
   $view.innerHTML = `<div class="ob">${html}</div>`;
   if (ob.step === 'login') bindAccountForm($view, obLoggedIn);
+  if (ob.step === 'review') bindRoutineDrag($view);
 }
 
 // Tras entrar desde la bienvenida: recupera la rutina o sigue con la configuración.
@@ -2497,7 +2587,7 @@ const actions = {
       : S.routineFromTemplate(S.templateByKey(key), ui.ob.days);
     S.addRoutine(r, true);
     ui.ob.routineId = r.id;
-    if (key !== 'custom') return actions['ob-review-done']();
+    ui.editDay = null;
     ui.ob.step = 'review';
     render(); window.scrollTo(0, 0);
   },
@@ -2551,8 +2641,49 @@ const actions = {
       <p class="muted small">Los días se repartirán entre los días que elegiste; podrás cambiarlos en el siguiente paso.</p>
       <button class="btn primary block" data-action="ob-pick" data-key="${tpl.key}">Elegir esta rutina</button>`);
   },
-  'edit-routine': (b) => { ui.editRoutineId = b.dataset.id; render(); window.scrollTo(0, 0); },
-  'close-editor': () => { ui.editRoutineId = null; toast('Rutina guardada'); render(); window.scrollTo(0, 0); },
+  'edit-routine': (b) => { ui.editRoutineId = b.dataset.id; ui.editReturn = null; render(); window.scrollTo(0, 0); },
+  // Desde Entrenar: abre el editor en ese día y, al terminar, vuelve a Entrenar.
+  'edit-day': (b) => {
+    const r = S.activeRoutine();
+    setTab('plan');
+    ui.editRoutineId = r.id; ui.editDay = b.dataset.id; ui.editReturn = 'train';
+    render(); window.scrollTo(0, 0);
+  },
+  'close-editor': () => {
+    const back = ui.editReturn;
+    ui.editRoutineId = null; ui.editReturn = null;
+    toast('Rutina guardada');
+    if (back) setTab(back); else { render(); window.scrollTo(0, 0); }
+  },
+  'red-day': (b) => { ui.editDay = b.dataset.id; const y = window.scrollY; render(); window.scrollTo(0, y); },
+  'rex-open': (b) => openRoutineExercise(Number(b.dataset.di), Number(b.dataset.ei)),
+  'rex-sets': (b) => {
+    const r = S.routineById(ui.editRoutineId);
+    const e = r.days[b.dataset.di].exercises[b.dataset.ei];
+    e.sets = Math.max(1, Math.min(20, (Number(e.sets) || 0) + Number(b.dataset.d)));
+    S.save();
+    b.parentElement.querySelector('.step-count').textContent = e.sets;
+  },
+  'rex-swap': (b) => {
+    const r = S.routineById(ui.editRoutineId);
+    const e = r.days[b.dataset.di].exercises[b.dataset.ei];
+    ui.rexOpen = false;
+    openPicker((id) => { e.exId = id; S.save(); toast('Ejercicio cambiado'); const y = window.scrollY; render(); window.scrollTo(0, y); },
+      '', { muscle: S.exById(e.exId).muscle, title: 'Cambiar ejercicio' });
+  },
+  'rex-day-menu': (b) => {
+    const r = S.routineById(ui.editRoutineId);
+    const di = Number(b.dataset.di);
+    openSheet('Pasar a otro día', `<div class="menu-list">${r.days.map((d, k) => k === di ? '' : `<button class="menu-row" data-action="rex-to-day" data-di="${di}" data-ei="${b.dataset.ei}" data-to="${k}"><span class="grow">${esc(d.name)}</span></button>`).join('')}</div>`);
+  },
+  'rex-to-day': (b) => {
+    const r = S.routineById(ui.editRoutineId);
+    const [e] = r.days[b.dataset.di].exercises.splice(b.dataset.ei, 1);
+    r.days[b.dataset.to].exercises.push(e);
+    S.save(); ui.rexOpen = false; closeSheet();
+    toast(`Pasado a ${r.days[b.dataset.to].name}`);
+    const y = window.scrollY; render(); window.scrollTo(0, y);
+  },
   'day-add': () => {
     const r = S.routineById(ui.editRoutineId);
     r.days.push({ id: S.uid(), name: `Día ${r.days.length + 1}`, exercises: [] });
@@ -2569,13 +2700,13 @@ const actions = {
   'day-add-ex': (b) => {
     const r = S.routineById(ui.editRoutineId);
     const d = r.days[b.dataset.di];
-    openPicker((id) => { d.exercises.push({ exId: id, sets: 3, reps: '8-12' }); S.save(); render(); });
+    openPicker((id) => { d.exercises.push({ exId: id, sets: 3, reps: '8-12' }); S.save(); const y = window.scrollY; render(); window.scrollTo(0, y); });
   },
-  'rex-up': (b) => moveRoutineEx(b, -1),
-  'rex-down': (b) => moveRoutineEx(b, 1),
   'rex-remove': (b) => {
     const r = S.routineById(ui.editRoutineId);
-    r.days[b.dataset.di].exercises.splice(b.dataset.ei, 1); S.save(); render();
+    r.days[b.dataset.di].exercises.splice(b.dataset.ei, 1); S.save();
+    ui.rexOpen = false; closeSheet();
+    const y = window.scrollY; render(); window.scrollTo(0, y);
   },
 
   // Ejercicios
@@ -2638,15 +2769,6 @@ const actions = {
     S.resetState(); ui.ob = null; ui.editRoutineId = null; closeSheet(); render();
   },
 };
-
-function moveRoutineEx(b, dir) {
-  const r = S.routineById(ui.editRoutineId);
-  const list = r.days[b.dataset.di].exercises;
-  const i = Number(b.dataset.ei), j = i + dir;
-  if (j < 0 || j >= list.length) return;
-  [list[i], list[j]] = [list[j], list[i]];
-  S.save(); render();
-}
 
 document.addEventListener('click', (e) => {
   const tab = e.target.closest('.tabbar [data-tab]');
