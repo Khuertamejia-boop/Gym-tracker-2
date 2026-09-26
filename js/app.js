@@ -147,39 +147,55 @@ function renderPlan() {
   const today = S.weekdayIndex();
   const monday = S.startOfWeek(new Date());
   const sessions = weekSessions();
-  const plannedDays = week.filter(Boolean).length;
-  const trained = new Set(sessions.map((x) => x.date)).size;
-
-  const rows = S.DAY_NAMES.map((name, i) => {
+  const days = S.DAY_NAMES.map((name, i) => {
     const date = new Date(monday); date.setDate(monday.getDate() + i);
     const iso = S.todayISO(date);
-    const day = routine.days.find((d) => d.id === week[i]);
-    const doneHere = sessions.filter((x) => x.date === iso);
-    const past = i < today;
-    const moved = changed && week[i] !== routine.week[i];
-    const editable = !past && !doneHere.length;
-    const title = doneHere.length ? shortName(doneHere[0].dayName) : day ? shortName(day.name) : 'Descanso';
-    const meta = doneHere.length ? 'Hecho'
-      : day ? `${day.exercises.length} ejercicios · ~${dayMinutes(day)} min`
-      : '';
-    const badge = doneHere.length ? `<span class="pd-badge done" aria-label="Hecho">${ICON_CHECK}</span>`
-      : i === today ? '<span class="pd-badge today">Hoy</span>'
-      : past && day ? '<span class="pd-badge missed">No hecho</span>'
-      : '';
-    return `<${editable ? `button class="plan-day" data-action="plan-row" data-wd="${i}"` : 'div class="plan-day"'} ${!day && !doneHere.length ? 'data-rest' : ''} ${past ? 'data-past' : ''}>
-      <span class="pd-date"><small>${name.slice(0, 3)}</small><b>${date.getDate()}</b></span>
-      <span class="grow"><span class="pd-name">${esc(title)}${moved ? ' <span class="pd-moved">cambiado</span>' : ''}</span>${meta ? `<span class="pd-meta">${meta}</span>` : ''}</span>
-      ${badge}${editable ? '<span class="chev" aria-hidden="true">›</span>' : ''}
-    </${editable ? 'button' : 'div'}>`;
+    const plan = routine.days.find((d) => d.id === week[i]) || null;
+    const done = sessions.filter((x) => x.date === iso);
+    return {
+      i, name, date, plan, done: done[0] || null,
+      past: i < today,
+      editable: i >= today && !done.length,
+      moved: changed && week[i] !== routine.week[i],
+    };
+  });
+  const planned = week.filter(Boolean).length;
+  const trained = new Set(sessions.map((x) => x.date)).size;
+  const goal = Math.max(planned, trained);
+  const pct = goal ? Math.min(100, (trained / goal) * 100) : 0;
+
+  // Tira L–D: toda la semana en una fila (tocar un día libre permite moverlo o entrenar).
+  const strip = days.map((d) => {
+    const cls = d.done ? 'done' : d.plan ? (d.past ? 'missed' : 'planned') : 'rest';
+    const inner = d.done ? ICON_CHECK : d.date.getDate();
+    const tag = d.editable ? `button data-action="plan-row" data-wd="${d.i}"` : 'div';
+    return `<${tag} class="wk ${cls} ${d.i === today ? 'today' : ''}" aria-label="${d.name}${d.plan ? `: ${esc(shortName(d.plan.name))}` : ': descanso'}${d.done ? ' (hecho)' : ''}">
+      <small>${S.DAY_SHORT[d.i]}</small><span>${inner}</span></${d.editable ? 'button' : 'div'}>`;
   }).join('');
 
-  const { planned, done } = weeklyVolume(routine, week);
-  const groups = VOLUME_GROUPS.filter((g) => planned[g] || done[g]).sort((a, b) => (planned[b] || 0) - (planned[a] || 0));
-  const scale = Math.max(24, ...groups.map((g) => Math.max(planned[g] || 0, done[g] || 0)));
+  // Próximo entrenamiento: hoy si toca y no está hecho; si no, el siguiente de la semana.
+  const next = days.find((d) => d.i >= today && d.plan && !d.done);
+  const nextLabel = next ? (next.i === today ? 'hoy' : `${next.name.toLowerCase()} ${next.date.getDate()}`) : '';
+
+  // Días de entreno (los del plan y los entrenados), en cuadrícula.
+  const tiles = days.filter((d) => d.plan || d.done).map((d) => {
+    const title = d.done ? shortName(d.done.dayName) : shortName(d.plan.name);
+    const state = d.done ? `<span class="pt-state ok">${ICON_CHECK} Hecho</span>`
+      : d.i === today ? '<span class="pt-state today">Hoy</span>'
+      : d.past ? '<span class="pt-state">No hecho</span>'
+      : `<span class="pt-state">${d.plan.exercises.length} ejercicios · ~${dayMinutes(d.plan)} min</span>`;
+    const tag = d.editable ? `button data-action="plan-row" data-wd="${d.i}"` : 'div';
+    return `<${tag} class="pt ${d.done ? 'done' : ''} ${d.past && !d.done ? 'missed' : ''} ${d.i === today ? 'is-today' : ''}">
+      <small>${d.name.slice(0, 3)} ${d.date.getDate()}${d.moved ? ' · <em>cambiado</em>' : ''}</small>
+      <b>${esc(title)}</b>${state}</${d.editable ? 'button' : 'div'}>`;
+  }).join('');
+
+  const { planned: pv, done: dv } = weeklyVolume(routine, week);
+  const groups = VOLUME_GROUPS.filter((g) => pv[g] || dv[g]).sort((a, b) => (pv[b] || 0) - (pv[a] || 0));
+  const scale = Math.max(24, ...groups.map((g) => Math.max(pv[g] || 0, dv[g] || 0)));
   const pctOf = (v) => `${Math.min(100, (v / scale) * 100).toFixed(1)}%`;
-  const fmtSets = (v) => Math.round(v);
   const volumeRows = groups.map((g) => {
-    const p = planned[g] || 0, d = done[g] || 0;
+    const p = pv[g] || 0, d = dv[g] || 0;
     const zone = p < VOLUME_MIN ? '<span class="vz low">bajo</span>' : p > VOLUME_MAX ? '<span class="vz high">alto</span>' : '';
     return `<div class="vol-row">
       <span class="vol-name">${g === 'upper_back' ? 'Espalda alta' : MUSCLE_NAME[g]}${zone}</span>
@@ -188,32 +204,39 @@ function renderPlan() {
         <span class="vol-plan" style="width:${pctOf(p)}"></span>
         <span class="vol-done" style="width:${pctOf(d)}"></span>
       </span>
-      <span class="vol-num"><b>${fmtSets(d)}</b>/${fmtSets(p)}</span>
+      <span class="vol-num"><b>${Math.round(d)}</b>/${Math.round(p)}</span>
     </div>`;
   }).join('');
 
   $view.innerHTML = `
-    <div class="card plan-card">
-      <div class="row between">
-        <div style="min-width:0"><div class="muted small">Tu rutina</div><h3 class="ellipsis" style="margin:0">${esc(routine.name)}</h3></div>
-        <button class="btn sm" data-action="edit-routine" data-id="${routine.id}">Editar</button>
+    <div class="card plan-hero">
+      <div class="ring" style="--p:${pct}%" role="img" aria-label="${trained} de ${goal} entrenamientos esta semana">
+        <div><b>${trained}/${goal}</b><small>esta semana</small></div>
       </div>
-      <div class="plan-progress">
-        <span class="dots">${Array.from({ length: Math.max(plannedDays, trained) }, (_, i) => `<i class="${i < trained ? 'on' : ''}"></i>`).join('')}</span>
-        <span class="muted small"><b>${trained} de ${Math.max(plannedDays, trained)}</b> entrenamientos esta semana</span>
-      </div>
+      <div class="plan-routine">${esc(routine.name)} · <button class="link" data-action="edit-routine" data-id="${routine.id}">Editar</button></div>
+      <div class="week-strip">${strip}</div>
     </div>
 
-    <div class="plan-head"><b>Esta semana</b>${changed ? '<button class="link small" data-action="plan-reset">Volver al plan original</button>' : ''}</div>
-    <div class="plan-week">${rows}</div>
-    <p class="muted small plan-hint">¿No puedes entrenar algún día? Tócalo para moverlo. El cambio es solo para esta semana.</p>
+    ${next
+      ? `<button class="next-card" data-action="plan-go" data-id="${next.plan.id}">
+          <span class="grow"><small>Próximo entrenamiento</small><b>${esc(shortName(next.plan.name))} · ${nextLabel}</b></span>
+          <span class="next-chev" aria-hidden="true">›</span></button>`
+      : `<div class="next-card done"><span class="grow"><small>Esta semana</small><b>${trained >= planned && planned ? '¡Semana completada! 💪' : 'No quedan entrenamientos'}</b></span></div>`}
 
-    ${groups.length ? `<div class="plan-head"><b>Volumen semanal</b><span class="muted small">series hechas / plan</span></div>
-    <div class="card vol-card">
-      ${volumeRows}
-      <div class="vol-legend muted small"><span class="lg-band"></span> Zona para hipertrofia: ${VOLUME_MIN}–${VOLUME_MAX} series por músculo. Los músculos secundarios cuentan como media serie.</div>
-    </div>` : ''}
+    <div class="plan-head"><b>Esta semana</b>${changed
+      ? '<button class="link small" data-action="plan-reset">Volver al plan original</button>'
+      : '<span class="muted small">Toca un día para moverlo</span>'}</div>
+    <div class="plan-tiles">${tiles}</div>
+
+    ${groups.length ? `<details class="vol-acc" ${ui.volOpen ? 'open' : ''}>
+      <summary><span class="grow">📊 Volumen semanal</span><span class="muted small">series hechas / plan</span><span class="acc-chev" aria-hidden="true">⌄</span></summary>
+      <div class="vol-body">
+        ${volumeRows}
+        <div class="vol-legend muted small"><span class="lg-band"></span> Zona para hipertrofia: ${VOLUME_MIN}–${VOLUME_MAX} series por músculo. Los músculos secundarios cuentan como media serie.</div>
+      </div>
+    </details>` : ''}
     <button class="btn block ghost" data-action="change-routine">Cambiar de rutina</button>`;
+  $view.querySelector('.vol-acc')?.addEventListener('toggle', (e) => { ui.volOpen = e.target.open; });
 }
 
 // Hoja para mover un día de esta semana (o entrenar en un día de descanso).
@@ -1752,6 +1775,7 @@ const actions = {
     S.setWeekThisWeek(r, week);
     closeSheet(); render();
   },
+  'plan-go': (b) => { ui.planDay = b.dataset.id; setTab('train'); },
   'plan-reset': () => { S.resetWeek(S.activeRoutine()); toast('Plan original restaurado'); render(); },
 
   // Entrenar

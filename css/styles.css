@@ -808,3 +808,73 @@ button.plan-day:active { background: var(--surface-2); }
 }
 .win-save p { margin: 4px 0 12px; font-size: 0.9rem; color: var(--text-2); }
 .win-save .row { gap: 8px; }
+
+/* ---------- Cabecera centrada en las 3 pestañas ---------- */
+.topbar { justify-content: center; padding-top: calc(env(safe-area-inset-top) + 22px); padding-bottom: 14px; min-height: 64px; }
+.topbar h1 { font-size: 1.25rem; font-weight: 700; text-align: center; }
+.topbar .profile-btn { position: absolute; right: 12px; bottom: 8px; }
+
+/* ---------- Mi plan (opción B) ---------- */
+.plan-hero { text-align: center; padding: 22px 16px 16px; }
+.plan-hero .ring {
+  --p: 0%; width: 136px; height: 136px; margin: 0 auto 10px; border-radius: 50%;
+  background: conic-gradient(var(--good) 0 var(--p), var(--surface-2) var(--p) 100%);
+  display: grid; place-items: center;
+}
+.plan-hero .ring > div {
+  width: 110px; height: 110px; border-radius: 50%; background: var(--surface);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1;
+}
+.plan-hero .ring b { font-size: 2rem; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.plan-hero .ring small { font-size: 0.78rem; color: var(--text-3); }
+.plan-routine { font-size: 0.92rem; color: var(--text-2); }
+.plan-routine .link { padding: 0 2px; }
+.week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-top: 16px; }
+.wk {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 0;
+  border: 0; background: none; color: inherit; font: inherit;
+}
+button.wk { cursor: pointer; }
+.wk small { font-size: 0.72rem; color: var(--text-3); font-weight: 600; }
+.wk span {
+  width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 0.85rem; font-weight: 600; color: var(--text-3); font-variant-numeric: tabular-nums;
+}
+.wk.planned span { background: var(--surface-2); color: var(--text); }
+.wk.missed span { background: var(--surface-2); color: var(--text-3); text-decoration: line-through; }
+.wk.done span { background: var(--good); }
+.wk.done svg { width: 18px; height: 18px; fill: #fff; }
+.wk.today span { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+.next-card {
+  display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 12px; padding: 14px 18px;
+  border: 0; border-radius: 18px; background: var(--accent); color: var(--accent-ink); font: inherit; text-align: left; cursor: pointer;
+}
+.next-card small { display: block; font-size: 0.8rem; opacity: 0.85; }
+.next-card b { display: block; font-size: 1.1rem; }
+.next-chev { font-size: 1.6rem; line-height: 1; }
+.next-card.done { background: var(--good-soft); color: var(--text); cursor: default; }
+.plan-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pt {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 14px; min-height: 84px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px; color: inherit; font: inherit; text-align: left;
+}
+button.pt { cursor: pointer; }
+button.pt:active { background: var(--surface-2); }
+.pt small { font-size: 0.72rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+.pt small em { font-style: normal; color: var(--accent); text-transform: none; }
+.pt b { font-size: 1rem; }
+.pt-state { font-size: 0.8rem; color: var(--text-3); display: inline-flex; align-items: center; gap: 4px; }
+.pt-state svg { width: 14px; height: 14px; fill: currentColor; }
+.pt-state.ok { color: var(--good); font-weight: 700; }
+.pt-state.today { color: var(--accent); font-weight: 700; }
+.pt.done { background: var(--good-soft); border-color: transparent; }
+.pt.missed { opacity: 0.6; }
+.pt.is-today:not(.done) { border: 2px solid var(--accent); padding: 11px 13px; }
+.vol-acc { margin: 14px 0; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+.vol-acc summary {
+  display: flex; align-items: center; gap: 10px; padding: 14px 16px; list-style: none; cursor: pointer; font-weight: 600;
+}
+.vol-acc summary::-webkit-details-marker { display: none; }
+.acc-chev { transition: transform 0.2s; color: var(--text-3); }
+.vol-acc[open] .acc-chev { transform: rotate(180deg); }
+.vol-body { padding: 0 16px 14px; }

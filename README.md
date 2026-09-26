@@ -15,7 +15,7 @@ Está pensada para usarse desde el celular en el gym.
 Arriba a la derecha está tu **perfil**: iniciar sesión o ver tu cuenta, *Ajustes* (cuerpo de la guía, unidad de peso, modo simple, temporizador de descanso, esfuerzo y tema) y, sin sesión, *Respaldo de datos*.
 
 La app tiene **tres pestañas**:
-- **Mi plan**: tu rutina y los 7 días de la semana (hecho, hoy, descanso). Toca un día para **moverlo solo esta semana** (se intercambia con otro día o se salta) y vuelve al plan original cuando quieras. Incluye el **volumen semanal** por músculo (series hechas frente a las del plan, con la zona de 10–20 series recomendada para hipertrofia; los secundarios cuentan como media serie) y los botones **Editar** y **Cambiar de rutina**.
+- **Mi plan**: anillo con los entrenamientos de la semana (p. ej. 2/4), tira L–D con toda la semana (✓ hechos, hoy marcado), botón **Próximo entrenamiento** que lleva directo a él, y solo tus días de entreno en una cuadrícula 2×2. Toca un día (en la cuadrícula o en la tira) para **moverlo solo esta semana** o entrenar en un día de descanso; **Volver al plan original** deshace los cambios. El **volumen semanal** por músculo (zona 10–20 series para hipertrofia) está plegado y se abre al tocarlo. Abajo, **Cambiar de rutina**.
 - **Entrenar**: la vista de tu plan con una pestaña por día (✓ en los hechos esta semana), cada ejercicio con su miniatura de músculos, series, reps y tu último peso, y el botón **Empezar**.
   - Por cada serie anotas kg y reps (y RIR/RPE fuera del modo simple).
   - Sugerencias de progresión, notas por ejercicio y aviso 🏆 de récord personal.
