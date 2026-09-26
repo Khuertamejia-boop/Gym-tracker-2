@@ -1563,15 +1563,24 @@ function showSummary(session) {
         ${stat(ICON_CHECK, S.doneSets(session), 'Series')}
         ${stat(ICON_BARS, `${groupNum(S.toUnit(volume, u))} ${u}`, 'Volumen')}
       </div>
-      ${pct > 0 && pct <= 200 ? `<div class="win-note">📈 +${pct}% de volumen frente a la última vez</div>` : ''}
-      ${prs.length ? `<div class="win-note">🏆 ${prs.length === 1 ? '¡Nuevo récord!' : `¡${prs.length} récords nuevos!`}</div>` : ''}
-      <button class="share-cta" data-share>${ICON_SHARE}<span>Compartir entrenamiento</span></button>
+      ${(pct > 0 && pct <= 200) || prs.length ? `<div class="win-chips">
+        ${pct > 0 && pct <= 200 ? `<span class="win-chip up">↑ ${pct}% <small>volumen</small></span>` : ''}
+        ${prs.length ? `<span class="win-chip gold">🏆 ${prs.length} <small>${prs.length === 1 ? 'récord' : 'récords'}</small></span>` : ''}
+      </div>` : ''}
+      <button class="share-cta" data-share aria-label="Compartir entrenamiento">
+        <span class="sc-thumb" aria-hidden="true"><img alt=""></span>
+        <span class="sc-text"><b>Comparte tu entrenamiento</b><small>Crea una historia para Instagram</small></span>
+        <span class="sc-go" aria-hidden="true">${ICON_SHARE}</span>
+      </button>
       ${askSignup(session) ? `<div class="win-save" id="win-save">
         <b>💾 Guarda tu progreso</b>
         <p>${S.getState().sessions.length === 1 ? '¡Primer entrenamiento hecho!' : `Llevas ${S.getState().sessions.length} entrenamientos.`} Crea una cuenta gratis para no perder tu progreso y verlo en cualquier teléfono.</p>
         <div class="row"><button class="btn primary grow" data-action="win-signup">Crear cuenta</button><button class="btn ghost" data-action="win-signup-later">Ahora no</button></div>
       </div>` : ''}
-      <div class="win-list">${exRows}</div>
+      <details class="win-exs">
+        <summary><span class="grow">Ejercicios</span><span class="muted">${session.exercises.length}</span><span class="acc-chev" aria-hidden="true">⌄</span></summary>
+        <div class="win-list">${exRows}</div>
+      </details>
       ${goal ? `<div class="win-week"><span class="muted">Esta semana</span>
         <span class="dots">${Array.from({ length: goal }, (_, i) => `<i class="${i < trained ? 'on' : ''}"></i>`).join('')}</span>
         <b>${trained} de ${goal}</b></div>` : ''}
@@ -1589,6 +1598,14 @@ function showSummary(session) {
   document.addEventListener('keydown', onKey);
   overlay.querySelector('.win-done').addEventListener('click', close);
   overlay.querySelector('[data-share]').addEventListener('click', () => openShare(session));
+  // Miniatura real de la historia dentro del botón: invita a compartir.
+  renderShare('card', session).then((c) => {
+    const t = document.createElement('canvas');
+    t.width = 180; t.height = 320;
+    t.getContext('2d').drawImage(c, 0, 0, 180, 320);
+    const img = overlay.querySelector('.sc-thumb img');
+    if (img) { img.src = t.toDataURL('image/jpeg', 0.85); img.parentElement.classList.add('ready'); }
+  }).catch(() => {});
   overlay.querySelector('.win-done').focus({ preventScroll: true });
   overlay.scrollTop = 0;
   if (navigator.vibrate) navigator.vibrate(80);

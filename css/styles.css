@@ -924,3 +924,50 @@ button.pt:active { background: var(--surface-2); }
 .share-acts .ic { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--text); }
 .share-acts .ic.p { background: var(--text); color: var(--bg); }
 .share-acts svg { width: 24px; height: 24px; fill: currentColor; }
+
+/* ---------- Resumen v2: chips, botón de compartir y ejercicios plegables ---------- */
+.win-chips { display: flex; justify-content: center; gap: 8px; margin: 4px 0 2px; }
+.win-chip {
+  display: inline-flex; align-items: baseline; gap: 5px; padding: 7px 14px; border-radius: 999px;
+  background: var(--surface-2); color: var(--text); font-size: 0.95rem; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.win-chip small { font-size: 0.8rem; font-weight: 500; color: var(--text-3); }
+.win-chip.up { color: var(--good); }
+.win-chip.gold { background: color-mix(in srgb, var(--gold) 16%, var(--surface-2)); }
+
+.share-cta {
+  position: relative; overflow: hidden; display: flex; align-items: center; gap: 14px; width: 100%;
+  height: auto; min-height: 92px; margin: 18px 0 8px; padding: 12px 14px 12px 12px; text-align: left;
+  border-radius: 22px; background: linear-gradient(135deg, #e0344a 0%, #b5102a 55%, #7d0a1d 100%); color: #fff;
+  box-shadow: 0 14px 34px color-mix(in srgb, #c8102e 38%, transparent), inset 0 1px 0 rgb(255 255 255 / 18%);
+}
+.share-cta::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 22%) 45%, transparent 60%);
+  transform: translateX(-100%); animation: sc-shine 2.8s ease-in-out 0.8s 2;
+}
+@keyframes sc-shine { to { transform: translateX(100%); } }
+.sc-thumb {
+  flex: none; width: 42px; height: 75px; border-radius: 8px; overflow: hidden; background: #0b0b0c;
+  transform: rotate(-6deg); box-shadow: 0 6px 14px rgb(0 0 0 / 35%), 0 0 0 1.5px rgb(255 255 255 / 55%);
+  opacity: 0; transition: opacity 0.3s;
+}
+.sc-thumb.ready { opacity: 1; }
+.sc-thumb img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.sc-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.sc-text b { font-size: 1.08rem; font-weight: 700; letter-spacing: -0.01em; line-height: 1.2; }
+.sc-text small { font-size: 0.82rem; font-weight: 500; opacity: 0.85; }
+.sc-go {
+  flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
+  background: #fff; color: #b5102a; box-shadow: 0 4px 10px rgb(0 0 0 / 20%);
+}
+.sc-go svg { width: 20px; height: 20px; fill: currentColor; }
+.share-cta:active { transform: scale(0.98); }
+@media (prefers-reduced-motion: reduce) { .share-cta::after { animation: none; } }
+
+.win-exs { margin-top: 10px; text-align: left; border-radius: 16px; background: var(--surface); border: 1px solid var(--border); }
+.win-exs summary { display: flex; align-items: center; gap: 10px; padding: 14px 16px; list-style: none; cursor: pointer; font-weight: 600; }
+.win-exs summary::-webkit-details-marker { display: none; }
+.win-exs[open] .acc-chev { transform: rotate(180deg); }
+.win-exs .win-list { margin: 0; padding: 0 16px 6px; }
+.win-exs .win-ex { padding: 11px 0; font-size: 0.92rem; }
