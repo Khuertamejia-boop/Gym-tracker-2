@@ -572,10 +572,10 @@ function exerciseStage(e, i, effort, d) {
     ${last?.note ? `<div class="last-line">📝 ${esc(last.note)}</div>` : ''}
     ${!last && !d.editing && S.isSimple() ? `<div class="hint">👋 Primera vez: elige un peso con el que puedas hacer ${esc(S.parseRange(e.target)?.hi || 10)} repeticiones con buena técnica, sin llegar al límite.</div>` : ''}
     <div class="toggles">
-      ${S.canUnilateral(e.exId) ? `<button class="toggle-chip ${perSide ? 'on' : ''}" data-action="uni-toggle" data-i="${i}" role="switch" aria-checked="${perSide}" title="Registra cada serie para la izquierda (I) y la derecha (D)">
-        <span class="chip-mark" aria-hidden="true">${perSide ? '✓' : '+'}</span>Por lado</button>` : ''}
       <button class="toggle-chip ${e.warmupOn ? 'on' : ''}" data-action="warm-toggle" data-i="${i}" role="switch" aria-checked="${Boolean(e.warmupOn)}" title="Series de calentamiento con menos peso; no cuentan en tus estadísticas">
         <span class="chip-mark" aria-hidden="true">${e.warmupOn ? '✓' : '+'}</span>Aproximación</button>
+      ${S.canUnilateral(e.exId) ? `<button class="toggle-chip ${perSide ? 'on' : ''}" data-action="uni-toggle" data-i="${i}" role="switch" aria-checked="${perSide}" title="Registra cada serie para la izquierda (I) y la derecha (D)">
+        <span class="chip-mark" aria-hidden="true">${perSide ? '✓' : '+'}</span>Por lado</button>` : ''}
     </div>
     <div class="set-grid ${effort ? 'with-effort' : ''}">
       <div class="set-labels"><span>Serie</span><span>Reps</span><span class="unit-label">Peso ${unitSwitch(e.exId, u)}</span>${effort ? `<span>${effort}</span>` : ''}<span></span></div>
