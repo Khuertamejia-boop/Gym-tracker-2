@@ -649,119 +649,6 @@ function afterMarking(anyPr) {
   }
 }
 
-// ---------- Barra −/+ sobre el teclado (peso y reps) ----------
-
-const numBar = document.createElement('div');
-numBar.className = 'num-bar';
-numBar.hidden = true;
-numBar.setAttribute('role', 'toolbar');
-numBar.setAttribute('aria-label', 'Ajuste rápido');
-document.body.appendChild(numBar);
-let numTarget = null;
-
-const isNumField = (el) => el?.matches?.('.set-row [data-set="kg"], .set-row [data-set="reps"], .set-row [data-warm="kg"], .set-row [data-warm="reps"]');
-const exOfField = (el) => S.getState().draft?.exercises[el.dataset.i];
-const isBarbell = (exId) => S.exById(exId).equipment === 'Barra';
-
-function showNumBar(el) {
-  numTarget = el;
-  const kind = el.dataset.set || el.dataset.warm;
-  const e = exOfField(el);
-  if (!e) return;
-  const u = S.unitFor(e.exId);
-  const step = kind === 'kg' ? (u === 'lb' ? 5 : 2.5) : 1;
-  const label = kind === 'kg' ? `${fmtN(step)} ${u}` : '1 rep';
-  numBar.innerHTML = `
-    <button type="button" data-nb="-${step}" aria-label="Restar ${label}">−${fmtN(step)}</button>
-    <button type="button" data-nb="${step}" aria-label="Sumar ${label}">+${fmtN(step)}</button>
-    ${kind === 'kg' && isBarbell(e.exId) ? '<button type="button" data-nb="plates">Discos</button>' : ''}
-    <span class="grow"></span>
-    <button type="button" data-nb="done" class="nb-done">Listo</button>`;
-  numBar.hidden = false;
-  placeNumBar();
-}
-
-function placeNumBar() {
-  if (numBar.hidden) return;
-  const vv = window.visualViewport;
-  const bottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
-  numBar.style.top = `${bottom - numBar.offsetHeight}px`;
-}
-window.visualViewport?.addEventListener('resize', placeNumBar);
-window.visualViewport?.addEventListener('scroll', placeNumBar);
-
-document.addEventListener('focusin', (e) => { if (isNumField(e.target)) showNumBar(e.target); });
-document.addEventListener('focusout', () => setTimeout(() => {
-  if (!isNumField(document.activeElement)) { numBar.hidden = true; numTarget = null; }
-}, 60));
-// Los botones no roban el foco: el teclado sigue abierto.
-numBar.addEventListener('pointerdown', (e) => e.preventDefault());
-numBar.addEventListener('click', (e) => {
-  const b = e.target.closest('[data-nb]');
-  if (!b || !numTarget) return;
-  const t = numTarget;
-  const v = b.dataset.nb;
-  if (v === 'done') { t.blur(); return; }
-  const e2 = exOfField(t);
-  if (v === 'plates') {
-    const kg = S.fromUnit(num(t.value !== '' ? t.value : t.placeholder) || 0, S.unitFor(e2.exId));
-    t.blur();
-    openPlates(e2.exId, kg);
-    return;
-  }
-  const cur = Number(t.value !== '' ? t.value : t.placeholder) || 0;
-  const next = Math.max(0, Math.round((cur + Number(v)) * 100) / 100);
-  t.value = String(next);
-  t.dispatchEvent(new Event('input', { bubbles: true }));
-});
-
-// ---------- Calculadora de discos ----------
-
-const PLATES = { kg: [25, 20, 15, 10, 5, 2.5, 1.25], lb: [45, 35, 25, 10, 5, 2.5] };
-const BARS = { kg: [20, 15, 10], lb: [45, 35, 25] };
-const PLATE_COLORS = ['#c8102e', '#1f5fbf', '#e0b04a', '#1f8a3a', '#e8e8e4', '#3a3a3a', '#a8a8a0'];
-
-function platesFor(total, bar, u) {
-  let side = (total - bar) / 2;
-  const out = [];
-  if (side <= 0) return { out, rest: 0 };
-  for (const p of PLATES[u]) while (side + 1e-9 >= p) { out.push(p); side -= p; }
-  return { out, rest: Math.round(side * 2 * 100) / 100 };
-}
-
-function openPlates(exId, kg) {
-  const u = S.unitFor(exId);
-  const st = S.getState().settings;
-  const bar = st.bar?.[u] ?? BARS[u][0];
-  const total = Math.round(S.toUnit(kg, u) * 100) / 100;
-  const { out, rest } = platesFor(total, bar, u);
-  const maxP = PLATES[u][0];
-  openSheet('Calculadora de discos', `
-    <form id="plates-form" class="plates">
-      <label class="field"><span>Peso total (${u})</span>
-        <input type="number" inputmode="decimal" step="0.5" min="0" name="total" value="${total || ''}" placeholder="0"></label>
-      <div class="muted small" style="margin:10px 0 6px">Barra</div>
-      <div class="segmented">${BARS[u].map((b) => `<button type="button" class="${b === bar ? 'active' : ''}" data-bar="${b}">${fmtN(b)} ${u}</button>`).join('')}</div>
-      <div class="plate-viz" aria-hidden="true">
-        <span class="pv-bar"></span>
-        ${out.map((p) => `<span class="pv-plate" style="height:${40 + (p / maxP) * 70}px;background:${PLATE_COLORS[PLATES[u].indexOf(p)]}"></span>`).join('')}
-        <span class="pv-collar"></span>
-      </div>
-      <p class="plates-text">${total <= bar ? `Solo la barra (${fmtN(bar)} ${u}).`
-        : `<b>Por lado:</b> ${out.length ? out.map((p) => fmtN(p)).join(' + ') : '—'} ${u}`}
-        ${rest ? `<br><span class="muted small">Faltan ${fmtN(rest)} ${u} que no se pueden cargar con discos estándar.</span>` : ''}</p>
-    </form>`, (root) => {
-    const form = root.querySelector('#plates-form');
-    form.addEventListener('submit', (e) => e.preventDefault());
-    form.total.addEventListener('change', () => openPlates(exId, S.fromUnit(num(form.total.value) || 0, u)));
-    form.querySelectorAll('[data-bar]').forEach((b) => b.addEventListener('click', () => {
-      st.bar = { ...(st.bar || {}), [u]: Number(b.dataset.bar) };
-      S.save();
-      openPlates(exId, S.fromUnit(num(form.total.value) || 0, u));
-    }));
-  });
-}
-
 // ---------- Compartir el resumen como imagen ----------
 
 async function shareSummary(session) {
@@ -2117,16 +2004,10 @@ const actions = {
     openSheet(ex.name, `
       <div class="menu-list">
         <button class="menu-row" data-action="ex-detail" data-id="${ex.id}"><span class="grow">Ver músculos y técnica</span><span class="chev" aria-hidden="true">›</span></button>
-        ${isBarbell(ex.id) ? `<button class="menu-row" data-action="plates" data-i="${i}"><span class="grow">Calculadora de discos</span><span class="chev" aria-hidden="true">›</span></button>` : ''}
         ${i > 0 ? `<button class="menu-row" data-action="ex-move" data-i="${i}" data-dir="-1"><span class="grow">Mover antes</span></button>` : ''}
         ${i < d.exercises.length - 1 ? `<button class="menu-row" data-action="ex-move" data-i="${i}" data-dir="1"><span class="grow">Mover después</span></button>` : ''}
         <button class="menu-row danger-row" data-action="ex-remove" data-i="${i}"><span class="grow">Quitar del entrenamiento</span></button>
       </div>`);
-  },
-  plates: (b) => {
-    const e = S.getState().draft.exercises[b.dataset.i];
-    const next = e.sets.find((x) => !x.done) || e.sets[e.sets.length - 1];
-    openPlates(e.exId, Number(next?.kg) || 0);
   },
   'ex-move': (b) => {
     const d = S.getState().draft;

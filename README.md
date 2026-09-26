@@ -26,8 +26,6 @@ La app tiene **tres pestañas**:
   - Series en filas redondeadas (serie, reps, peso, ✓) y un botón inferior que guía: *Marcar todas las series* → *Siguiente ejercicio* → *Terminar entrenamiento*. Descartar queda en el menú ⋯.
   - **Temporizador de descanso**: arranca solo al marcar una serie (en ejercicios por lado, tras el lado derecho). Duración según las reps objetivo (≤6: 2:30, ≤10: 2:00, resto: 1:30); con −15 / +15 la app recuerda tu descanso para ese ejercicio. Suena y vibra al terminar (si el teléfono lo permite). Se puede desactivar en Ajustes.
   - El descanso se detiene solo al completar la última serie del entrenamiento.
-  - Al tocar un peso o las reps aparece una barra sobre el teclado con **−/+** (2,5 kg · 5 lb · 1 rep) y **Listo**; en ejercicios con barra, también **Discos**.
-  - **Calculadora de discos** (también en ⋯ del ejercicio): discos por lado para el peso total, con barra de 20/15/10 kg o 45/35/25 lb (se recuerda).
   - La pantalla se mantiene encendida mientras entrenas.
   - Cuando toca subir de peso, aparece **↑ +2,5 kg** con el motivo.
   - Resumen limpio al terminar (con botón para **compartir** una imagen del entrenamiento): check verde, tiempo, series y volumen en tarjetas, la lista de ejercicios hechos (series, reps, peso y 🏆 si hubo récord), el progreso de la semana y una frase motivadora.
