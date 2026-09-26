@@ -789,7 +789,9 @@ button.plan-day:active { background: var(--surface-2); }
 .install-steps { margin: 0; padding-left: 20px; line-height: 1.7; }
 .inline-ico { width: 18px; height: 18px; vertical-align: -3px; fill: var(--accent); }
 .empty-progress { text-align: center; padding: 28px 20px; }
-.empty-progress .ep-icon { font-size: 2.4rem; }
+.empty-progress .ep-icon { width: 56px; height: 56px; margin: 0 auto 10px; border-radius: 50%; background: var(--accent-soft); display: grid; place-items: center; }
+.empty-progress .ep-icon svg { width: 28px; height: 28px; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ico-trophy { width: 1.05em; height: 1.05em; vertical-align: -0.16em; fill: none; stroke: var(--gold); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .empty-progress p { margin: 6px 0 16px; }
 
 /* Invitación a crear cuenta tras el primer entrenamiento */

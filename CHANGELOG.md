@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Adiós a los emojis: los récords llevan un trofeo dorado de línea fina; Progreso vacío, una flecha de tendencia en carmesí; notas con «Nota:»; los avisos van solo con texto.
 - Mi plan: «Volumen semanal» ya no lleva el emoji 📊.
 - Logo nuevo: pesa blanca de formas redondeadas sobre fondo carmesí en degradado (icono del iPhone, pestaña del navegador y pantalla de bienvenida).
 - Resumen final: la tarjeta «Guarda tu progreso» ya no tiene el disquete ni fondo rosa. Ahora es blanca (como «Ejercicios»), con un icono de nube con check, una frase corta y «Ahora no» en gris, para que Compartir sea el protagonista.

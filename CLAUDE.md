@@ -77,7 +77,8 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - Elegir rutina (26-09-2026): principiante → pantalla «A» (solo la recomendada, en grande: etiqueta «RECOMENDADA PARA TI»
   sin estrella, 3 cifras DÍAS · EJERCICIOS · MINUTOS, tira «Tu semana», botón «Empezar con esta rutina»); intermedio/avanzado
   (o «Ver otras opciones») → lista «B» estilo Ajustes con selección redonda; la elegida se abre con días, ejerc./día,
-  series/semana y minutos (≈ 3 min por serie). Nada de emojis decorativos: rompen la armonía visual.
+  series/semana y minutos (≈ 3 min por serie). Nada de emojis decorativos: rompen la armonía visual
+  (26-09-2026 se quitaron todos: récords con `ICON_TROPHY` dorado de línea, iconos de línea en círculo `--accent-soft`, avisos solo texto; ✓ sí se usa).
 - Recomendación de rutina (26-09-2026, `recommendTemplate` en `js/store.js`): 1-3 días → Full Body; 4 → Torso/Pierna;
   5 → Torso/Pierna (principiante) o «Torso / Pierna + PPL» (resto); 6-7 → PPL (principiante/intermedio) o Arnold (avanzado).
   La semana es fija (no rota): un ciclo de 3 días (PPL, Arnold) con 5 días deja la pierna 1 vez/semana, por eso no se usa con 5.

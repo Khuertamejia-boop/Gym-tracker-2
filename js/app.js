@@ -43,6 +43,8 @@ const series = (n) => `${n} ${n === 1 ? 'serie' : 'series'}`;
 const fmtN = (v, d = 1) => Number(v).toLocaleString('es', { maximumFractionDigits: d });
 
 const ICON_CLOUD = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18h10.5a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.4 9.1 4.5 4.5 0 0 0 7 18Z"/><path d="m9.5 13.5 2 2 3.5-4"/></svg>';
+const ICON_TROPHY = '<svg class="ico-trophy" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 6H5v1.5A3 3 0 0 0 8 10.5M16 6h3v1.5a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg>';
+const ICON_TREND = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16"/><path d="m5 15 4.5-4.5 3.5 3L19 7"/><path d="M15 7h4v4"/></svg>';
 const ICON_CHECK = '<svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z"/></svg>';
 const ICON_X = '<svg viewBox="0 0 24 24"><path d="M19 6.4 17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12 19 6.4Z"/></svg>';
 const ICON_UP = '<svg viewBox="0 0 24 24"><path d="m7 14 5-5 5 5H7Z"/></svg>';
@@ -226,7 +228,7 @@ function renderPlan() {
       ? `<button class="next-card" data-action="plan-go" data-id="${next.plan.id}">
           <span class="grow"><small>Próximo entrenamiento</small><b>${esc(shortName(next.plan.name))} · ${nextLabel}</b></span>
           <span class="next-chev" aria-hidden="true">›</span></button>`
-      : `<div class="next-card done"><span class="grow"><small>Esta semana</small><b>${trained >= planned && planned ? '¡Semana completada! 💪' : 'No quedan entrenamientos'}</b></span></div>`}
+      : `<div class="next-card done"><span class="grow"><small>Esta semana</small><b>${trained >= planned && planned ? '¡Semana completada!' : 'No quedan entrenamientos'}</b></span></div>`}
 
     <div class="plan-head"><b>Esta semana</b>${changed
       ? '<button class="link small" data-action="plan-reset">Volver al plan original</button>'
@@ -570,8 +572,8 @@ function exerciseStage(e, i, effort, d) {
     <div class="stage-sub">${nextSet === -1 ? '✓ Ejercicio completado' : pos}${e.target ? ` · objetivo ${esc(e.target)} reps` : ''}</div>
     ${last ? `<div class="last-line"><span class="last-label">Última vez</span> ${lastSummary(last.sets, u)}</div>` : ''}
     ${e.upFrom && e.sets.some((x) => !x.done) && Number(e.sets[0].kg) > e.upFrom ? `<div class="up-line">↑ +${wn(Number(e.sets[0].kg) - e.upFrom, u)} ${u} <span>· la última vez completaste todas las reps</span></div>` : ''}
-    ${last?.note ? `<div class="last-line">📝 ${esc(last.note)}</div>` : ''}
-    ${!last && !d.editing && S.isSimple() ? `<div class="hint">👋 Primera vez: elige un peso con el que puedas hacer ${esc(S.parseRange(e.target)?.hi || 10)} repeticiones con buena técnica, sin llegar al límite.</div>` : ''}
+    ${last?.note ? `<div class="last-line"><b>Nota:</b> ${esc(last.note)}</div>` : ''}
+    ${!last && !d.editing && S.isSimple() ? `<div class="hint">Primera vez: elige un peso con el que puedas hacer ${esc(S.parseRange(e.target)?.hi || 10)} repeticiones con buena técnica, sin llegar al límite.</div>` : ''}
     <div class="toggles">
       <button class="toggle-chip ${e.warmupOn ? 'on' : ''}" data-action="warm-toggle" data-i="${i}" role="switch" aria-checked="${Boolean(e.warmupOn)}" title="Series de calentamiento con menos peso; no cuentan en tus estadísticas">
         <span class="chip-mark" aria-hidden="true">${e.warmupOn ? '✓' : '+'}</span>Aproximación</button>
@@ -596,8 +598,8 @@ function exerciseStage(e, i, effort, d) {
         const label = x.side ? `${Math.floor(j / 2) + 1}<small>${x.side === 'L' ? 'I' : 'D'}</small>` : j + 1;
         return `<div class="set-row ${x.done ? 'done' : ''} ${j === nextSet ? 'next' : ''} ${x.side === 'R' ? 'side-end' : ''}">
           ${S.isSimple()
-            ? `<span class="set-n">${x.pr ? '<span title="Récord personal">🏆</span>' : label}</span>`
-            : `<button class="set-n" data-action="set-menu" data-kind="set" data-i="${i}" data-j="${j}" aria-label="Opciones de la serie ${x.side ? `${Math.floor(j / 2) + 1} ${x.side === 'L' ? 'izquierda' : 'derecha'}` : j + 1}">${x.pr ? '🏆' : label}</button>`}
+            ? `<span class="set-n">${x.pr ? '<span title="Récord personal">${ICON_TROPHY}</span>' : label}</span>`
+            : `<button class="set-n" data-action="set-menu" data-kind="set" data-i="${i}" data-j="${j}" aria-label="Opciones de la serie ${x.side ? `${Math.floor(j / 2) + 1} ${x.side === 'L' ? 'izquierda' : 'derecha'}` : j + 1}">${x.pr ? ICON_TROPHY : label}</button>`}
           <input class="pill-input" type="number" inputmode="numeric" min="0" value="${esc(x.reps)}" placeholder="${esc(sug.reps)}" data-set="reps" data-i="${i}" data-j="${j}" aria-label="Repeticiones serie ${x.side ? `${Math.floor(j / 2) + 1} ${x.side === 'L' ? 'izquierda' : 'derecha'}` : j + 1}">
           <input class="pill-input" type="number" inputmode="decimal" step="0.5" min="0" value="${esc(S.toUnit(x.kg, u))}" placeholder="${sug.kg !== '' ? esc(S.toUnit(sug.kg, u)) : '–'}" data-set="kg" data-i="${i}" data-j="${j}" aria-label="Peso en ${u} serie ${j + 1}">
           ${effort ? `<input class="pill-input small-input" type="number" inputmode="decimal" step="0.5" min="0" max="10" value="${esc(x.effort)}" placeholder="–" data-set="effort" data-i="${i}" data-j="${j}" aria-label="${effort} serie ${j + 1}">` : ''}
@@ -631,8 +633,8 @@ function markSet(i, j) {
   const pr = S.prType(e.exId, s, d.editing ? d.id : null, e.sets.filter((x) => x !== s && x.done));
   if (pr) {
     s.pr = pr;
-    toast(pr === 'peso' ? `🏆 ¡Récord de peso! ${wt(s.kg, u)}`
-      : S.isSimple() ? '🏆 ¡Tu mejor serie hasta ahora en este ejercicio!' : `🏆 ¡Récord personal! 1RM estimado ${wt(S.e1rm(s), u)}`);
+    toast(pr === 'peso' ? `¡Récord de peso! ${wt(s.kg, u)}`
+      : S.isSimple() ? '¡Tu mejor serie hasta ahora en este ejercicio!' : `¡Récord personal! 1RM estimado ${wt(S.e1rm(s), u)}`);
     if (navigator.vibrate) navigator.vibrate([60, 40, 60]);
   }
   // Las series siguientes heredan este peso, salvo las que el usuario cambió a mano.
@@ -648,7 +650,7 @@ function afterMarking(anyPr) {
   render();
   window.scrollTo(0, y);
   if (!d.editing && d.exercises.every(exDone)) {
-    setTimeout(() => toast('¡Completaste todas las series! 💪'), anyPr ? 2300 : 0);
+    setTimeout(() => toast('¡Completaste todas las series!'), anyPr ? 2300 : 0);
   }
 }
 
@@ -974,7 +976,7 @@ function showExerciseDetail(id, tab = ui.exTab) {
       ? `<div class="list small">${hist.slice(0, 30).map((h) => `<div class="list-item" style="align-items:flex-start">
           <div style="width:90px;flex:none" class="muted">${S.formatDate(h.date)}</div>
           <div class="grow">${h.sets.map((x) => `${sideTag(x)}${wn(x.kg, u)}×${x.reps}${x.effort !== '' && x.effort !== undefined ? `<span class="muted">@${x.effort}</span>` : ''}`).join(' · ')}
-            ${h.note ? `<div class="muted">📝 ${esc(h.note)}</div>` : ''}</div></div>`).join('')}</div>`
+            ${h.note ? `<div class="muted"><b>Nota:</b> ${esc(h.note)}</div>` : ''}</div></div>`).join('')}</div>`
       : '<div class="empty small">Sin historial todavía.</div>';
   } else if (tab === 'charts') {
     const metrics = S.isSimple() ? [['max', 'Peso máx.'], ['volume', 'Volumen']] : [['e1rm', '1RM est.'], ['max', 'Peso máx.'], ['volume', 'Volumen']];
@@ -1218,7 +1220,7 @@ function renderProgress() {
 
   if (!st.sessions.length) {
     $view.innerHTML = `<div class="card empty-progress">
-        <div class="ep-icon" aria-hidden="true">📈</div>
+        <div class="ep-icon" aria-hidden="true">${ICON_TREND}</div>
         <b>Aquí verás cómo mejoras</b>
         <p class="muted small">Cuando termines tu primer entrenamiento aparecerán tus entrenos, los músculos que trabajas y la evolución de cada ejercicio.</p>
         <button class="btn primary" data-action="go-train">Ir a entrenar</button>
@@ -1632,7 +1634,7 @@ function openCodeLogin(onDone) {
           form.querySelector('#code-step').hidden = false;
           form.email.readOnly = true;
           btn.textContent = 'Entrar';
-          msg.textContent = `📧 Revisa ${email} (también la carpeta de spam) y escribe el código.`;
+          msg.textContent = `Revisa ${email} (también la carpeta de spam) y escribe el código.`;
           form.code.focus();
         } else {
           msg.textContent = 'Comprobando…';
@@ -1723,7 +1725,7 @@ function showSummary(session) {
   const exRows = session.exercises.map((e) => {
     const sets = e.sets.filter((x) => x.side !== 'R').length;
     const top = Math.max(...e.sets.map((x) => Number(x.kg) || 0));
-    return `<div class="win-ex"><span class="grow">${esc(S.exById(e.exId).name)}${e.sets.some((x) => x.pr) ? ' <span class="win-pr" title="Récord">🏆</span>' : ''}</span>
+    return `<div class="win-ex"><span class="grow">${esc(S.exById(e.exId).name)}${e.sets.some((x) => x.pr) ? ' <span class="win-pr" title="Récord">${ICON_TROPHY}</span>' : ''}</span>
       <span class="win-ex-val">${sets}${top ? ` × ${wt(top, S.unitFor(e.exId))}` : ` ${sets === 1 ? 'serie' : 'series'}`}</span></div>`;
   }).join('');
   const overlay = document.createElement('div');
@@ -1744,7 +1746,7 @@ function showSummary(session) {
       </div>
       ${(pct > 0 && pct <= 200) || prs.length ? `<div class="win-chips">
         ${pct > 0 && pct <= 200 ? `<span class="win-chip up">↑ ${pct}% <small>volumen</small></span>` : ''}
-        ${prs.length ? `<span class="win-chip gold">🏆 ${prs.length} <small>${prs.length === 1 ? 'récord' : 'récords'}</small></span>` : ''}
+        ${prs.length ? `<span class="win-chip gold">${ICON_TROPHY} ${prs.length} <small>${prs.length === 1 ? 'récord' : 'récords'}</small></span>` : ''}
       </div>` : ''}
       <button class="share-cta" data-share aria-label="Compartir entrenamiento">
         <span class="sc-thumb" aria-hidden="true"><img alt=""></span>
@@ -1797,7 +1799,7 @@ function showSummary(session) {
 function syncLabel() {
   const { status, error, lastSync } = Cloud.getInfo();
   if (status === 'syncing') return 'Sincronizando…';
-  if (status === 'error' || status === 'offline') return `⚠️ ${esc(error)}`;
+  if (status === 'error' || status === 'offline') return esc(error);
   if (lastSync) return `✓ Sincronizado a las ${new Date(lastSync).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}`;
   return '';
 }
@@ -1979,7 +1981,7 @@ function bindAccountForm(root, onDone) {
       if (mode === 'signup') {
         const needsConfirm = await Cloud.signUp(f.get('email'), f.get('password'));
         if (needsConfirm) {
-          msg.textContent = '📧 Te enviamos un correo. Abre el enlace para confirmar tu cuenta y luego inicia sesión desde tu perfil (arriba a la derecha).';
+          msg.textContent = 'Te enviamos un correo. Abre el enlace para confirmar tu cuenta y luego inicia sesión desde tu perfil (arriba a la derecha).';
           const next = document.querySelector('[data-action="ob-finish"]');
           if (next) { next.textContent = 'Continuar'; next.classList.add('primary'); next.classList.remove('ghost'); }
           return;
@@ -2329,9 +2331,9 @@ const actions = {
     openSheet(s.dayName, `
       <p class="muted small" style="margin-top:0">${S.formatDate(s.date)}${mins ? ` · ${mins} min` : ''} · ${series(S.doneSets(s))} · ${vol(S.sessionVolume(s))}</p>
       ${s.exercises.map((e) => `<div style="margin-bottom:10px"><b class="small">${esc(S.exById(e.exId).name)}</b> <span class="muted small">(${S.unitFor(e.exId)})</span>
-        <div class="muted small">${e.sets.map((x) => `${x.pr ? '🏆' : ''}${sideTag(x)}${wn(x.kg, S.unitFor(e.exId))}×${x.reps}${x.effort !== '' && x.effort !== undefined ? ` @${x.effort}` : ''}`).join(' · ')}</div>
+        <div class="muted small">${e.sets.map((x) => `${x.pr ? ICON_TROPHY : ''}${sideTag(x)}${wn(x.kg, S.unitFor(e.exId))}×${x.reps}${x.effort !== '' && x.effort !== undefined ? ` @${x.effort}` : ''}`).join(' · ')}</div>
         ${e.warmup?.length ? `<div class="muted small">Aproximación: ${e.warmup.map((w) => `${wn(w.kg, S.unitFor(e.exId))}×${w.reps}`).join(' · ')}</div>` : ''}
-        ${e.note ? `<div class="muted small">📝 ${esc(e.note)}</div>` : ''}</div>`).join('')}
+        ${e.note ? `<div class="muted small"><b>Nota:</b> ${esc(e.note)}</div>` : ''}</div>`).join('')}
       <div class="stack">
         <button class="btn block" data-action="edit-session" data-id="${s.id}">Editar entrenamiento</button>
         <button class="btn block ghost danger" data-action="delete-session" data-id="${s.id}">Eliminar entrenamiento</button>
@@ -2412,7 +2414,7 @@ const actions = {
   'win-signup': () => openLogin('signup', { back: null, onDone: () => {
     closeSheet();
     document.getElementById('win-save')?.remove();
-    toast('✅ Cuenta creada · tus entrenamientos ya están en la nube');
+    toast('Cuenta creada · tus entrenamientos ya están en la nube');
     render();
   } }),
   'win-signup-later': () => document.getElementById('win-save')?.remove(),
@@ -2662,7 +2664,7 @@ if ('serviceWorker' in navigator && location.protocol === 'https:') {
   try {
     if (sessionStorage.getItem('gymtrack.updated')) {
       sessionStorage.removeItem('gymtrack.updated');
-      setTimeout(() => toast('✨ App actualizada a la última versión'), 400);
+      setTimeout(() => toast('App actualizada a la última versión'), 400);
     }
   } catch {}
 }
