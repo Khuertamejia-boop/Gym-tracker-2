@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Mi plan: «Volumen semanal» ya no lleva el emoji 📊.
 - Logo nuevo: pesa blanca de formas redondeadas sobre fondo carmesí en degradado (icono del iPhone, pestaña del navegador y pantalla de bienvenida).
 - Resumen final: la tarjeta «Guarda tu progreso» ya no tiene el disquete ni fondo rosa. Ahora es blanca (como «Ejercicios»), con un icono de nube con check, una frase corta y «Ahora no» en gris, para que Compartir sea el protagonista.
 - Mejores recomendaciones de rutina: con 5 días (intermedio/avanzado) se recomienda la nueva «Torso / Pierna + PPL», que entrena cada músculo 2 veces; con 6-7 días, Push/Pull/Legs (principiante e intermedio) o Arnold Split (avanzado). Con 7 días se sugiere dejar uno de descanso.

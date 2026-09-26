@@ -234,7 +234,7 @@ function renderPlan() {
     <div class="plan-tiles">${tiles}</div>
 
     ${groups.length ? `<details class="vol-acc" ${ui.volOpen ? 'open' : ''}>
-      <summary><span class="grow">📊 Volumen semanal</span><span class="muted small">series hechas / plan</span><span class="acc-chev" aria-hidden="true">⌄</span></summary>
+      <summary><span class="grow">Volumen semanal</span><span class="muted small">series hechas / plan</span><span class="acc-chev" aria-hidden="true">⌄</span></summary>
       <div class="vol-body">
         ${volumeRows}
         <div class="vol-legend muted small"><span class="lg-band"></span> Zona para hipertrofia: ${VOLUME_MIN}–${VOLUME_MAX} series por músculo. Los músculos secundarios cuentan como media serie.</div>
