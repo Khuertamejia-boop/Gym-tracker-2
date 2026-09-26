@@ -10,7 +10,6 @@ export const W = 1080;
 export const H = 1920;
 const RED = '#e0302a';
 const ACCENT = '#d9233a';
-const GRAY = '#8e8e93';
 const FONT = '-apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
 const font = (weight, size) => `${weight} ${size}px ${FONT}`;
 
@@ -67,13 +66,6 @@ function spaced(g, text, x, y, spacing, align = 'left') {
   g.textAlign = prev;
 }
 
-function fitText(g, text, maxWidth, weight, size) {
-  let s = size;
-  g.font = font(weight, s);
-  while (g.measureText(text).width > maxWidth && s > 20) { s -= 2; g.font = font(weight, s); }
-  return s;
-}
-
 // 7518 → "7.518" (el formato español no agrupa números de 4 cifras).
 export const groupNum = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
@@ -93,155 +85,137 @@ export function sessionStats(session) {
   };
 }
 
-// Mejor récord del entrenamiento y la marca anterior de ese ejercicio.
-export function bestRecord(session) {
-  let best = null;
-  for (const e of session.exercises) {
-    for (const x of e.sets) {
-      if (!x.pr) continue;
-      if (!best || (x.pr === 'peso') > (best.set.pr === 'peso') || Number(x.kg) > Number(best.set.kg)) best = { e, set: x };
-    }
-  }
-  if (!best) return null;
-  let prev = 0;
-  for (const s of S.getState().sessions) {
-    if (s.id === session.id || s.date > session.date) continue;
-    for (const e of s.exercises) if (e.exId === best.e.exId) for (const x of e.sets) prev = Math.max(prev, Number(x.kg) || 0);
-  }
-  return { ...best, prev };
+// Medidas de un texto con espaciado entre letras.
+function spacedWidth(g, text, spacing) {
+  return [...text].reduce((a, ch) => a + g.measureText(ch).width, 0) + spacing * ([...text].length - 1);
 }
 
-function brand(g, y, align = 'center', x = W / 2) {
-  g.font = font(600, 28);
-  g.fillStyle = GRAY;
+// Posición horizontal de un bloque de ancho w según la alineación.
+const MARGIN = 80;
+const blockX = (align, w) => (align === 'center' ? (W - w) / 2 : align === 'right' ? W - MARGIN - w : MARGIN);
+
+function brand(g, y, align, k) {
+  g.font = font(600, Math.round(26 * k));
   const label = 'MI GYM TRACKER';
-  const w = [...label].reduce((a, ch) => a + g.measureText(ch).width, 0) + 7 * (label.length - 1);
-  const start = align === 'center' ? x - (w + 30) / 2 : x;
+  const sp = 6 * k;
+  const dot = 16 * k;
+  const w = dot + 14 * k + spacedWidth(g, label, sp);
+  const x = blockX(align, w);
   g.fillStyle = ACCENT;
-  g.beginPath(); g.arc(start + 8, y - 10, 8, 0, Math.PI * 2); g.fill();
-  g.fillStyle = align === 'center' ? GRAY : 'rgba(255,255,255,0.75)';
-  spaced(g, label, start + 30, y, 7);
+  g.beginPath(); g.arc(x + dot / 2, y - 9 * k, dot / 2, 0, Math.PI * 2); g.fill();
+  g.fillStyle = 'rgba(255,255,255,0.8)';
+  spaced(g, label, x + dot + 14 * k, y, sp);
 }
 
-function statsRow(g, stats, y, { x0 = 80, x1 = W - 80, big = 76, label = 26, color = '#fff' } = {}) {
-  const colW = (x1 - x0) / stats.length;
-  stats.forEach(([v, l], k) => {
-    const x = x0 + colW * k;
-    g.fillStyle = color; g.font = font(700, big); g.textAlign = 'left';
-    g.fillText(v, x, y);
-    g.fillStyle = color === '#fff' ? GRAY : 'rgba(255,255,255,0.8)'; g.font = font(600, label);
-    spaced(g, l.toUpperCase(), x, y + 48, 5);
-  });
-}
-
-async function drawCard(g, session) {
+// Plantilla "Sobre foto": PNG transparente o sobre una foto de la galería.
+// layout: { align: 'left'|'center'|'right', size: 's'|'m'|'l', pos: 'bottom'|'top' }
+async function drawPhoto(g, session, photo, layout = {}) {
+  const align = layout.align || 'left';
+  const k = { s: 0.8, m: 1, l: 1.2 }[layout.size || 'm'];
+  const top = layout.pos === 'top';
   const st = sessionStats(session);
   const [primary, secondary] = sessionMuscles(session);
-  g.fillStyle = '#0b0b0c'; g.fillRect(0, 0, W, H);
-  const glow = g.createRadialGradient(W / 2, 820, 60, W / 2, 820, 820);
-  glow.addColorStop(0, 'rgba(217,35,58,0.30)'); glow.addColorStop(1, 'rgba(217,35,58,0)');
-  g.fillStyle = glow; g.fillRect(0, 0, W, H);
 
-  g.fillStyle = GRAY; g.font = font(600, 30);
-  spaced(g, `${upperDate(session.date)} · ${shortDay(session.dayName).toUpperCase()}`, 80, 170, 6);
-  g.fillStyle = '#fff'; g.font = font(800, 96);
-  g.fillText('Entrenamiento', 80, 290); g.fillText('completado', 80, 395);
-
-  const bw = 600;
-  const [front, back] = await Promise.all([bodyCanvas('front', primary, secondary, bw), bodyCanvas('back', primary, secondary, bw)]);
-  g.drawImage(front, W / 2 - bw + 50, 470);
-  g.drawImage(back, W / 2 - 50, 470);
-
-  g.fillStyle = 'rgba(255,255,255,0.12)'; g.fillRect(80, 1480, W - 160, 2);
-  statsRow(g, [[st.timeShort, 'Tiempo'], [String(st.sets), 'Series'], [st.volume, st.unit]], 1620);
-  brand(g, 1830);
-}
-
-async function drawPhoto(g, session, photo) {
-  const st = sessionStats(session);
-  const [primary, secondary] = sessionMuscles(session);
   if (photo) {
     const r = Math.max(W / photo.width, H / photo.height);
     const pw = photo.width * r, ph = photo.height * r;
     g.drawImage(photo, (W - pw) / 2, (H - ph) / 2, pw, ph);
-    const shade = g.createLinearGradient(0, H * 0.45, 0, H);
-    shade.addColorStop(0, 'rgba(0,0,0,0)'); shade.addColorStop(1, 'rgba(0,0,0,0.62)');
+    const shade = top ? g.createLinearGradient(0, H * 0.55, 0, 0) : g.createLinearGradient(0, H * 0.45, 0, H);
+    shade.addColorStop(0, 'rgba(0,0,0,0)'); shade.addColorStop(1, 'rgba(0,0,0,0.6)');
     g.fillStyle = shade; g.fillRect(0, 0, W, H);
   }
-  g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 28; g.shadowOffsetY = 2;
-  g.fillStyle = '#fff'; g.font = font(700, 32);
-  spaced(g, `${shortDay(session.dayName).toUpperCase()} · ${upperDate(session.date).replace(/^\S+\s/, '')}`, 80, 1250, 5);
 
-  const mini = await bodyCanvas('front', primary, secondary, 230);
-  g.drawImage(mini, 64, 1290);
+  // Medidas del bloque.
+  const eyebrow = `${shortDay(session.dayName).toUpperCase()} · ${upperDate(session.date).replace(/^\S+\s/, '')}`;
   const vol = `${st.volume} ${st.unit}`;
-  const size = fitText(g, vol, W - 360 - 80, 800, 132);
-  g.fillStyle = '#fff'; g.font = font(800, size);
-  g.fillText(vol, 330, 1560);
-  g.font = font(600, 28); g.fillStyle = 'rgba(255,255,255,0.85)';
-  spaced(g, 'VOLUMEN LEVANTADO', 334, 1612, 6);
-
+  const volSize = Math.round(120 * k);
+  const bodyW = Math.round((align === 'center' ? 130 : 150) * k);
+  const mini = await bodyCanvas('front', primary, secondary, bodyW);
   const prs = session.exercises.reduce((a, e) => a + e.sets.filter((x) => x.pr).length, 0);
-  const row = [[st.time, 'Tiempo'], [String(st.sets), 'Series']];
-  if (prs) row.push([`🏆 ${prs}`, prs === 1 ? 'Récord' : 'Récords']);
-  statsRow(g, row, 1745, { x1: 80 + 260 * row.length, big: 64, label: 24, color: '#fff' });
-  g.shadowColor = 'transparent';
-  brand(g, 1860, 'left', 80);
-}
+  const stats = [[st.time, 'Tiempo'], [String(st.sets), 'Series']];
+  if (prs) stats.push([`🏆 ${prs}`, prs === 1 ? 'Récord' : 'Récords']);
 
-async function drawRecord(g, session) {
-  const st = sessionStats(session);
-  const rec = bestRecord(session);
-  const bg = g.createLinearGradient(0, 0, 0, H);
-  bg.addColorStop(0, '#141416'); bg.addColorStop(1, '#0b0b0c');
-  g.fillStyle = bg; g.fillRect(0, 0, W, H);
-  g.textAlign = 'center';
-  g.fillStyle = GRAY; g.font = font(600, 32);
-  spaced(g, 'NUEVO RÉCORD PERSONAL', W / 2, 250, 8, 'center');
+  g.font = font(800, volSize);
+  const volW = Math.min(g.measureText(vol).width, W - 2 * MARGIN - (align === 'center' ? 0 : bodyW + 30 * k));
+  const heroH = align === 'center' ? mini.height + 24 * k + volSize * 0.8 + 50 * k : Math.max(mini.height, volSize + 50 * k);
+  const eyebrowH = 32 * k + 36 * k;
+  const statsH = 64 * k + 48 * k;
+  const blockH = eyebrowH + heroH + 56 * k + statsH + 64 * k + 26 * k;
+  let y = top ? 250 : H - 110 - blockH;
 
-  const cx = W / 2, cy = 590, r = 190;
-  const halo = g.createRadialGradient(cx, cy, r * 0.6, cx, cy, r * 2);
-  halo.addColorStop(0, 'rgba(224,176,74,0.35)'); halo.addColorStop(1, 'rgba(224,176,74,0)');
-  g.fillStyle = halo; g.fillRect(0, cy - r * 2, W, r * 4);
-  const medal = g.createRadialGradient(cx - 60, cy - 70, 20, cx, cy, r);
-  medal.addColorStop(0, '#f6dc97'); medal.addColorStop(0.6, '#c8962e'); medal.addColorStop(1, '#8a6418');
-  g.fillStyle = medal; g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.fill();
-  g.font = font(400, 170); g.textBaseline = 'middle'; g.fillText('🏆', cx, cy + 8); g.textBaseline = 'alphabetic';
-
-  const u = S.unitFor(rec.e.exId);
-  const fmt = (kg) => S.toUnit(kg, u).toLocaleString('es', { maximumFractionDigits: 1 });
-  const value = `${fmt(rec.set.kg)} ${u}`;
-  g.fillStyle = '#fff'; g.font = font(800, fitText(g, value, W - 160, 800, 190));
-  g.fillText(value, cx, 1010);
-  const name = S.exById(rec.e.exId).name;
-  g.font = font(600, fitText(g, name, W - 160, 600, 60));
-  g.fillText(name, cx, 1105);
-  const diff = Number(rec.set.kg) - rec.prev;
-  const sub = rec.set.pr === 'peso' && rec.prev && diff > 0
-    ? `Antes: ${fmt(rec.prev)} ${u} · +${fmt(diff)} ${u}`
-    : `${rec.set.reps} repeticiones · tu mejor serie`;
-  g.fillStyle = GRAY; g.font = font(500, 40); g.fillText(sub, cx, 1175);
-
-  g.fillStyle = 'rgba(255,255,255,0.12)'; g.fillRect(80, 1300, W - 160, 2);
+  g.shadowColor = 'rgba(0,0,0,0.45)'; g.shadowBlur = 28; g.shadowOffsetY = 2;
   g.textAlign = 'left';
-  const cols = [[st.timeShort, 'Tiempo'], [String(st.sets), 'Series'], [st.volume, st.unit]];
-  const colW = (W - 160) / 3;
-  cols.forEach(([v, l], k) => {
-    const x = 80 + colW * k + colW / 2;
-    g.textAlign = 'center'; g.fillStyle = '#fff'; g.font = font(700, 76); g.fillText(v, x, 1440);
-    g.fillStyle = GRAY; g.font = font(600, 26); spaced(g, l.toUpperCase(), x, 1488, 5, 'center');
+
+  // Fecha y día.
+  g.fillStyle = '#fff'; g.font = font(700, Math.round(30 * k));
+  const eyW = spacedWidth(g, eyebrow, 5 * k);
+  spaced(g, eyebrow, blockX(align, eyW), y + 30 * k, 5 * k);
+  y += eyebrowH;
+
+  // Cuerpo + volumen.
+  g.font = font(800, volSize);
+  const labelTxt = 'VOLUMEN LEVANTADO';
+  if (align === 'center') {
+    g.drawImage(mini, (W - mini.width) / 2, y);
+    y += mini.height + 24 * k;
+    g.fillStyle = '#fff'; g.textAlign = 'center';
+    g.fillText(vol, W / 2, y + volSize * 0.8, W - 2 * MARGIN);
+    g.font = font(600, Math.round(26 * k)); g.fillStyle = 'rgba(255,255,255,0.85)';
+    spaced(g, labelTxt, W / 2, y + volSize * 0.8 + 46 * k, 6 * k, 'center');
+    y += volSize * 0.8 + 50 * k;
+  } else {
+    const rowH = heroH;
+    const bodyX = align === 'left' ? MARGIN - 16 * k : W - MARGIN - mini.width + 16 * k;
+    g.drawImage(mini, bodyX, y + rowH - mini.height);
+    const base = y + rowH - 50 * k;
+    g.fillStyle = '#fff';
+    g.textAlign = align === 'left' ? 'left' : 'right';
+    const tx = align === 'left' ? bodyX + mini.width + 20 * k : bodyX - 20 * k;
+    g.fillText(vol, tx, base, volW);
+    g.font = font(600, Math.round(26 * k)); g.fillStyle = 'rgba(255,255,255,0.85)';
+    spaced(g, labelTxt, tx, base + 46 * k, 6 * k, align === 'left' ? 'left' : 'right');
+    y += rowH;
+  }
+  y += 56 * k;
+
+  // Tiempo, series y récords.
+  g.textAlign = 'left';
+  const colGap = 64 * k;
+  const cols = stats.map(([v, l]) => {
+    g.font = font(700, Math.round(60 * k)); const vw = g.measureText(v).width;
+    g.font = font(600, Math.round(22 * k)); const lw = spacedWidth(g, l.toUpperCase(), 5 * k);
+    return { v, l: l.toUpperCase(), w: Math.max(vw, lw) };
   });
-  brand(g, 1830);
+  const rowW = cols.reduce((a, c) => a + c.w, 0) + colGap * (cols.length - 1);
+  let x = blockX(align, rowW);
+  for (const c of cols) {
+    const cx = align === 'center' ? x + c.w / 2 : align === 'right' ? x + c.w : x;
+    const ta = align === 'center' ? 'center' : align === 'right' ? 'right' : 'left';
+    g.textAlign = ta; g.fillStyle = '#fff'; g.font = font(700, Math.round(60 * k));
+    g.fillText(c.v, cx, y + 60 * k);
+    g.fillStyle = 'rgba(255,255,255,0.85)'; g.font = font(600, Math.round(22 * k));
+    spaced(g, c.l, cx, y + 60 * k + 42 * k, 5 * k, ta);
+    x += c.w + colGap;
+  }
+  y += statsH + 64 * k;
+  g.textAlign = 'left';
+  g.shadowColor = 'rgba(0,0,0,0.35)';
+  brand(g, y, align, k);
+  g.shadowColor = 'transparent';
 }
 
-// Devuelve el canvas de la plantilla pedida. photo: imagen de la galería (plantilla 'photo').
-export async function renderShare(kind, session, { photo } = {}) {
+// Devuelve el canvas de la imagen. photo: imagen de la galería (opcional).
+// background: color de fondo (para miniaturas); sin él, PNG transparente.
+export async function renderShare(session, { photo, layout, background } = {}) {
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
   const g = c.getContext('2d');
   g.textBaseline = 'alphabetic';
-  if (kind === 'record') await drawRecord(g, session);
-  else if (kind === 'photo') await drawPhoto(g, session, photo);
-  else await drawCard(g, session);
+  if (background && !photo) {
+    const bg = g.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#3a3f46'); bg.addColorStop(1, background);
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  }
+  await drawPhoto(g, session, photo, layout);
   return c;
 }

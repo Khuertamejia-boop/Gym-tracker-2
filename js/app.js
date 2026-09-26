@@ -5,7 +5,7 @@ import { TEMPLATES } from './data/templates.js';
 import { lineChart, sparkArea, destroyCharts } from './charts.js';
 import * as Cloud from './cloud.js';
 import { mountMuscleMaps, musclesFor, muscleNames } from './body.js';
-import { renderShare, bestRecord, groupNum } from './share.js';
+import { renderShare, groupNum } from './share.js';
 
 const $view = document.getElementById('view');
 const $title = document.getElementById('view-title');
@@ -656,15 +656,28 @@ function afterMarking(anyPr) {
 
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
+const ICON_AL = {
+  left: '<svg viewBox="0 0 24 24"><path d="M4 5h16v2H4V5Zm0 4h10v2H4V9Zm0 4h16v2H4v-2Zm0 4h10v2H4v-2Z"/></svg>',
+  center: '<svg viewBox="0 0 24 24"><path d="M4 5h16v2H4V5Zm3 4h10v2H7V9Zm-3 4h16v2H4v-2Zm3 4h10v2H7v-2Z"/></svg>',
+  right: '<svg viewBox="0 0 24 24"><path d="M4 5h16v2H4V5Zm6 4h10v2H10V9Zm-6 4h16v2H4v-2Zm6 4h10v2H10v-2Z"/></svg>',
+  top: '<svg viewBox="0 0 24 24"><path d="M4 3h16v2H4V3Zm4 4h8v6H8V7Z"/></svg>',
+  bottom: '<svg viewBox="0 0 24 24"><path d="M4 19h16v2H4v-2Zm4-8h8v6H8v-6Z"/></svg>',
+};
+
 function openShare(session) {
-  const kinds = [['card', 'Tarjeta'], ['photo', 'Sobre foto']];
-  if (bestRecord(session)) kinds.push(['record', 'Récord']);
-  const state = { kind: 'card', photo: null, canvas: null, token: 0 };
+  const st = S.getState().settings;
+  const layout = { align: 'left', size: 'm', pos: 'bottom', ...(st.shareLayout || {}) };
+  const state = { photo: null, canvas: null, token: 0 };
+  const seg = (key, opts) => `<div class="segmented share-seg" role="group">${opts.map(([v, label, aria]) =>
+    `<button type="button" data-l="${key}" data-v="${v}" aria-label="${aria}">${label}</button>`).join('')}</div>`;
 
   openSheet('Compartir', `
-    <div class="segmented share-tabs" role="tablist">${kinds.map(([k, l]) => `<button type="button" data-kind="${k}" role="tab">${l}</button>`).join('')}</div>
-    <div class="share-stage"><div class="share-frame"><img alt="Vista previa de la imagen"><span class="share-spin" aria-hidden="true"></span></div></div>
-    <div class="share-dots" aria-hidden="true">${kinds.map(() => '<i></i>').join('')}</div>
+    <div class="share-stage"><div class="share-frame checker"><img alt="Vista previa de la imagen"><span class="share-spin" aria-hidden="true"></span></div></div>
+    <div class="share-tools">
+      ${seg('align', [['left', ICON_AL.left, 'Alinear a la izquierda'], ['center', ICON_AL.center, 'Centrar'], ['right', ICON_AL.right, 'Alinear a la derecha']])}
+      ${seg('size', [['s', '<span class="a-s">A</span>', 'Texto pequeño'], ['m', '<span class="a-m">A</span>', 'Texto mediano'], ['l', '<span class="a-l">A</span>', 'Texto grande']])}
+      ${seg('pos', [['top', ICON_AL.top, 'Arriba'], ['bottom', ICON_AL.bottom, 'Abajo']])}
+    </div>
     <p class="share-hint muted small"></p>
     <div class="share-acts">
       <button type="button" data-act="share"><span class="ic p">${ICON_SHARE}</span>Compartir</button>
@@ -678,14 +691,11 @@ function openShare(session) {
     const draw = async () => {
       const token = ++state.token;
       frame.classList.add('loading');
-      root.querySelectorAll('[data-kind]').forEach((b) => b.classList.toggle('active', b.dataset.kind === state.kind));
-      root.querySelectorAll('.share-dots i').forEach((d, k) => d.classList.toggle('on', kinds[k][0] === state.kind));
-      frame.classList.toggle('checker', state.kind === 'photo' && !state.photo);
-      hint.textContent = state.kind === 'photo'
-        ? (state.photo ? 'Tu foto con los datos del entrenamiento.' : 'PNG transparente: pégalo sobre tu foto en Instagram, o toca "Usar mi foto".')
-        : '';
+      root.querySelectorAll('[data-l]').forEach((b) => b.classList.toggle('active', layout[b.dataset.l] === b.dataset.v));
+      frame.classList.toggle('checker', !state.photo);
+      hint.textContent = state.photo ? 'Tu foto con los datos del entrenamiento.' : 'PNG transparente: pégalo sobre tu foto en Instagram, o toca "Usar mi foto".';
       try {
-        const c = await renderShare(state.kind, session, { photo: state.kind === 'photo' ? state.photo : null });
+        const c = await renderShare(session, { photo: state.photo, layout });
         if (token !== state.token) return;
         state.canvas = c;
         img.src = c.toDataURL('image/png');
@@ -696,17 +706,12 @@ function openShare(session) {
       }
     };
 
-    root.querySelectorAll('[data-kind]').forEach((b) => b.addEventListener('click', () => { state.kind = b.dataset.kind; draw(); }));
-    // Deslizar a los lados para cambiar de plantilla.
-    let x0 = null;
-    frame.addEventListener('touchstart', (e) => { x0 = e.touches[0].clientX; }, { passive: true });
-    frame.addEventListener('touchend', (e) => {
-      if (x0 === null) return;
-      const dx = e.changedTouches[0].clientX - x0; x0 = null;
-      if (Math.abs(dx) < 50) return;
-      const k = kinds.findIndex(([kk]) => kk === state.kind) + (dx < 0 ? 1 : -1);
-      if (k >= 0 && k < kinds.length) { state.kind = kinds[k][0]; draw(); }
-    });
+    root.querySelectorAll('[data-l]').forEach((b) => b.addEventListener('click', () => {
+      layout[b.dataset.l] = b.dataset.v;
+      st.shareLayout = { ...layout }; // se recuerda para la próxima vez
+      S.save();
+      draw();
+    }));
 
     root.querySelector('input[type=file]').addEventListener('change', async (e) => {
       const file = e.target.files[0];
@@ -717,13 +722,12 @@ function openShare(session) {
         const url = URL.createObjectURL(file);
         state.photo = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = url; });
       }
-      state.kind = 'photo';
       draw();
     });
 
     const toFile = async () => {
       const blob = await new Promise((r) => state.canvas.toBlob(r, 'image/png'));
-      return new File([blob], `entrenamiento-${session.date}-${state.kind}.png`, { type: 'image/png' });
+      return new File([blob], `entrenamiento-${session.date}.png`, { type: 'image/png' });
     };
     const download = (file) => {
       const a = document.createElement('a');
@@ -1599,7 +1603,7 @@ function showSummary(session) {
   overlay.querySelector('.win-done').addEventListener('click', close);
   overlay.querySelector('[data-share]').addEventListener('click', () => openShare(session));
   // Miniatura real de la historia dentro del botón: invita a compartir.
-  renderShare('card', session).then((c) => {
+  renderShare(session, { background: '#15171a', layout: S.getState().settings.shareLayout }).then((c) => {
     const t = document.createElement('canvas');
     t.width = 180; t.height = 320;
     t.getContext('2d').drawImage(c, 0, 0, 180, 320);

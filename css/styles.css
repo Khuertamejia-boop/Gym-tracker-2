@@ -971,3 +971,12 @@ button.pt:active { background: var(--surface-2); }
 .win-exs[open] .acc-chev { transform: rotate(180deg); }
 .win-exs .win-list { margin: 0; padding: 0 16px 6px; }
 .win-exs .win-ex { padding: 11px 0; font-size: 0.92rem; }
+
+/* Controles de diseño de la imagen para compartir */
+.share-tools { display: flex; justify-content: center; gap: 6px; margin: 4px 0 2px; }
+.share-seg { display: inline-flex; }
+.share-seg button { width: 36px; height: 34px; padding: 0; display: grid; place-items: center; }
+.share-seg svg { width: 18px; height: 18px; fill: currentColor; }
+.share-seg .a-s { font-size: 0.72rem; font-weight: 700; }
+.share-seg .a-m { font-size: 0.95rem; font-weight: 700; }
+.share-seg .a-l { font-size: 1.2rem; font-weight: 700; }
