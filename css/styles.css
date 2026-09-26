@@ -206,22 +206,9 @@ button.list-item { width: 100%; background: none; border-left: 0; border-right: 
 
 /* ---------- Semana ---------- */
 .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-.week-day {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 8px 2px; border-radius: 10px; background: var(--surface-2);
-  font-size: 0.7rem; color: var(--text-2); text-align: center; min-width: 0;
-}
-.week-day b { font-size: 0.85rem; color: var(--text); }
-.week-day.today { outline: 2px solid var(--accent); }
-.week-day.done { background: var(--good-soft); }
-.week-day .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-.week-day.rest .dot { background: transparent; }
-.week-day span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 
 /* ---------- Sesión de entrenamiento ---------- */
-.session-head { position: sticky; top: 60px; z-index: 5; }
-.ex-card .ex-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
-.ex-card .ex-head h3 { font-size: 1rem; }
+
 .sets { width: 100%; border-collapse: separate; border-spacing: 0 6px; }
 .sets th { font-size: 0.7rem; font-weight: 600; color: var(--text-3); text-transform: uppercase; text-align: center; }
 .sets td { text-align: center; padding: 0 2px; }
@@ -281,14 +268,13 @@ details.table-view td:first-child, details.table-view th:first-child { text-alig
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
 /* ---------- v2: sugerencias, notas, fichas, cuenta ---------- */
 .hint {
   margin: 0 0 6px; padding: 8px 10px; border-radius: 10px;
   background: var(--surface-2); color: var(--text-2); font-size: 0.82rem; line-height: 1.35;
 }
-.hint.hint-up { background: var(--good-soft); color: var(--text); }
+
 .link-btn { border: 0; background: none; padding: 0; text-align: left; color: inherit; }
 .link-btn h3 { text-decoration: underline dotted var(--text-3); text-underline-offset: 3px; }
 textarea.note {
@@ -297,10 +283,7 @@ textarea.note {
 }
 .segmented.tabs { display: grid; grid-auto-columns: 1fr; width: 100%; }
 .segmented.tabs button { padding: 7px 4px; font-size: 0.8rem; }
-.banner {
-  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-  background: var(--accent-soft); border-color: transparent; font-size: 0.9rem;
-}
+
 input[type="email"], input[type="password"] {
   width: 100%; min-height: 44px; padding: 8px 12px;
   border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
@@ -334,14 +317,13 @@ body.onboarding { padding-bottom: 32px; }
 .day-toggle.on b { color: var(--accent-ink); }
 .card.recommended { border: 1.5px solid var(--accent); }
 details.more { margin-top: 12px; }
-details.more > summary, details.more-inline > summary {
+details.more > summary {
   cursor: pointer; color: var(--accent); font-weight: 600; padding: 10px 4px; list-style: none;
 }
-details.more > summary::-webkit-details-marker, details.more-inline > summary::-webkit-details-marker { display: none; }
-details.more > summary::before, details.more-inline > summary::before { content: '＋ '; }
-details.more[open] > summary::before, details.more-inline[open] > summary::before { content: '－ '; }
-.week-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 10px; }
-.week-legend b { color: var(--text); }
+details.more > summary::-webkit-details-marker { display: none; }
+details.more > summary::before { content: '＋ '; }
+details.more[open] > summary::before { content: '－ '; }
+
 .segmented.unit-switch { padding: 2px; border-radius: 8px; }
 .segmented.unit-switch button { padding: 2px 9px; font-size: 0.75rem; border-radius: 6px; }
 
@@ -352,7 +334,7 @@ details.more[open] > summary::before, details.more-inline[open] > summary::befor
 }
 .thumb svg { width: 100% !important; height: 100% !important; display: block; }
 .thumb [data-muscle-map] { width: 100%; height: 100%; display: block; }
-.thumb-sm { width: 48px; height: 48px; border-radius: 10px; }
+
 .plan-chips .chip { font-size: 0.9rem; padding: 7px 14px; }
 .plan-chips .chip .ok { color: var(--good); }
 .plan-chips .chip.active .ok { color: inherit; }
@@ -379,8 +361,6 @@ details.more[open] > summary::before, details.more-inline[open] > summary::befor
 .sw-primary { background: #e0302a; }
 .sw-secondary { background: #e0302a; opacity: 0.45; }
 .tag-primary { background: rgb(224 48 42 / 18%); color: var(--text); }
-.ex-card .ex-head { align-items: flex-start; }
-.ex-card .ex-head .thumb-sm { margin-top: 2px; }
 
 /* ---------- v5: menú de cuenta y ajustes ---------- */
 .profile-btn { position: relative; color: var(--text-2); }
@@ -449,10 +429,10 @@ body.no-scroll { overflow: hidden; }
   display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 14px 6px;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
 }
-.win-stat .win-icon { font-size: 1.2rem; }
+
 .win-stat b { font-size: 1.6rem; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.2; }
 .win-stat span:last-child { font-size: 0.78rem; color: var(--text-2); }
-.win-note { color: var(--good); font-weight: 600; margin: 6px 0; }
+
 .win-week {
   display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin: 12px 0;
@@ -460,7 +440,7 @@ body.no-scroll { overflow: hidden; }
 .win-week .dots { display: inline-flex; gap: 6px; }
 .win-week .dots i { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
 .win-week .dots i.on { background: var(--gold); }
-.win-phrase { font-style: italic; color: var(--text-2); margin: 16px 8px 20px; }
+
 .win-done { min-height: 54px; font-size: 1.05rem; border-radius: 14px; }
 @media (prefers-reduced-motion: reduce) {
   .celebrate { animation: none; }
@@ -529,10 +509,7 @@ body.in-session main { padding-top: calc(env(safe-area-inset-top) + 8px); }
 .set-row.done .set-check { background: var(--good); border-color: var(--good); color: #fff; }
 .set-actions { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
 .add-set { display: inline-flex; align-items: center; gap: 10px; border: 0; background: none; color: var(--accent); font-weight: 600; padding: 4px 0; }
-.add-set .plus {
-  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
-  background: var(--accent); color: var(--accent-ink); font-size: 1.5rem; line-height: 1;
-}
+
 .session-cta {
   position: sticky; bottom: calc(env(safe-area-inset-bottom) + 12px); margin-top: 20px; z-index: 4;
 }
@@ -640,11 +617,9 @@ body.in-session .toast.show { transform: translateX(-50%) translateY(0); }
 .data-links .link.danger { color: var(--danger); }
 
 /* ---------- Mi plan ---------- */
-.plan-card .plan-progress { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
-.plan-progress .dots, .win-week .dots { display: inline-flex; gap: 6px; }
-.plan-progress .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
-.plan-progress .dots i.on { background: var(--gold); }
-.plan-week { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+
+.win-week .dots { display: inline-flex; gap: 6px; }
+
 .plan-day {
   display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; min-height: 64px;
   border: 0; border-bottom: 1px solid var(--border); background: none; color: inherit; font: inherit; text-align: left;
@@ -653,24 +628,7 @@ body.in-session .toast.show { transform: translateX(-50%) translateY(0); }
 button.plan-day { cursor: pointer; }
 button.plan-day:active { background: var(--surface-2); }
 .plan-day[data-past] { opacity: 0.55; }
-.pd-date {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; flex: none;
-  width: 44px; height: 44px; border-radius: 12px; background: var(--surface-2); line-height: 1.05;
-}
-.pd-date small { font-size: 0.68rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; }
-.pd-date b { font-size: 1.05rem; }
-.plan-day[data-rest] .pd-name { color: var(--text-3); font-weight: 500; }
-.pd-name { display: block; font-weight: 600; }
-.pd-meta { display: block; font-size: 0.82rem; color: var(--text-3); margin-top: 1px; }
-.pd-moved { font-size: 0.7rem; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 999px; padding: 1px 7px; margin-left: 4px; vertical-align: 1px; }
-.pd-badge { flex: none; font-size: 0.75rem; font-weight: 700; border-radius: 999px; padding: 3px 9px; }
-.pd-badge.today { background: var(--accent); color: var(--accent-ink); }
-.pd-badge.missed { color: var(--text-3); padding: 0; font-weight: 500; }
-.pd-badge.done { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; background: var(--good-soft); }
-.pd-badge.done svg { width: 16px; height: 16px; fill: var(--good); }
-.plan-hint { margin: 8px 4px 0; }
 
-.vol-card { padding: 14px 16px; }
 .vol-row { display: grid; grid-template-columns: 104px 1fr auto; align-items: center; gap: 10px; padding: 6px 0; }
 .vol-name { font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vz { display: block; font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -706,8 +664,7 @@ button.plan-day:active { background: var(--surface-2); }
 .win-stat svg { width: 20px; height: 20px; fill: var(--text); margin-bottom: 4px; }
 .win-stat b { font-size: 1.05rem; letter-spacing: -0.01em; white-space: nowrap; }
 .win-stat span:last-child { font-size: 0.78rem; color: var(--text-3); }
-.win-note { font-size: 0.92rem; margin: 4px 0; }
-.win-list-head { text-align: left; font-weight: 700; font-size: 1.05rem; margin: 20px 4px 6px; }
+
 .win-list { text-align: left; }
 .win-ex { display: flex; align-items: center; gap: 14px; padding: 10px 4px; border-bottom: 1px solid var(--border); }
 .win-ex:last-child { border-bottom: 0; }
@@ -717,15 +674,13 @@ button.plan-day:active { background: var(--surface-2); }
 .win-pr { font-size: 0.85rem; }
 .win-week { border-radius: 18px; border-color: transparent; background: var(--surface-2); margin-top: 18px; }
 
-.win-phrase { font-style: normal; color: var(--text-3); font-size: 0.9rem; margin: 14px 8px 0; }
 .win-foot {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 2; padding: 12px 16px calc(env(safe-area-inset-bottom) + 12px);
   background: linear-gradient(to top, var(--bg) 70%, transparent);
 }
 .win-foot { display: flex; gap: 10px; justify-content: center; }
 .win-foot .win-done { max-width: 400px; margin: 0; min-height: 54px; }
-.win-share { width: 54px; height: 54px; padding: 0; border-radius: 14px; display: grid; place-items: center; flex: none; }
-.win-share svg { width: 24px; height: 24px; fill: currentColor; }
+
 @media (prefers-reduced-motion: reduce) { .win-check { animation: none; } }
 
 /* ---------- Progreso: analíticas ---------- */
@@ -877,7 +832,6 @@ button.pt:active { background: var(--surface-2); }
 .vol-acc[open] .acc-chev { transform: rotate(180deg); }
 .vol-body { padding: 0 16px 14px; }
 
-
 /* ---------- Resumen: compartir como protagonista ---------- */
 .share-cta {
   display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; height: 56px; margin: 18px 0 6px;
@@ -892,7 +846,7 @@ button.pt:active { background: var(--surface-2); }
 .win-foot .win-done { background: var(--surface-2); border-color: transparent; color: var(--text-2); font-weight: 600; max-width: 460px; }
 
 /* ---------- Hoja de compartir ---------- */
-.share-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); width: 100%; }
+
 .share-stage { display: flex; justify-content: center; margin: 16px 0 10px; }
 .share-frame {
   position: relative; height: min(46vh, 400px); aspect-ratio: 9 / 16; border-radius: 18px; overflow: hidden;
@@ -908,9 +862,7 @@ button.pt:active { background: var(--surface-2); }
 }
 .share-frame.loading .share-spin { display: block; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.share-dots { display: flex; gap: 6px; justify-content: center; }
-.share-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
-.share-dots i.on { background: var(--text); }
+
 .share-hint { text-align: center; min-height: 1.4em; margin: 8px 12px 4px; }
 .share-acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 6px 0 4px; text-align: center; }
 .share-acts > * {

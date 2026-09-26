@@ -76,9 +76,26 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - Cuentas del dueño: la de **iCloud** es la principal (datos reales); la de **Gmail** es solo para probar la app.
   Al cerrar sesión se sincroniza y se vacía el dispositivo (`S.clearLocal()`), para cambiar de cuenta sin mezclar datos.
 
+## Plan: app nativa para iOS (decidido el 26-09-2026)
+
+- El dueño hará después una **app nativa en Xcode (SwiftUI)** con Claude integrado en Xcode (26.3+, plan Pro, por tandas).
+  La web es la **maqueta viva**: primero se terminan los detalles visuales pendientes y luego se **congela**
+  (solo arreglos). Web y app son desarrollos independientes (JS vs Swift); se comparten diseño, decisiones y datos.
+- Datos de la app: recomendado **iCloud (CloudKit/SwiftData)**: gratis a cualquier escala, sin cuentas ni correos,
+  sincroniza solo los cambios. El dueño **no quiere pagar Supabase Pro (25 $/mes)**.
+- Supabase gratis se queda **solo para la web** mientras dura el desarrollo. No se pausa si se usa al menos una vez
+  cada 7 días (si se pausa: «Restore» en el panel, sin perder datos). La sincronización actual sube/baja el JSON
+  completo, pero con 1–2 usuarios es ~1 % del límite: **no cambiarla**.
+- Importar el historial de la web a la app una vez (exportar JSON desde la web → importar en la app).
+  Ojo: «Respaldo de datos» (exportar) solo aparece en el menú sin sesión; habrá que mostrarlo también con sesión.
+
 ## Pendientes (al 26-09-2026)
 
 - Confirmar en un iPhone real el giro con dos dedos y el toque para alinear del sticker de Compartir.
+- **Siguiente paso del dueño:** mandar en un solo mensaje su lista de detalles visuales para simplificar la web
+  (quitar información, más limpio). Hacerlos en una tanda, con maquetas si son cambios grandes; después, congelar la web.
+- Opcional: hacer más pequeños los enlaces «+ Aproximación / Quitar» bajo las filas de aproximación (lo ofrecí; sin respuesta).
+- Cuando empiece con Xcode: preparar un documento con el plan de la app (pantallas, datos, estilo, orden de trabajo).
 - Ideas de fase 4 (no pedidas aún): superseries, recordatorios los días de entreno, semana de descarga.
 - Ahorro: los chats muy largos consumen muchos créditos de la nube; conviene empezar chats nuevos
   (este archivo da el contexto) y agrupar cambios pequeños en un solo mensaje.

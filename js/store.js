@@ -234,11 +234,6 @@ export function addRoutine(routine, makeActive = true) {
   return routine;
 }
 
-export function newEmptyRoutine(name = 'Mi rutina') {
-  const day = { id: uid(), name: 'Día 1', exercises: [] };
-  return { id: uid(), name, days: [day], week: [day.id, null, null, null, null, null, null] };
-}
-
 export const routineById = (id) => state.routines.find((r) => r.id === id);
 export const activeRoutine = () => routineById(state.activeRoutineId);
 

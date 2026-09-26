@@ -936,15 +936,6 @@ function muscleChips(active, action) {
   </div>`;
 }
 
-function exerciseListHTML(list, action) {
-  if (!list.length) return '<div class="empty small">No hay ejercicios que coincidan.</div>';
-  return `<div class="list">${list.map((e) => `
-    <button class="list-item" data-action="${action}" data-id="${e.id}">
-      <div class="grow"><div>${esc(e.name)}</div><div class="muted small">${esc(e.muscle)} · ${esc(e.equipment)}${e.custom ? ' · propio' : ''}</div></div>
-      <span class="muted">›</span>
-    </button>`).join('')}</div>`;
-}
-
 function showExerciseDetail(id, tab = ui.exTab) {
   ui.exTab = tab;
   const ex = S.exById(id);
@@ -1948,7 +1939,6 @@ function applyTheme() {
 // =====================================================================
 
 const actions = {
-  goto: (b) => setTab(b.dataset.tab),
   'open-menu': openMenu,
   'open-settings': openSettings,
   'open-login': () => openLogin('login'),
