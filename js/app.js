@@ -664,6 +664,13 @@ const ICON_AL = {
   right: '<svg viewBox="0 0 24 24"><path d="M4 5h16v2H4V5Zm6 4h10v2H10V9Zm-6 4h16v2H4v-2Zm6 4h10v2H10v-2Z"/></svg>',
 };
 const NEXT_ALIGN = { left: 'center', center: 'right', right: 'left' };
+// Fondos para compartir sin foto: [arriba, abajo] del degradado y color de texto que le va.
+const SHARE_BGS = {
+  none: null,
+  dark: { top: '#3a3f46', bottom: '#15171a', ink: 'white' },
+  light: { top: '#f5f5f7', bottom: '#d9d9de', ink: 'black' },
+};
+const NEXT_BG = { none: 'dark', dark: 'light', light: 'none' };
 
 // Compartir: el bloque de datos es un "sticker" sobre la vista previa. Se arrastra con
 // un dedo, con dos se pellizca (tamaño) y se gira, y un toque cambia la alineación.
@@ -671,7 +678,7 @@ const NEXT_ALIGN = { left: 'center', center: 'right', right: 'left' };
 function openShare(session) {
   const st = S.getState().settings;
   const saved = st.shareLayout || {};
-  const state = { align: saved.align || 'left', color: saved.color || 'white', t: saved.t || null, photo: null, sticker: null, autoColor: false };
+  const state = { align: saved.align || 'left', color: saved.color || 'white', bg: SHARE_BGS[saved.bg] ? saved.bg : 'none', t: saved.t || null, photo: null, sticker: null, autoColor: false };
 
   openSheet('Compartir', `
     <div class="share-stage">
@@ -688,6 +695,7 @@ function openShare(session) {
       <button type="button" data-act="share"><span class="ic p">${ICON_SHARE}</span>Compartir</button>
       <button type="button" data-act="save"><span class="ic">${ICON_SAVE}</span>Guardar</button>
       <label><span class="ic">${ICON_PHOTO}</span>Usar mi foto<input type="file" accept="image/*" hidden></label>
+      <button type="button" data-act="bg" aria-label="Fondo sin foto"><span class="ic"><i class="bg-dot ${state.bg}"></i></span>Fondo</button>
       <button type="button" data-act="color" aria-label="Color del texto"><span class="ic"><i class="ink-dot ${state.color}"></i></span>Color</button>
     </div>`, (root) => {
     const frame = root.querySelector('.share-frame');
@@ -706,7 +714,7 @@ function openShare(session) {
       stickerImg.style.top = `${t.cy * r - h / 2}px`;
       stickerImg.style.transform = t.r ? `rotate(${t.r}rad)` : '';
     };
-    const save = () => { st.shareLayout = { align: state.align, color: state.color, t: { ...state.t } }; S.save(); };
+    const save = () => { st.shareLayout = { align: state.align, color: state.color, bg: state.bg, t: { ...state.t } }; S.save(); };
     const colorDot = root.querySelector('.ink-dot');
 
     const load = async (keepHeight) => {
@@ -738,6 +746,24 @@ function openShare(session) {
     };
     // Con foto: color automático según lo clara u oscura que sea la zona detrás del bloque.
     const autoColor = () => { if (state.photo && state.autoColor && state.sticker) setColor(autoInk(state.photo, state.sticker, state.t)); };
+    // Fondo sin foto: transparente → oscuro → claro (sin carmesí: taparía el punto rojo). Quita la foto si había una.
+    const bgDot = root.querySelector('.bg-dot');
+    const paintBg = () => {
+      const bg = SHARE_BGS[state.bg];
+      bgDot.className = `bg-dot ${state.bg}`;
+      frame.style.background = bg && !state.photo ? `linear-gradient(${bg.top}, ${bg.bottom})` : '';
+      frame.classList.toggle('checker', !bg && !state.photo);
+    };
+    paintBg();
+    root.querySelector('[data-act="bg"]').addEventListener('click', async () => {
+      state.bg = NEXT_BG[state.bg];
+      if (state.photo) { state.photo = null; photoImg.hidden = true; photoImg.removeAttribute('src'); }
+      state.autoColor = false;
+      paintBg();
+      const bg = SHARE_BGS[state.bg];
+      if (bg) await setColor(bg.ink);
+      save();
+    });
     root.querySelector('[data-act="color"]').addEventListener('click', () => {
       state.autoColor = false;
       setColor(state.color === 'white' ? 'black' : 'white');
@@ -836,13 +862,14 @@ function openShare(session) {
       }
       photoImg.src = URL.createObjectURL(file);
       photoImg.hidden = false;
-      frame.classList.remove('checker');
+      paintBg();
       state.autoColor = true;
       autoColor();
     });
 
     const toFile = async () => {
-      const c = composeShare({ sticker: state.sticker, photo: state.photo, t: state.t });
+      const bg = !state.photo && SHARE_BGS[state.bg];
+      const c = composeShare({ sticker: state.sticker, photo: state.photo, t: state.t, background: bg?.bottom, backgroundTop: bg?.top });
       const blob = await new Promise((r) => c.toBlob(r, 'image/png'));
       return new File([blob], `entrenamiento-${session.date}.png`, { type: 'image/png' });
     };

@@ -109,7 +109,7 @@ export const INKS = {
 
 function brand(g, y, align, k, ink = INKS.white) {
   g.font = font(600, Math.round(26 * k));
-  const label = 'MI GYM TRACKER';
+  const label = 'GYM TRACKER APP';
   const sp = 6 * k;
   const dot = 16 * k;
   const w = dot + 14 * k + spacedWidth(g, label, sp);

@@ -68,9 +68,11 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   sticker: se arrastra con un dedo, con dos se pellizca (tamaño, imán al centro) y se gira (imán a recto);
   un toque cambia la alineación izquierda → centro → derecha (sin botón; el icono aparece un momento).
   Nada de botones sobre la imagen. Sin sombra detrás del texto (se probó un halo que seguía al sticker y el dueño lo descartó).
-  Color del texto: 4.º botón «Color» (blanco/negro, `INKS` en `js/share.js`); con foto, automático
+  Botón «Fondo» (26-09-2026) para compartir sin foto: transparente → oscuro → claro (`SHARE_BGS` en `js/app.js`;
+  sin carmesí porque tapa el punto rojo de la firma). Firma del sticker: «GYM TRACKER APP» con punto rojo.
+  Color del texto: botón «Color» (blanco/negro, `INKS` en `js/share.js`); con foto, automático
   (`autoInk`: brillo de la zona bajo el sticker) hasta que el dueño toque el botón. Se recuerda en `shareLayout.color`. Muestra los músculos trabajados (en texto, máx. 3: los de más series) y una cápsula
-  de cristal «¡NUEVO PR!» (sin emoji, texto blanco) si hubo récords. Botón protagonista en el resumen.
+  de cristal «¡NUEVO PR!» (sin emoji, texto blanco) si hubo récords. En el resumen (26-09-2026): «Listo» en carmesí y la tarjeta de compartir neutra (el dueño la veía invasiva).
 - Login solo con correo y contraseña (26-09-2026): Supabase no deja editar las plantillas de correo sin SMTP
   propio, así que el botón «Entrar con un código» se ocultó. Para recuperarlo: SMTP propio (p. ej. iCloud con
   contraseña de app) + `{{ .Token }}` en "Magic Link or OTP" y "Confirm signup" + volver a poner el botón.

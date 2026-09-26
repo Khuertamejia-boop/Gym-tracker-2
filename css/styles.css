@@ -875,17 +875,21 @@ button.pt:active { background: var(--surface-2); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .share-hint { text-align: center; min-height: 1.4em; margin: 8px 12px 4px; }
-.share-acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 6px 0 4px; text-align: center; }
+.share-acts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 6px 0 4px; text-align: center; }
 .share-acts > * {
   display: flex; flex-direction: column; align-items: center; gap: 6px; border: 0; background: none; color: var(--text-2);
   font: inherit; font-size: 0.8rem; font-weight: 500; cursor: pointer; padding: 0;
 }
-.share-acts .ic { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--text); }
+.share-acts .ic { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--text); }
 .share-acts .ic.p { background: var(--text); color: var(--bg); }
 .share-acts svg { width: 24px; height: 24px; fill: currentColor; }
 .ink-dot { width: 24px; height: 24px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgb(128 128 128 / 55%); transition: background 0.2s; }
 .ink-dot.white { background: #fff; }
 .ink-dot.black { background: #111; }
+.bg-dot { width: 24px; height: 24px; border-radius: 7px; box-shadow: inset 0 0 0 1.5px rgb(128 128 128 / 55%); }
+.bg-dot.none { background: conic-gradient(#bbb 25%, #fff 0 50%, #bbb 0 75%, #fff 0) 0 0 / 8px 8px; }
+.bg-dot.dark { background: linear-gradient(#3a3f46, #15171a); }
+.bg-dot.light { background: linear-gradient(#f5f5f7, #d9d9de); }
 
 /* ---------- Resumen v2: chips, botón de compartir y ejercicios plegables ---------- */
 .win-chips { display: flex; justify-content: center; gap: 8px; margin: 4px 0 2px; }
@@ -988,3 +992,16 @@ button.pt:active { background: var(--surface-2); }
   box-shadow: 0 0 0 2px var(--surface);
 }
 .rail-add { display: grid; place-items: center; font-size: 1.5rem; color: var(--text-2); box-shadow: none; border: 1.5px dashed var(--border); background: transparent; }
+
+/* Resumen (26-09-2026): «Listo» en carmesí; compartir pasa a tarjeta neutra, sin brillo animado. */
+.win-foot .win-done { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.share-cta {
+  min-height: 76px; border-radius: 18px; background: var(--surface); color: var(--text);
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+.share-cta::after { content: none; animation: none; }
+.sc-thumb { width: 34px; height: 60px; transform: rotate(-4deg); box-shadow: 0 3px 8px rgb(0 0 0 / 25%); }
+.sc-text b { font-size: 1rem; font-weight: 600; }
+.sc-text small { color: var(--text-2); opacity: 1; }
+.sc-go { width: 38px; height: 38px; background: var(--accent-soft); color: var(--accent); box-shadow: none; }
+.sf-photo[hidden] { display: none; }

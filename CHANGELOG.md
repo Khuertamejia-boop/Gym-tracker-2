@@ -3,6 +3,8 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Resumen final: el botón «Listo» ahora es carmesí y el de «Comparte tu entrenamiento» pasa a una tarjeta blanca más discreta (sin brillo animado).
+- Compartir: nuevo botón «Fondo» para compartir solo los datos, sin foto: transparente → oscuro → claro. El sticker ahora firma «GYM TRACKER APP» (con el punto rojo).
 - Entreno: la fila de ejercicios de arriba es más ligera. Tarjetas pequeñas y en color (antes grises), solo la del ejercicio actual es grande con borde carmesí; las terminadas llevan un check verde pequeño en la esquina.
 - Miniaturas de pierna (sentadilla búlgara, extensión de cuádriceps, curl femoral, pantorrillas…): se ven las dos piernas, centradas.
 - Miniaturas de los ejercicios con zoom al músculo principal: primer plano del pecho, un hombro, un bíceps, la espalda, un cuádriceps, los glúteos… así cada fila se ve distinta.

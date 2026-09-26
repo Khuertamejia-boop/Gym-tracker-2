@@ -20,6 +20,7 @@ const OUT = process.env.OUT; const FIX = process.env.FIX;
   const n = await p.evaluate(() => JSON.parse(localStorage.getItem('gymtrack.v1')).draft.exercises.length);
   for (let i = 0; i < n; i++) { await click(`[data-action="go-ex"][data-i="${i}"]`); await click('[data-action="log-all"]'); }
   await click('.session-bar [data-action="finish"]'); await p.waitForTimeout(1500);
+  await p.screenshot({ path: OUT + '/share-0-resumen.png' });
   await click('[data-share]'); await p.waitForTimeout(1500);
   const box = () => p.locator('.sf-sticker').boundingBox();
   const b0 = await box();
@@ -68,6 +69,16 @@ const OUT = process.env.OUT; const FIX = process.env.FIX;
   await p.setInputFiles('.share-acts input[type=file]', FIX + '/gymphoto.jpg'); await p.waitForTimeout(900);
   console.log('auto on dark photo:', await color());
   await p.screenshot({ path: OUT + '/share-3-foto.png' });
+  // Fondo sin foto: quita la foto y cicla oscuro → claro
+  await click('[data-act="bg"]'); await p.waitForTimeout(700);
+  console.log('bg:', await p.evaluate(() => JSON.parse(localStorage.getItem('gymtrack.v1')).settings.shareLayout.bg), '| photo hidden:', await p.locator('.sf-photo[hidden]').count());
+  await click('[data-act="bg"]'); await p.waitForTimeout(700);
+  console.log('bg:', await p.evaluate(() => JSON.parse(localStorage.getItem('gymtrack.v1')).settings.shareLayout.bg), '| color:', await color());
+  await p.screenshot({ path: OUT + '/share-4-fondo.png' });
+  // Vuelve a oscuro con el bloque recto y en su sitio (para la captura)
+  await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('gymtrack.v1')); delete s.settings.shareLayout.t; localStorage.setItem('gymtrack.v1', JSON.stringify(s)); });
+  await click('[data-act="bg"]'); await click('[data-act="bg"]'); await p.waitForTimeout(700);
+  await p.screenshot({ path: OUT + '/share-5-oscuro.png' });
   const dl = p.waitForEvent('download', { timeout: 5000 }).catch(() => null);
   await click('[data-act="save"]'); const f = await dl;
   if (f) { await f.saveAs(OUT + '/share-final.png'); console.log('exportado'); } else { console.log('no download'); errs.push('sin descarga'); }
