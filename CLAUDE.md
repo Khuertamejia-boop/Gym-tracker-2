@@ -71,7 +71,6 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 ## Pendientes (al 26-09-2026)
 
 - Confirmar en un iPhone real el pellizco/arrastre del sticker de Compartir y el menú de compartir/guardar.
-- Pregunta abierta al dueño: en la rutina importada del Excel, el "75" de press inclinado, ¿era kg o lb?
 - Ideas de fase 4 (no pedidas aún): superseries, recordatorios los días de entreno, semana de descarga.
 - Ahorro: los chats muy largos consumen muchos créditos de la nube; conviene empezar chats nuevos
   (este archivo da el contexto) y agrupar cambios pequeños en un solo mensaje.
