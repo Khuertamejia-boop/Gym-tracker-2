@@ -19,7 +19,7 @@ const OUT = process.env.OUT; const FIX = process.env.FIX;
   await p.evaluate(() => { const i = document.querySelector('[data-set="kg"][data-j="0"]'); i.value = '150'; i.dispatchEvent(new Event('input', { bubbles: true })); });
   const n = await p.evaluate(() => JSON.parse(localStorage.getItem('gymtrack.v1')).draft.exercises.length);
   for (let i = 0; i < n; i++) { await click(`[data-action="go-ex"][data-i="${i}"]`); await click('[data-action="log-all"]'); }
-  await click('.session-bar [data-action="finish"]'); await p.waitForTimeout(1500);
+  await click('.session-bar [data-action="session-menu"]'); await click('#sheet [data-action="finish"]'); await p.waitForTimeout(1500);
   await p.screenshot({ path: OUT + '/share-0-resumen.png' });
   await click('[data-share]'); await p.waitForTimeout(1500);
   const box = () => p.locator('.sf-sticker').boundingBox();

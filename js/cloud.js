@@ -24,8 +24,11 @@ export const getInfo = () => ({ status, error, lastSync });
 export const onChange = (fn) => listeners.push(fn);
 const emit = () => listeners.forEach((fn) => fn());
 
-export async function initCloud({ onData }) {
+let onRecovery = null;
+
+export async function initCloud({ onData, onPasswordRecovery }) {
   onRemoteChange = onData;
+  onRecovery = onPasswordRecovery || null;
   if (!isConfigured()) return;
   try {
     const { createClient } = await import(SUPABASE_JS);
@@ -37,7 +40,7 @@ export async function initCloud({ onData }) {
     client.auth.onAuthStateChange((event, session) => {
       const prev = user?.id;
       user = session?.user || null;
-      if (event === 'PASSWORD_RECOVERY') askNewPassword();
+      if (event === 'PASSWORD_RECOVERY') onRecovery?.();
       if (user && user.id !== prev) sync();
       emit();
     });
@@ -163,11 +166,11 @@ export async function resetPassword(email) {
   if (e) throw new Error(translate(e));
 }
 
-async function askNewPassword() {
-  const pw = prompt('Escribe tu nueva contraseña (mínimo 6 caracteres):');
-  if (!pw) return;
+// Nueva contraseña tras abrir el enlace del correo (la hoja la pide la app, sin ventanas del navegador).
+export async function updatePassword(pw) {
+  ensureClient();
   const { error: e } = await client.auth.updateUser({ password: pw });
-  alert(e ? translate(e) : 'Contraseña actualizada.');
+  if (e) throw new Error(translate(e));
 }
 
 export async function signOut() {

@@ -44,8 +44,8 @@ const OUT = process.env.OUT; const FIX = process.env.FIX;
   // Edición: botón Guardar cambios
   await click('.tabbar [data-tab="progress"]');
   await click('[data-action="session-detail"]'); await click('#sheet [data-action="edit-session"]');
-  console.log('edit button:', await p.textContent('.session-bar [data-action="finish"]'));
-  await click('[data-action="session-menu"]'); console.log('edit menu:', (await p.textContent('#sheet .danger-row')).trim());
+  await click('[data-action="session-menu"]');
+  console.log('edit button:', (await p.textContent('#sheet [data-action="finish"]')).trim(), '| edit menu:', (await p.textContent('#sheet [data-action="discard"]')).trim());
   await click('#sheet [data-action="discard"]');
   console.log('errors:', JSON.stringify(errs));
   await b.close();

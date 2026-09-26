@@ -27,6 +27,14 @@ const OUT = process.env.OUT; const FIX = process.env.FIX;
   await type(reps, '0'); console.log('0 reps →', JSON.stringify(await p.inputValue(reps)));
   await type(reps, '08'); console.log('08 reps →', await p.inputValue(reps));
   await type(reps, '500'); console.log('500 reps →', await p.inputValue(reps));
+  await type(kg, '77,5'); console.log('77,5 →', await p.inputValue(kg), '| guardado', await stored('kg'));
+  await type(kg, '80.5'); console.log('80.5 →', await p.inputValue(kg), '| guardado', await stored('kg'));
+  // Ningún campo por debajo de 16 px (Safari haría zoom): nota, RIR y fecha
+  await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('gymtrack.v1')); s.settings.effort = 'RIR'; s.settings.simple = false; localStorage.setItem('gymtrack.v1', JSON.stringify(s)); });
+  await p.reload(); await p.waitForTimeout(800);
+  await click('[data-action="note-open"]');
+  const small = await p.evaluate(() => [...document.querySelectorAll('input, textarea, select')].filter(x => x.offsetParent && parseFloat(getComputedStyle(x).fontSize) < 16).map(x => x.outerHTML.slice(0, 60)));
+  console.log('campos < 16px:', small.length, JSON.stringify(small), '| RIR visible:', await p.locator('[data-set="effort"]').count());
   const t = await p.evaluate(async () => { const S = await import('/js/store.js');
     return ['peso-muerto', 'press-banca', 'curl-mancuernas', 'prensa', 'dominadas'].map(id => `${id}:${S.maxKg(id)}`).join(' '); });
   console.log('límites', t);

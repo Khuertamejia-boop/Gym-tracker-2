@@ -4,6 +4,7 @@ const persist = () => localStorage.setItem('__mockcloud', JSON.stringify(db));
 export function createClient() {
   let session = JSON.parse(localStorage.getItem('__mocksession') || 'null');
   const subs = [];
+  globalThis.__authEmit = (event) => subs.forEach((f) => f(event, session));
   return {
     auth: {
       getSession: async () => ({ data: { session } }),
@@ -22,6 +23,7 @@ export function createClient() {
       signUp: async () => ({ data: { session: null }, error: null }),
       signOut: async () => { session = null; localStorage.removeItem('__mocksession'); subs.forEach((f) => f('SIGNED_OUT', null)); },
       resetPasswordForEmail: async () => ({ error: null }),
+      updateUser: async ({ password }) => ({ error: password.length < 6 ? { message: 'Password should be at least 6 characters' } : null }),
     },
     from: () => ({
       select: () => ({ eq: (_c, id) => ({ maybeSingle: async () => {

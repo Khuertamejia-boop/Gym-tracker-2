@@ -37,7 +37,7 @@ const { chromium } = require('playwright'); const OUT = process.env.OUT; const F
   // ajuste off
   await click('[data-action="session-menu"]').catch(()=>{}); await p.evaluate(() => document.getElementById('sheet').open && document.getElementById('sheet').close());
   // terminar: rest no se guarda en sesión
-  await click('.session-bar [data-action="finish"]'); await p.waitForTimeout(600);
+  await click('.session-bar [data-action="session-menu"]'); await click('#sheet [data-action="finish"]'); await p.waitForTimeout(600);
   const last = (await st()).sessions.slice(-1)[0];
   console.log('session has rest:', 'rest' in last, '| upFrom leak:', last.exercises.some(e => 'upFrom' in e));
   await click('.win-done');

@@ -64,6 +64,15 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   Orden de cápsulas: «Aproximación» siempre la primera (izquierda), «Por lado» y «Nota» (sustituye al 📝;
   «✓ Nota» en carmesí si hay texto; la nota se abre bajo las cápsulas).
 - Temporizador de descanso automático al marcar serie; se detiene tras la última serie del entreno.
+- Pantalla del entreno (26-09-2026): un solo «⋯» arriba (ejercicio actual: unidad kg/lb, músculos, mover, quitar;
+  entrenamiento: añadir, terminar/guardar, descartar). Sin botón «Terminar» arriba ni «⋯» junto al ejercicio ni selector
+  kg | lb en la tabla (la cabecera muestra «Peso kg»). Avisos (toast) siempre arriba, estilo notificación.
+- Decimales con coma en toda la app (`dec`/`parseDec` en `js/app.js`; campos de peso/RIR son `type=text inputmode=decimal`).
+  Ningún campo por debajo de 16 px (Safari hace zoom). Actualizaciones: no recarga con entreno en curso, resumen u hoja abierta.
+- Mi plan sin entrenos pendientes: verde solo con la semana completa; si no, «Semana: X de Y» neutro o «Mover … a hoy»
+  (un entreno perdido que no se haya hecho ya esta semana) si hoy está libre.
+- Ejercicios propios: editar/borrar en su ficha; borrar = `hidden` (sale del buscador, el historial conserva el nombre).
+  Tocar un punto de los gráficos de ejercicio abre ese entreno (`session-detail`) para corregir errores.
 - Compartir: solo plantilla "Sobre foto" (PNG transparente o sobre foto). El bloque de datos es un
   sticker: se arrastra con un dedo, con dos se pellizca (tamaño, imán al centro) y se gira (imán a recto);
   un toque cambia la alineación izquierda → centro → derecha (sin botón; el icono aparece un momento).
@@ -109,6 +118,9 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - Supabase gratis se queda **solo para la web** mientras dura el desarrollo. No se pausa si se usa al menos una vez
   cada 7 días (si se pausa: «Restore» en el panel, sin perder datos). La sincronización actual sube/baja el JSON
   completo, pero con 1–2 usuarios es ~1 % del límite: **no cambiarla**.
+- **Para la app de Xcode (la web no puede):** aviso de fin de descanso con el teléfono bloqueado o en otra app
+  (notificación local + **Live Activity** en la pantalla bloqueada y la isla dinámica), vibración (Safari en iPhone
+  no permite vibrar) y **recordatorios los días de entreno** (notificaciones programadas).
 - Importar el historial de la web a la app una vez (exportar JSON desde la web → importar en la app).
   Ojo: «Respaldo de datos» (exportar) solo aparece en el menú sin sesión; habrá que mostrarlo también con sesión.
 
@@ -119,6 +131,6 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   (quitar información, más limpio). Hacerlos en una tanda, con maquetas si son cambios grandes; después, congelar la web.
 - Opcional: hacer más pequeños los enlaces «+ Aproximación / Quitar» bajo las filas de aproximación (lo ofrecí; sin respuesta).
 - Cuando empiece con Xcode: preparar un documento con el plan de la app (pantallas, datos, estilo, orden de trabajo).
-- Ideas de fase 4 (no pedidas aún): superseries, recordatorios los días de entreno, semana de descarga.
+- Pedidas el 26-09-2026, sin hacer aún (necesitan maqueta): **superseries** y **semana de descarga**. Recordatorios → app de Xcode.
 - Ahorro: los chats muy largos consumen muchos créditos de la nube; conviene empezar chats nuevos
   (este archivo da el contexto) y agrupar cambios pequeños en un solo mensaje.

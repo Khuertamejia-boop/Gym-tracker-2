@@ -61,7 +61,7 @@ function mount(canvas, config) {
   instances.set(canvas.id, new window.Chart(canvas, config));
 }
 
-export function lineChart(canvas, { labels, data, unit, tooltipTitle }) {
+export function lineChart(canvas, { labels, data, unit, tooltipTitle, onPoint }) {
   const color = css('--series-1');
   const opts = base({ unit, tooltipTitle });
   opts.scales.y.beginAtZero = false;
@@ -85,9 +85,15 @@ export function lineChart(canvas, { labels, data, unit, tooltipTitle }) {
         spanGaps: true,
       }],
     },
-    options: opts,
+    options: { ...opts, onClick: pointClick(onPoint) },
   });
 }
+
+// Tocar un punto: onPoint(índice) (p. ej. abrir ese entreno para corregir un valor mal puesto).
+const pointClick = (onPoint) => (onPoint ? (evt, _els, chart) => {
+  const el = chart.getElementsAtEventForMode(evt, 'nearest', { intersect: false, axis: 'x' }, false)[0];
+  if (el) onPoint(el.index);
+} : undefined);
 
 // '#8f8e86' → 'rgba(143,142,134,a)' (Safari no admite color-mix en los degradados del canvas).
 function rgba(hex, a) {
@@ -100,7 +106,7 @@ const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', '
 
 // Mini gráfico de evolución: línea gris con área suave, puntos en el color
 // principal, eje de valores a la derecha y fechas reales en el eje X.
-export function sparkArea(canvas, { points, unit }) {
+export function sparkArea(canvas, { points, unit, onPoint }) {
   if (!window.Chart || !canvas) return;
   const accent = css('--accent');
   const line = css('--text-3');
@@ -142,6 +148,7 @@ export function sparkArea(canvas, { points, unit }) {
       maintainAspectRatio: false,
       animation: { duration: 250 },
       layout: { padding: { top: 6, left: 6 } },
+      onClick: pointClick(onPoint),
       interaction: { mode: 'nearest', intersect: false, axis: 'x' },
       plugins: {
         legend: { display: false },

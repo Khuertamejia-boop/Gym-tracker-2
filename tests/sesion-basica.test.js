@@ -40,11 +40,11 @@ const OUT = process.env.OUT; const FIX = process.env.FIX;
   await swipe(120); await p.waitForTimeout(200); console.log('after swipe right:', await cur());
   // lb en el ejercicio actual
   const exId = await p.evaluate(() => JSON.parse(localStorage.getItem('gymtrack.v1')).draft.exercises[1].exId);
-  await click(`.stage [data-action="ex-unit"][data-u="lb"]`);
-  console.log('unit label now lb:', await p.locator('.stage .unit-switch button.active').textContent());
-  await click(`.stage [data-action="ex-unit"][data-u="kg"]`);
-  // menú del ejercicio: mover después
-  await click('[data-action="ex-menu"]');
+  await click('.session-bar [data-action="session-menu"]');
+  await click(`#sheet [data-action="ex-unit"][data-u="lb"]`);
+  console.log('unit label now lb:', await p.locator('#sheet .unit-switch button.active').textContent(), '| header:', await p.textContent('.stage .unit-tag'));
+  await click(`#sheet [data-action="ex-unit"][data-u="kg"]`);
+  // menú «⋯»: mover después
   await p.screenshot({ path: OUT + '/v8-ex-menu.png' });
   await click('#sheet [data-action="ex-move"][data-dir="1"]');
   console.log('moved, current:', await cur(), '| rail order ok:', await p.evaluate((id) => JSON.parse(localStorage.getItem('gymtrack.v1')).draft.exercises[2].exId === id, exId));

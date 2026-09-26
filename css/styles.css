@@ -593,8 +593,6 @@ button.set-n { border: 0; padding: 0; cursor: pointer; font: inherit; font-weigh
 .sheet.sheet-top { height: auto; max-height: calc(var(--vvh, 100dvh)); }
 
 /* Durante la sesión los avisos van abajo, sobre el botón principal, para no tapar el carrusel. */
-body.in-session .toast { top: auto; bottom: calc(env(safe-area-inset-bottom) + 84px); transform: translateX(-50%) translateY(12px); }
-body.in-session .toast.show { transform: translateX(-50%) translateY(0); }
 
 
 /* v9: "última vez" compacto */
@@ -817,6 +815,7 @@ button.wk { cursor: pointer; }
 .next-card b { display: block; font-size: 1.1rem; }
 .next-chev { font-size: 1.6rem; line-height: 1; }
 .next-card.done { background: var(--good-soft); color: var(--text); cursor: default; }
+.next-card.neutral { background: var(--surface); border: 1px solid var(--border); color: var(--text); cursor: default; }
 .plan-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .pt {
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 14px; min-height: 84px;
@@ -1006,3 +1005,13 @@ button.pt:active { background: var(--surface-2); }
 .sc-text small { color: var(--text-2); opacity: 1; }
 .sc-go { width: 38px; height: 38px; background: var(--accent-soft); color: var(--accent); box-shadow: none; }
 .sf-photo[hidden] { display: none; }
+
+/* 26-09-2026: avisos siempre arriba, como una notificación del iPhone (no tapan el descanso). */
+.toast { top: calc(env(safe-area-inset-top) + 12px); border-radius: 16px; padding: 12px 18px; font-weight: 500;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 22%); text-align: center; }
+/* Safari hace zoom si un campo tiene letra de menos de 16 px. */
+textarea.note, .small-input, .set-row .small-input, .pill.pill-input, input, select, textarea { font-size: max(16px, 1em); }
+.unit-tag { font-size: 0.72rem; font-weight: 600; color: var(--text-3); text-transform: none; }
+.menu-title { margin: 4px 4px 6px; font-weight: 600; }
+.menu-list + .menu-title { margin-top: 16px; }
+.chart-hint { margin: 6px 2px 0; text-align: center; font-size: 0.78rem; }

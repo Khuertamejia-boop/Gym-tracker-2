@@ -17,7 +17,7 @@ const { chromium, devices } = require('playwright'); const OUT = process.env.OUT
   await click('[data-action="ob-go"][data-step="choose"]'); await click('[data-action="ob-pick"]');
   console.log('after pick → title:', await p.textContent('#view-title'), '(no account step)');
   await click('.cta-bar [data-action="start"]'); await click('[data-action="log-all"]');
-  await click('.session-bar [data-action="finish"]'); await p.waitForTimeout(700);
+  await click('.session-bar [data-action="session-menu"]'); await click('#sheet [data-action="finish"]'); await p.waitForTimeout(700);
   console.log('signup card:', await p.locator('#win-save').count(), '|', (await p.textContent('#win-save p')).trim());
   await p.screenshot({ path: OUT + '/v20-signup.png' });
   await p.emulateMedia({ colorScheme: 'light' }); await p.waitForTimeout(200); await p.screenshot({ path: OUT + '/v20-signup-light.png' }); await p.emulateMedia({ colorScheme: 'dark' });
@@ -30,6 +30,6 @@ const { chromium, devices } = require('playwright'); const OUT = process.env.OUT
   await click('.win-done');
   // 2º entrenamiento: sin tarjeta
   await click('.cta-bar [data-action="start"]'); await click('[data-action="log-all"]');
-  await click('.session-bar [data-action="finish"]'); await p.waitForTimeout(700);
+  await click('.session-bar [data-action="session-menu"]'); await click('#sheet [data-action="finish"]'); await p.waitForTimeout(700);
   console.log('2nd workout card:', await p.locator('#win-save').count());
   console.log('errors', JSON.stringify(errs)); await b.close(); })();

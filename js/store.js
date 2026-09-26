@@ -194,12 +194,32 @@ export function addCustomExercise(name, muscle, equipment) {
   return e;
 }
 
+// Editar un ejercicio propio (nombre, músculo, equipo).
+export function updateCustomExercise(id, fields) {
+  const e = state.customExercises.find((x) => x.id === id);
+  if (!e) return null;
+  Object.assign(e, { ...fields, name: (fields.name ?? e.name).trim(), editedAt: Date.now() });
+  exIndex = null;
+  save();
+  return e;
+}
+
+// Borrar un ejercicio propio: sale del buscador, pero el historial y las rutinas conservan su nombre.
+export function deleteCustomExercise(id) {
+  const e = state.customExercises.find((x) => x.id === id);
+  if (!e) return;
+  e.hidden = true;
+  e.editedAt = Date.now();
+  save();
+}
+
 export const normalize = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export function searchExercises(query, muscle) {
   const q = normalize(query.trim());
   const words = q.split(/\s+/).filter(Boolean);
   return allExercises()
+    .filter((e) => !e.hidden)
     .filter((e) => !muscle || e.muscle === muscle)
     .filter((e) => {
       const hay = normalize(`${e.name} ${e.muscle} ${e.equipment} ${e.aliases || ''}`);

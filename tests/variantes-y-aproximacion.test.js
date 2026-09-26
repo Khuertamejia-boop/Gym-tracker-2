@@ -46,7 +46,7 @@ const OUT = process.env.OUT; const FIX = process.env.FIX;
   await click('[data-action="log-all"]');
   const d = (await st()).draft.exercises[0];
   console.log('warm done:', d.warmup.map(w => w.done).join(','), '| sub:', await p.textContent('.stage-sub'), '| cta:', await p.textContent('.session-btn'));
-  await click('.session-bar [data-action="finish"]'); await p.waitForTimeout(400);
+  await click('.session-bar [data-action="session-menu"]'); await click('#sheet [data-action="finish"]'); await p.waitForTimeout(400);
   const sess = (await st()).sessions.slice(-1)[0];
   const e0 = sess.exercises[0];
   const vol = sess.exercises.reduce((a, e) => a + e.sets.reduce((b, s) => b + s.kg * s.reps, 0), 0);

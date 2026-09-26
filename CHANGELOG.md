@@ -3,6 +3,17 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-09-26
+- Tanda de arreglos y limpieza del entreno:
+  - Los avisos salen arriba, como una notificación del iPhone, y ya no tapan el descanso.
+  - El iPhone ya no hace zoom al escribir la nota, el RIR/RPE o la fecha.
+  - Decimales con coma en todas partes: se escribe y se ve «77,5» (también vale «77.5»). Igual en peso corporal y medidas.
+  - Si publicas una versión nueva, la app espera a que termines el entreno (y cierres el resumen) para actualizarse.
+  - Un solo «⋯» arriba en el entreno: reúne lo del ejercicio (unidad kg/lb, músculos, mover, quitar) y lo del entrenamiento (añadir, terminar, descartar). Se quitó el botón «Terminar» de arriba y el selector kg | lb de cada ejercicio.
+  - Aviso de fin de descanso sin emoji.
+  - Mi plan: ya no felicita en verde cuando faltan entrenos. Muestra «Semana: 1 de 4» en neutro o, si hoy está libre, «Mover Pierna A a hoy».
+  - Los ejercicios propios se pueden editar y borrar desde su ficha.
+  - En Progreso y en la ficha del ejercicio, tocar un punto del gráfico abre ese entreno para corregir un valor mal puesto.
+  - Recuperar contraseña: una hoja de la app (con repetición y sin mostrarla) en lugar de la ventana gris del navegador.
 - Entreno: los ejercicios ya hechos se ven igual de suaves que los pendientes (con su check verde nítido); solo el actual va en color pleno.
 - Peso y repeticiones con límites: se quitan los ceros de delante (025 → 25), el peso tiene que ser mayor que 0 (salvo lastre en ejercicios de peso corporal), las repeticiones al menos 1 y hay un máximo por ejercicio basado en los récords mundiales (p. ej. peso muerto 510 kg, press de banca 360 kg, mancuernas 120 kg cada una).
 - Resumen final: el botón «Listo» ahora es carmesí y el de «Comparte tu entrenamiento» pasa a una tarjeta blanca más discreta (sin brillo animado).

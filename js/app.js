@@ -39,6 +39,14 @@ const wt = (kgValue, u) => `${wn(kgValue, u)} ${u}`;
 const unitSwitch = (exId, u) => `<span class="segmented unit-switch" role="group" aria-label="Unidad de peso">
     ${['kg', 'lb'].map((x) => `<button class="${x === u ? 'active' : ''}" data-action="ex-unit" data-id="${exId}" data-u="${x}">${x}</button>`).join('')}</span>`;
 const num = (v) => (v === '' || v === null || v === undefined ? '' : Number(v));
+// Decimales con coma (como el resto de la app): se muestran «77,5» y se acepta «77,5» o «77.5».
+const dec = (v) => (v === '' || v === null || v === undefined ? '' : String(v).replace('.', ','));
+const parseDec = (v) => {
+  const t = String(v ?? '').trim().replace(',', '.');
+  if (t === '') return '';
+  const n = Number(t);
+  return Number.isFinite(n) ? n : '';
+};
 const series = (n) => `${n} ${n === 1 ? 'serie' : 'series'}`;
 const fmtN = (v, d = 1) => Number(v).toLocaleString('es', { maximumFractionDigits: d });
 
@@ -182,6 +190,12 @@ function renderPlan() {
 
   // Próximo entrenamiento: hoy si toca y no está hecho; si no, el siguiente de la semana.
   const next = days.find((d) => d.i >= today && d.plan && !d.done);
+  // Sin entrenos pendientes pero con alguno perdido: si hoy está libre, se ofrece moverlo a hoy.
+  const todayFree = !days[today].plan && !days[today].done;
+  const missed = days.filter((d) => d.past && d.plan && !d.done);
+  const missedToday = !next && todayFree
+    ? missed.find((d) => !sessions.some((x) => x.dayName === d.plan.name)) || null
+    : null;
   const nextLabel = next ? (next.i === today ? 'hoy' : `${next.name.toLowerCase()} ${next.date.getDate()}`) : '';
 
   // Días de entreno (los del plan y los entrenados), en cuadrícula.
@@ -228,7 +242,13 @@ function renderPlan() {
       ? `<button class="next-card" data-action="plan-go" data-id="${next.plan.id}">
           <span class="grow"><small>Próximo entrenamiento</small><b>${esc(shortName(next.plan.name))} · ${nextLabel}</b></span>
           <span class="next-chev" aria-hidden="true">›</span></button>`
-      : `<div class="next-card done"><span class="grow"><small>Esta semana</small><b>${trained >= planned && planned ? '¡Semana completada!' : 'No quedan entrenamientos'}</b></span></div>`}
+      : trained >= planned && planned
+        ? '<div class="next-card done"><span class="grow"><small>Esta semana</small><b>¡Semana completada!</b></span></div>'
+        : missedToday
+          ? `<button class="next-card" data-action="plan-move" data-from="${missedToday.i}" data-to="${today}">
+              <span class="grow"><small>Semana: ${trained} de ${goal}</small><b>Mover ${esc(shortName(missedToday.plan.name))} a hoy</b></span>
+              <span class="next-chev" aria-hidden="true">›</span></button>`
+          : `<div class="next-card neutral"><span class="grow"><small>Esta semana</small><b>Semana: ${trained} de ${goal}</b></span></div>`}
 
     <div class="plan-head"><b>Esta semana</b>${changed
       ? '<button class="link small" data-action="plan-reset">Volver al plan original</button>'
@@ -389,7 +409,6 @@ function renderSession() {
         : `<span class="pill timer-pill">${ICON_CLOCK}<span id="elapsed">0:00</span></span>`}
       <span class="grow"></span>
       <button class="icon-btn" data-action="session-menu" aria-label="Más opciones">${ICON_MORE}</button>
-      <button class="btn sm primary pill-btn" data-action="finish">${d.editing ? 'Guardar' : 'Terminar'}</button>
     </div>
     <div class="rail" id="rail" role="tablist" aria-label="Ejercicios">
       ${d.exercises.map((x, k) => `<button class="rail-item ${k === i ? 'active' : ''} ${exDone(x) ? 'done' : ''}" role="tab" aria-selected="${k === i}" data-action="go-ex" data-i="${k}" aria-label="${esc(S.exById(x.exId).name)}${exDone(x) ? ' (hecho)' : ''}">
@@ -461,7 +480,7 @@ function restTick(d) {
   if (late) return;
   beep();
   if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-  toast('⏱ ¡Descanso terminado! A por la siguiente serie');
+  toast('Descanso terminado: a por la siguiente serie');
 }
 
 function startRest(e) {
@@ -567,7 +586,6 @@ function exerciseStage(e, i, effort, d) {
     <div class="muted small">${esc(shortName(d.dayName))} · Ejercicio ${i + 1} de ${d.exercises.length}</div>
     <div class="stage-head">
       <button class="link-btn grow" data-action="ex-detail" data-id="${e.exId}"><h2>${esc(ex.name)}</h2></button>
-      <button class="icon-btn" data-action="ex-menu" data-i="${i}" aria-label="Opciones del ejercicio">${ICON_MORE}</button>
     </div>
     <div class="stage-sub">${nextSet === -1 ? '✓ Ejercicio completado' : pos}${e.target ? ` · objetivo ${esc(e.target)} reps` : ''}</div>
     ${last ? `<div class="last-line"><span class="last-label">Última vez</span> ${lastSummary(last.sets, u)}</div>` : ''}
@@ -584,12 +602,12 @@ function exerciseStage(e, i, effort, d) {
     </div>
     ${noteOpen ? `<textarea class="note" rows="2" maxlength="300" placeholder="Nota: agarre, sensaciones, molestias…" data-note="${i}" aria-label="Nota del ejercicio">${esc(e.note || '')}</textarea>` : ''}
     <div class="set-grid ${effort ? 'with-effort' : ''}">
-      <div class="set-labels"><span>Serie</span><span>Reps</span><span class="unit-label">Peso ${unitSwitch(e.exId, u)}</span>${effort ? `<span>${effort}</span>` : ''}<span></span></div>
+      <div class="set-labels"><span>Serie</span><span>Reps</span><span class="unit-label">Peso <small class="unit-tag">${u}</small></span>${effort ? `<span>${effort}</span>` : ''}<span></span></div>
       ${e.warmupOn ? (e.warmup || []).map((w, j) => `<div class="set-row warm ${w.done ? 'done' : ''}">
           ${S.isSimple() ? '<span class="set-n" title="Serie de aproximación">A</span>'
             : `<button class="set-n" data-action="set-menu" data-kind="warm" data-i="${i}" data-j="${j}" aria-label="Opciones de la aproximación ${j + 1}">A</button>`}
           <input class="pill-input" type="number" inputmode="numeric" min="0" value="${esc(w.reps)}" placeholder="–" data-warm="reps" data-i="${i}" data-j="${j}" aria-label="Repeticiones aproximación ${j + 1}">
-          <input class="pill-input" type="number" inputmode="decimal" step="0.5" min="0" value="${esc(S.toUnit(w.kg, u))}" placeholder="–" data-warm="kg" data-i="${i}" data-j="${j}" aria-label="Peso en ${u} aproximación ${j + 1}">
+          <input class="pill-input" type="text" inputmode="decimal" autocomplete="off" value="${esc(dec(S.toUnit(w.kg, u)))}" placeholder="–" data-warm="kg" data-i="${i}" data-j="${j}" aria-label="Peso en ${u} aproximación ${j + 1}">
           ${effort ? '<span></span>' : ''}
           <button class="set-check" data-action="toggle-warm" data-i="${i}" data-j="${j}" aria-pressed="${w.done}" aria-label="Marcar aproximación ${j + 1} como hecha">${ICON_CHECK}</button>
         </div>`).join('') + `<div class="warm-actions"><button class="link" data-action="warm-add" data-i="${i}">+ Aproximación</button>${(e.warmup || []).length ? `<button class="link" data-action="warm-remove" data-i="${i}">Quitar</button>` : ''}</div>` : ''}
@@ -598,11 +616,11 @@ function exerciseStage(e, i, effort, d) {
         const label = x.side ? `${Math.floor(j / 2) + 1}<small>${x.side === 'L' ? 'I' : 'D'}</small>` : j + 1;
         return `<div class="set-row ${x.done ? 'done' : ''} ${j === nextSet ? 'next' : ''} ${x.side === 'R' ? 'side-end' : ''}">
           ${S.isSimple()
-            ? `<span class="set-n">${x.pr ? '<span title="Récord personal">${ICON_TROPHY}</span>' : label}</span>`
+            ? `<span class="set-n">${x.pr ? `<span title="Récord personal">${ICON_TROPHY}</span>` : label}</span>`
             : `<button class="set-n" data-action="set-menu" data-kind="set" data-i="${i}" data-j="${j}" aria-label="Opciones de la serie ${x.side ? `${Math.floor(j / 2) + 1} ${x.side === 'L' ? 'izquierda' : 'derecha'}` : j + 1}">${x.pr ? ICON_TROPHY : label}</button>`}
           <input class="pill-input" type="number" inputmode="numeric" min="0" value="${esc(x.reps)}" placeholder="${esc(sug.reps)}" data-set="reps" data-i="${i}" data-j="${j}" aria-label="Repeticiones serie ${x.side ? `${Math.floor(j / 2) + 1} ${x.side === 'L' ? 'izquierda' : 'derecha'}` : j + 1}">
-          <input class="pill-input" type="number" inputmode="decimal" step="0.5" min="0" value="${esc(S.toUnit(x.kg, u))}" placeholder="${sug.kg !== '' ? esc(S.toUnit(sug.kg, u)) : '–'}" data-set="kg" data-i="${i}" data-j="${j}" aria-label="Peso en ${u} serie ${j + 1}">
-          ${effort ? `<input class="pill-input small-input" type="number" inputmode="decimal" step="0.5" min="0" max="10" value="${esc(x.effort)}" placeholder="–" data-set="effort" data-i="${i}" data-j="${j}" aria-label="${effort} serie ${j + 1}">` : ''}
+          <input class="pill-input" type="text" inputmode="decimal" autocomplete="off" value="${esc(dec(S.toUnit(x.kg, u)))}" placeholder="${sug.kg !== '' ? esc(dec(S.toUnit(sug.kg, u))) : '–'}" data-set="kg" data-i="${i}" data-j="${j}" aria-label="Peso en ${u} serie ${j + 1}">
+          ${effort ? `<input class="pill-input small-input" type="text" inputmode="decimal" autocomplete="off" value="${esc(dec(x.effort))}" placeholder="–" data-set="effort" data-i="${i}" data-j="${j}" aria-label="${effort} serie ${j + 1}">` : ''}
           <button class="set-check" data-action="toggle-set" data-i="${i}" data-j="${j}" aria-pressed="${x.done}" aria-label="Marcar serie ${j + 1} como hecha">${ICON_CHECK}</button>
         </div>`;
       }).join('')}
@@ -996,6 +1014,8 @@ function showExerciseDetail(id, tab = ui.exTab) {
         : '<p class="muted small" style="margin:0 0 12px">Todavía no has registrado este ejercicio.</p>'}
       <div class="row between" style="margin-bottom:12px"><div class="grow"><b>Unidad de peso</b><div class="muted small">Si esta máquina está en libras, elige lb</div></div>${unitSwitch(id, u)}</div>
       <a class="btn block" href="${video}" target="_blank" rel="noopener">▶ Ver técnica en YouTube</a>
+      ${ex.custom ? `<div class="row" style="margin-top:8px"><button class="btn grow" data-action="custom-edit" data-id="${id}">Editar ejercicio</button>
+        <button class="btn ghost danger" data-action="custom-delete" data-id="${id}">Borrar</button></div>` : ''}
       ${routine ? `<div class="section-title">Añadir a “${esc(routine.name)}”</div>
         <div class="row wrap">${routine.days.map((d) => `<button class="btn sm" data-action="add-ex-to-day" data-ex="${id}" data-day="${d.id}">${esc(d.name)}</button>`).join('')}</div>` : ''}`;
   } else if (tab === 'history') {
@@ -1010,7 +1030,7 @@ function showExerciseDetail(id, tab = ui.exTab) {
     if (!metrics.some(([k]) => k === ui.exMetric)) ui.exMetric = metrics[0][0];
     body = `<div class="segmented" style="margin-bottom:8px">${metrics.map(([k, l]) => `<button class="${ui.exMetric === k ? 'active' : ''}" data-action="ex-metric" data-m="${k}" data-id="${id}">${l}</button>`).join('')}</div>
       <div class="muted small">${ui.exMetric === 'e1rm' ? 'Máximo estimado para 1 repetición (fórmula de Epley), mejor serie de cada sesión' : ui.exMetric === 'max' ? 'Peso más alto usado en cada sesión' : `Peso × repeticiones sumados en cada sesión (${u})`}</div>
-      ${hist.length >= 2 ? '<div class="chart-box"><canvas id="c-exercise" role="img" aria-label="Evolución del ejercicio"></canvas></div>'
+      ${hist.length >= 2 ? '<div class="chart-box"><canvas id="c-exercise" role="img" aria-label="Evolución del ejercicio"></canvas></div><p class="muted small chart-hint">Toca un punto para ver ese entreno y corregirlo.</p>'
         : '<div class="empty small">Necesitas al menos 2 sesiones para ver la evolución.</div>'}`;
   } else {
     const tile = (label, value, sub) => `<div class="stat"><div class="label">${label}</div><div class="value">${value}</div><div class="delta">${sub}</div></div>`;
@@ -1035,6 +1055,7 @@ function showExerciseDetail(id, tab = ui.exTab) {
       labels: rows.map((h) => S.formatDate(h.date)),
       data: rows.map((h) => S.toUnit(val(h), u)),
       unit: u,
+      onPoint: (k) => actions['session-detail']({ dataset: { id: rows[k].sessionId } }),
     });
   }
 }
@@ -1121,20 +1142,31 @@ function openVariantPicker(key, onPick, query) {
   }, 'variant-back');
 }
 
-function newExerciseForm(prefill = '', onCreated) {
-  openSheet('Nuevo ejercicio', `
+// Crear un ejercicio propio o, con `editId`, editar uno ya creado.
+function newExerciseForm(prefill = '', onCreated, editId = null) {
+  const cur = editId ? S.exById(editId) : null;
+  const opts = (list, sel) => list.map((m) => `<option${m === sel ? ' selected' : ''}>${m}</option>`).join('');
+  openSheet(cur ? 'Editar ejercicio' : 'Nuevo ejercicio', `
     <form id="new-ex" class="stack">
-      <label class="field"><span>Nombre</span><input type="text" name="name" required maxlength="60" value="${esc(prefill)}"></label>
+      <label class="field"><span>Nombre</span><input type="text" name="name" required maxlength="60" value="${esc(cur ? cur.name : prefill)}"></label>
       <div class="grid-2">
-        <label class="field"><span>Grupo muscular</span><select name="muscle">${MUSCLES.map((m) => `<option>${m}</option>`).join('')}</select></label>
-        <label class="field"><span>Equipo</span><select name="equipment">${['Barra', 'Mancuernas', 'Máquina', 'Polea', 'Smith', 'Peso corporal', 'Otro'].map((m) => `<option>${m}</option>`).join('')}</select></label>
+        <label class="field"><span>Grupo muscular</span><select name="muscle">${opts(MUSCLES, cur?.muscle)}</select></label>
+        <label class="field"><span>Equipo</span><select name="equipment">${opts(['Barra', 'Mancuernas', 'Máquina', 'Polea', 'Smith', 'Peso corporal', 'Otro'], cur?.equipment)}</select></label>
       </div>
-      <button class="btn primary block">Guardar ejercicio</button>
+      <button class="btn primary block">${cur ? 'Guardar cambios' : 'Guardar ejercicio'}</button>
     </form>`, (root) => {
     root.querySelector('#new-ex').addEventListener('submit', (e) => {
       e.preventDefault();
       const f = new FormData(e.target);
-      const ex = S.addCustomExercise(f.get('name'), f.get('muscle'), f.get('equipment'));
+      const fields = { name: f.get('name'), muscle: f.get('muscle'), equipment: f.get('equipment') };
+      if (cur) {
+        S.updateCustomExercise(editId, fields);
+        toast('Ejercicio actualizado');
+        showExerciseDetail(editId, 'about');
+        render();
+        return;
+      }
+      const ex = S.addCustomExercise(fields.name, fields.muscle, fields.equipment);
       closeSheet();
       toast(`“${ex.name}” creado`);
       if (onCreated) onCreated(ex.id);
@@ -1225,7 +1257,7 @@ function exerciseSeries(sessions) {
         ? done.reduce((a, x) => a + S.setVolume(x), 0)
         : Math.max(...done.map((x) => Number(x.kg) || 0));
       if (!map.has(e.exId)) map.set(e.exId, []);
-      map.get(e.exId).push({ x: S.parseISO(s.date).getTime(), y });
+      map.get(e.exId).push({ x: S.parseISO(s.date).getTime(), y, sid: s.id });
     }
   }
   return [...map.entries()]
@@ -1297,6 +1329,7 @@ function renderProgress() {
         <div class="spark-box"><canvas id="c-ex-${i}" role="img" aria-label="Evolución de ${esc(S.exById(id).name)}"></canvas></div>
       </div>`;
     }).join('') : '<p class="muted small" style="margin:4px 0 0">Cuando repitas un ejercicio al menos dos veces en este periodo verás aquí cómo evoluciona.</p>'}
+    ${shown.length ? '<p class="muted small chart-hint">Toca un punto para ver ese entreno y corregirlo.</p>' : ''}
     ${list.length > 5 ? `<button class="btn sm ghost block" data-action="ex-show-all">${ui.exShowAll ? 'Ver menos' : `Ver los ${list.length} ejercicios`}</button>` : ''}
   </section>`;
 
@@ -1311,7 +1344,10 @@ function renderProgress() {
 
   shown.forEach(([id, pts], i) => {
     const u = isVol ? du : S.unitFor(id);
-    sparkArea(document.getElementById(`c-ex-${i}`), { points: pts.map((p) => ({ x: p.x, y: S.toUnit(p.y, u) })), unit: u });
+    sparkArea(document.getElementById(`c-ex-${i}`), {
+      points: pts.map((p) => ({ x: p.x, y: S.toUnit(p.y, u) })), unit: u,
+      onPoint: (k) => actions['session-detail']({ dataset: { id: pts[k].sid } }),
+    });
   });
   drawBodyChart();
 }
@@ -1408,7 +1444,7 @@ function bodyForm(date = S.todayISO()) {
     <form id="body-form" class="stack">
       <label class="field"><span>Fecha</span><input type="date" name="date" value="${date}" max="${S.todayISO()}" required></label>
       <div class="grid-2">${S.BODY_FIELDS.map((f) => `<label class="field"><span>${f.label} (${bodyUnit(f)})</span>
-        <input type="number" inputmode="decimal" step="0.1" min="0" name="${f.key}" value="${esc(existing[f.key] !== undefined && existing[f.key] !== '' ? bodyVal(existing[f.key], f) : '')}"></label>`).join('')}</div>
+        <input type="text" inputmode="decimal" autocomplete="off" name="${f.key}" value="${esc(existing[f.key] !== undefined && existing[f.key] !== '' ? dec(bodyVal(existing[f.key], f)) : '')}"></label>`).join('')}</div>
       <p class="muted small" style="margin:0">Deja en blanco lo que no midas hoy.</p>
       <button class="btn primary block">Guardar</button>
       ${existing.date ? `<button type="button" class="btn ghost danger block" data-action="body-delete" data-date="${date}">Eliminar este registro</button>` : ''}
@@ -1419,7 +1455,8 @@ function bodyForm(date = S.todayISO()) {
       const entry = { date: f.get('date') };
       for (const bf of S.BODY_FIELDS) {
         const v = f.get(bf.key);
-        if (v !== '') entry[bf.key] = bf.convert ? S.fromUnit(Number(v), S.defaultUnit()) : Number(v);
+        const n = parseDec(v);
+        if (n !== '' && n > 0) entry[bf.key] = bf.convert ? S.fromUnit(n, S.defaultUnit()) : n;
       }
       if (Object.keys(entry).length === 1) return toast('Introduce al menos una medida');
       S.upsertBody(entry);
@@ -2237,18 +2274,6 @@ const actions = {
     if (!e.warmup.length) e.warmupOn = false;
     S.save(); const y = window.scrollY; render(); window.scrollTo(0, y);
   },
-  'ex-menu': (b) => {
-    const i = Number(b.dataset.i);
-    const d = S.getState().draft;
-    const ex = S.exById(d.exercises[i].exId);
-    openSheet(ex.name, `
-      <div class="menu-list">
-        <button class="menu-row" data-action="ex-detail" data-id="${ex.id}"><span class="grow">Ver músculos y técnica</span><span class="chev" aria-hidden="true">›</span></button>
-        ${i > 0 ? `<button class="menu-row" data-action="ex-move" data-i="${i}" data-dir="-1"><span class="grow">Mover antes</span></button>` : ''}
-        ${i < d.exercises.length - 1 ? `<button class="menu-row" data-action="ex-move" data-i="${i}" data-dir="1"><span class="grow">Mover después</span></button>` : ''}
-        <button class="menu-row danger-row" data-action="ex-remove" data-i="${i}"><span class="grow">Quitar del entrenamiento</span></button>
-      </div>`);
-  },
   'ex-move': (b) => {
     const d = S.getState().draft;
     const i = Number(b.dataset.i), k = i + Number(b.dataset.dir);
@@ -2294,6 +2319,7 @@ const actions = {
     S.save(); render(); window.scrollTo(0, 0);
   }),
   finish: () => {
+    closeSheet();
     const d = S.getState().draft;
     const n = S.doneSets(d);
     if (!n) {
@@ -2309,14 +2335,27 @@ const actions = {
     if (editing) toast('Cambios guardados');
     else showSummary(saved);
   },
+  // Un solo «⋯»: opciones del ejercicio actual (unidad, músculos, mover, quitar) y del entrenamiento.
   'session-menu': () => {
     const d = S.getState().draft;
+    const i = d.current || 0;
+    const e = d.exercises[i];
+    const ex = e && S.exById(e.exId);
     openSheet(d.editing ? 'Editando entrenamiento' : 'Entrenamiento en curso', `
-      <div class="menu-list">
+      ${e ? `<div class="menu-title small muted">${esc(ex.name)}</div>
+      <div class="menu-list" data-menu="session">
+        <div class="menu-row"><span class="grow">Unidad de peso</span>${unitSwitch(ex.id, S.unitFor(ex.id))}</div>
+        <button class="menu-row" data-action="ex-detail" data-id="${ex.id}"><span class="grow">Ver músculos y técnica</span><span class="chev" aria-hidden="true">›</span></button>
+        ${i > 0 ? `<button class="menu-row" data-action="ex-move" data-i="${i}" data-dir="-1"><span class="grow">Mover antes</span></button>` : ''}
+        ${i < d.exercises.length - 1 ? `<button class="menu-row" data-action="ex-move" data-i="${i}" data-dir="1"><span class="grow">Mover después</span></button>` : ''}
+        <button class="menu-row danger-row" data-action="ex-remove" data-i="${i}"><span class="grow">Quitar este ejercicio</span></button>
+      </div>` : ''}
+      <div class="menu-title small muted">Entrenamiento</div>
+      <div class="menu-list" data-menu="session">
         <button class="menu-row" data-action="session-add-ex-menu"><span class="grow">Añadir ejercicio</span><span class="chev" aria-hidden="true">›</span></button>
+        <button class="menu-row" data-action="finish"><span class="grow">${d.editing ? 'Guardar cambios' : 'Terminar entrenamiento'}</span></button>
         <button class="menu-row danger-row" data-action="discard"><span class="grow">${d.editing ? 'Cancelar edición' : 'Descartar entrenamiento'}</span></button>
-      </div>
-      ${d.editing ? '' : '<p class="muted small" style="margin:0">Al descartar se pierde lo anotado en esta sesión.</p>'}`);
+      </div>`);
   },
   'session-add-ex-menu': () => { closeSheet(); actions['session-add-ex'](); },
   discard: () => {
@@ -2346,10 +2385,18 @@ const actions = {
   'ex-unit': (b) => {
     S.setExerciseUnit(b.dataset.id, b.dataset.u);
     if ($sheet.open && document.querySelector('#sheet [data-action="ex-tab"]')) showExerciseDetail(b.dataset.id);
+    else if ($sheet.open && document.querySelector('#sheet [data-menu="session"]')) actions['session-menu']();
     const scroll = window.scrollY;
     render(); window.scrollTo(0, scroll);
   },
   'ex-tab': (b) => showExerciseDetail(b.dataset.id, b.dataset.tab),
+  'custom-edit': (b) => newExerciseForm('', null, b.dataset.id),
+  'custom-delete': (b) => {
+    const ex = S.exById(b.dataset.id);
+    if (!confirm(`¿Borrar “${ex.name}”? Dejará de salir en el buscador; tu historial lo conserva.`)) return;
+    S.deleteCustomExercise(b.dataset.id);
+    closeSheet(); toast('Ejercicio borrado'); render();
+  },
   'ex-metric': (b) => { ui.exMetric = b.dataset.m; showExerciseDetail(b.dataset.id, 'charts'); },
   'session-detail': (b) => {
     const s = S.getState().sessions.find((x) => x.id === b.dataset.id);
@@ -2585,7 +2632,7 @@ document.addEventListener('input', (e) => {
   if (t.dataset.warm) {
     const ex = S.getState().draft.exercises[t.dataset.i];
     const w = ex.warmup[t.dataset.j];
-    const raw = t.dataset.warm === 'kg' ? S.fromUnit(num(t.value), S.unitFor(ex.exId)) : num(t.value);
+    const raw = t.dataset.warm === 'kg' ? S.fromUnit(parseDec(t.value), S.unitFor(ex.exId)) : parseDec(t.value);
     w[t.dataset.warm] = S.clampEntry(ex.exId, t.dataset.warm, raw).value;
     S.save();
     return;
@@ -2593,7 +2640,7 @@ document.addEventListener('input', (e) => {
   if (t.dataset.set) {
     const ex = S.getState().draft.exercises[t.dataset.i];
     const s = ex.sets[t.dataset.j];
-    const raw = t.dataset.set === 'kg' ? S.fromUnit(num(t.value), S.unitFor(ex.exId)) : num(t.value);
+    const raw = t.dataset.set === 'kg' ? S.fromUnit(parseDec(t.value), S.unitFor(ex.exId)) : parseDec(t.value);
     s[t.dataset.set] = S.clampEntry(ex.exId, t.dataset.set, raw).value;
     if (t.dataset.set === 'kg') s.kgTouched = true;
     S.save();
@@ -2624,9 +2671,9 @@ document.addEventListener('change', (e) => {
     const ex = S.getState().draft?.exercises[t.dataset.i];
     if (ex) {
       const u = S.unitFor(ex.exId);
-      const raw = field === 'kg' ? S.fromUnit(Number(t.value), u) : Number(t.value);
+      const raw = field === 'kg' ? S.fromUnit(parseDec(t.value), u) : parseDec(t.value);
       const { value, note } = S.clampEntry(ex.exId, field, raw);
-      t.value = value === '' ? '' : field === 'kg' ? S.toUnit(value, u) : value;
+      t.value = value === '' ? '' : dec(field === 'kg' ? S.toUnit(value, u) : value);
       if (note) toast(u === 'lb' ? note.replace(/Máximo (\d+) kg/, (_, k) => `Máximo ${S.toUnit(Number(k), 'lb')} lb`) : note);
     }
     return;
@@ -2687,19 +2734,56 @@ Cloud.onChange(() => {
   const id = Cloud.getUser()?.id;
   if (id !== lastUserId) { lastUserId = id; safeRender(); }
 });
-Cloud.initCloud({ onData: safeRender });
+Cloud.initCloud({ onData: safeRender, onPasswordRecovery: openNewPassword });
+
+// Hoja para elegir la contraseña nueva al volver desde el correo de recuperación.
+function openNewPassword() {
+  openSheet('Nueva contraseña', `
+    <form id="pw-form" class="stack">
+      <p class="muted small" style="margin:0">Elige una contraseña nueva para tu cuenta (mínimo 6 caracteres).</p>
+      <input type="password" name="pw" placeholder="Contraseña nueva" autocomplete="new-password" minlength="6" required>
+      <input type="password" name="pw2" placeholder="Repite la contraseña" autocomplete="new-password" minlength="6" required>
+      <button class="btn primary block">Guardar contraseña</button>
+      <p class="small" id="pw-msg" style="margin:0" role="status"></p>
+    </form>`, (root) => {
+    root.querySelector('#pw-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const f = new FormData(e.target);
+      const msg = root.querySelector('#pw-msg');
+      if (f.get('pw') !== f.get('pw2')) { msg.textContent = 'Las dos contraseñas no coinciden.'; return; }
+      const btn = e.target.querySelector('button');
+      btn.disabled = true;
+      try {
+        await Cloud.updatePassword(f.get('pw'));
+        closeSheet(); toast('Contraseña actualizada');
+      } catch (err) {
+        msg.textContent = err.message;
+        btn.disabled = false;
+      }
+    });
+  });
+}
 
 // Actualizaciones: al publicar una versión nueva, el service worker nuevo toma el control
-// y la app se recarga sola (el entrenamiento en curso está guardado y no se pierde).
+// y la app se recarga sola. Si hay un entreno en curso (o el resumen, una hoja abierta),
+// espera a que termines para no reiniciar la pantalla a mitad del entreno.
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   const hadController = Boolean(navigator.serviceWorker.controller);
   let reloading = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!hadController || reloading) return;
+  let pending = false;
+  const busy = () => Boolean(S.getState().draft) || Boolean(document.querySelector('.celebrate')) || $sheet.open;
+  const reload = () => {
+    if (reloading) return;
     reloading = true;
     try { sessionStorage.setItem('gymtrack.updated', '1'); } catch {}
     location.reload();
+  };
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) return;
+    if (busy()) { pending = true; return; }
+    reload();
   });
+  setInterval(() => { if (pending && !busy()) reload(); }, 3000);
   navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
   }).catch(() => {});
