@@ -1917,7 +1917,7 @@ function showSummary(session) {
   const exRows = session.exercises.map((e) => {
     const sets = e.sets.filter((x) => x.side !== 'R').length;
     const top = Math.max(...e.sets.map((x) => Number(x.kg) || 0));
-    return `<div class="win-ex"><span class="grow">${esc(S.exById(e.exId).name)}${e.sets.some((x) => x.pr) ? ' <span class="win-pr" title="Récord">${ICON_TROPHY}</span>' : ''}</span>
+    return `<div class="win-ex"><span class="grow">${esc(S.exById(e.exId).name)}${e.sets.some((x) => x.pr) ? ` <span class="win-pr" title="Récord">${ICON_TROPHY}</span>` : ''}</span>
       <span class="win-ex-val">${sets}${top ? ` × ${wt(top, S.unitFor(e.exId))}` : ` ${sets === 1 ? 'serie' : 'series'}`}</span></div>`;
   }).join('');
   const overlay = document.createElement('div');
@@ -2032,7 +2032,7 @@ function openMenu() {
   openSheet(user ? 'Tu cuenta' : 'Menú', `${top}
     <div class="menu-list">
       ${menuRow('open-settings', 'Ajustes')}
-      ${user ? '' : menuRow('open-backup', 'Respaldo de datos')}
+      ${menuRow('open-backup', 'Respaldo de datos')}
     </div>
     ${user ? '<button class="btn block ghost danger" data-action="cloud-logout">Cerrar sesión</button>' : ''}`);
 }
@@ -2129,7 +2129,7 @@ function openBackup() {
   const st = S.getState();
   openSheet('Respaldo de datos', `
     <p class="muted small" style="margin:0 0 10px">${Cloud.getUser()
-      ? 'Tus datos ya se guardan en la nube. Aun así puedes descargar una copia.'
+      ? 'Tus datos ya se guardan en la nube. Aun así puedes descargar una copia (sirve también para pasar tu historial a la app del iPhone).'
       : 'Sin sesión iniciada, tus datos se guardan solo en este teléfono. Descarga una copia de vez en cuando.'}</p>
     <div class="menu-list">
       ${menuRow('export', 'Descargar copia (.json)')}

@@ -2,6 +2,11 @@
 
 Cada actualización de la app, de la más nueva a la más antigua.
 
+## 2026-09-27
+- «Respaldo de datos» se ve también con la sesión iniciada (para pasar tu historial a la app del iPhone).
+- Arreglo: en la lista de ejercicios del resumen final, el trofeo de récord salía como texto.
+- La web queda terminada («congelada»): a partir de ahora solo arreglos. Plan de la app del iPhone en `docs/app-ios/PLAN.md`.
+
 ## 2026-09-26
 - Editar la rutina, fácil y en cualquier momento:
   - Al elegir una rutina (también la recomendada) aparece el paso «Tu rutina»: los ejercicios de cada día con su miniatura. Arrastras ≡ para ordenarlos y abajo pulsas «Empezar con esta rutina».

@@ -118,6 +118,10 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 
 ## Plan: app nativa para iOS (decidido el 26-09-2026)
 
+- **27-09-2026: la web queda CONGELADA** (solo arreglos). El plan de la app está en `docs/app-ios/PLAN.md`
+  (se copia al proyecto de Xcode como `CLAUDE.md`) con el catálogo exportado en `docs/app-ios/datos/*.json`.
+  Si cambia el catálogo o las plantillas de la web, volver a exportar esos JSON.
+
 - El dueño hará después una **app nativa en Xcode (SwiftUI)** con Claude integrado en Xcode (26.3+, plan Pro, por tandas).
   La web es la **maqueta viva**: primero se terminan los detalles visuales pendientes y luego se **congela**
   (solo arreglos). Web y app son desarrollos independientes (JS vs Swift); se comparten diseño, decisiones y datos.
@@ -130,15 +134,13 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   (notificación local + **Live Activity** en la pantalla bloqueada y la isla dinámica), vibración (Safari en iPhone
   no permite vibrar) y **recordatorios los días de entreno** (notificaciones programadas).
 - Importar el historial de la web a la app una vez (exportar JSON desde la web → importar en la app).
-  Ojo: «Respaldo de datos» (exportar) solo aparece en el menú sin sesión; habrá que mostrarlo también con sesión.
+  «Respaldo de datos» (exportar) aparece en el menú del perfil siempre, con o sin sesión (27-09-2026).
 
 ## Pendientes (al 26-09-2026)
 
 - Confirmar en un iPhone real el giro con dos dedos y el toque para alinear del sticker de Compartir.
-- **Siguiente paso del dueño:** mandar en un solo mensaje su lista de detalles visuales para simplificar la web
-  (quitar información, más limpio). Hacerlos en una tanda, con maquetas si son cambios grandes; después, congelar la web.
+- **Siguiente paso del dueño (27-09-2026):** empezar la app en Xcode siguiendo `docs/app-ios/PLAN.md`, fase 1.
 - Opcional: hacer más pequeños los enlaces «+ Aproximación / Quitar» bajo las filas de aproximación (lo ofrecí; sin respuesta).
-- Cuando empiece con Xcode: preparar un documento con el plan de la app (pantallas, datos, estilo, orden de trabajo).
 - Pedidas el 26-09-2026, sin hacer aún (necesitan maqueta): **superseries** y **semana de descarga**. Recordatorios → app de Xcode.
 - Ahorro: los chats muy largos consumen muchos créditos de la nube; conviene empezar chats nuevos
   (este archivo da el contexto) y agrupar cambios pequeños en un solo mensaje.

@@ -1,0 +1,1086 @@
+{
+ "names": {
+  "chest": "Pecho",
+  "shoulders": "Hombros",
+  "biceps": "Bíceps",
+  "triceps": "Tríceps",
+  "forearms": "Antebrazos",
+  "abs": "Abdomen",
+  "obliques": "Oblicuos",
+  "upper_back": "Trapecio y espalda alta",
+  "lats": "Dorsales",
+  "lower_back": "Lumbares",
+  "glutes": "Glúteos",
+  "quads": "Cuádriceps",
+  "hamstrings": "Femorales",
+  "calves": "Pantorrillas"
+ },
+ "backGroups": [
+  "upper_back",
+  "lats",
+  "lower_back",
+  "triceps",
+  "glutes",
+  "hamstrings",
+  "calves"
+ ],
+ "lowerGroups": [
+  "glutes",
+  "quads",
+  "hamstrings",
+  "calves"
+ ],
+ "byCategory": {
+  "Pecho": [
+   [
+    "chest"
+   ],
+   [
+    "shoulders",
+    "triceps"
+   ]
+  ],
+  "Espalda": [
+   [
+    "lats",
+    "upper_back"
+   ],
+   [
+    "biceps"
+   ]
+  ],
+  "Hombros": [
+   [
+    "shoulders"
+   ],
+   [
+    "triceps"
+   ]
+  ],
+  "Bíceps": [
+   [
+    "biceps"
+   ],
+   [
+    "forearms"
+   ]
+  ],
+  "Tríceps": [
+   [
+    "triceps"
+   ],
+   []
+  ],
+  "Antebrazo": [
+   [
+    "forearms"
+   ],
+   []
+  ],
+  "Cuádriceps": [
+   [
+    "quads"
+   ],
+   [
+    "glutes"
+   ]
+  ],
+  "Isquios": [
+   [
+    "hamstrings"
+   ],
+   [
+    "glutes"
+   ]
+  ],
+  "Glúteos": [
+   [
+    "glutes"
+   ],
+   [
+    "hamstrings"
+   ]
+  ],
+  "Pantorrillas": [
+   [
+    "calves"
+   ],
+   []
+  ],
+  "Abdomen": [
+   [
+    "abs"
+   ],
+   [
+    "obliques"
+   ]
+  ]
+ },
+ "byExercise": {
+  "press-banca": [
+   [
+    "chest"
+   ],
+   [
+    "shoulders",
+    "triceps"
+   ]
+  ],
+  "press-banca-mancuernas": [
+   [
+    "chest"
+   ],
+   [
+    "shoulders",
+    "triceps"
+   ]
+  ],
+  "press-inclinado-barra": [
+   [
+    "chest",
+    "shoulders"
+   ],
+   [
+    "triceps"
+   ]
+  ],
+  "press-inclinado-mancuernas": [
+   [
+    "chest",
+    "shoulders"
+   ],
+   [
+    "triceps"
+   ]
+  ],
+  "press-declinado": [
+   [
+    "chest"
+   ],
+   [
+    "shoulders",
+    "triceps"
+   ]
+  ],
+  "press-pecho-maquina": [
+   [
+    "chest"
+   ],
+   [
+    "shoulders",
+    "triceps"
+   ]
+  ],
+  "press-inclinado-smith": [
+   [
+    "chest",
+    "shoulders"
+   ],
+   [
+    "triceps"
+   ]
+  ],
+  "aperturas-mancuernas": [
+   [
+    "chest"
+   ],
+   [
+    "shoulders"
+   ]
+  ],
+  "aperturas-inclinadas": [
+   [
+    "chest"
+   ],
+   [
+    "shoulders"
+   ]
+  ],
+  "cruce-poleas": [
+   [
+    "chest"
+   ],
+   [
+    "shoulders"
+   ]
+  ],
+  "cruce-poleas-bajo": [
+   [
+    "chest"
+   ],
+   [
+    "shoulders"
+   ]
+  ],
+  "pec-deck": [
+   [
+    "chest"
+   ],
+   [
+    "shoulders"
+   ]
+  ],
+  "fondos-pecho": [
+   [
+    "chest",
+    "triceps"
+   ],
+   [
+    "shoulders"
+   ]
+  ],
+  "flexiones": [
+   [
+    "chest"
+   ],
+   [
+    "triceps",
+    "shoulders",
+    "abs"
+   ]
+  ],
+  "pullover": [
+   [
+    "chest",
+    "lats"
+   ],
+   [
+    "triceps"
+   ]
+  ],
+  "dominadas": [
+   [
+    "lats"
+   ],
+   [
+    "biceps",
+    "upper_back",
+    "forearms"
+   ]
+  ],
+  "dominadas-supinas": [
+   [
+    "lats",
+    "biceps"
+   ],
+   [
+    "upper_back",
+    "forearms"
+   ]
+  ],
+  "dominadas-lastradas": [
+   [
+    "lats"
+   ],
+   [
+    "biceps",
+    "upper_back",
+    "forearms"
+   ]
+  ],
+  "jalon-pecho": [
+   [
+    "lats"
+   ],
+   [
+    "biceps",
+    "upper_back"
+   ]
+  ],
+  "jalon-agarre-cerrado": [
+   [
+    "lats"
+   ],
+   [
+    "biceps",
+    "upper_back"
+   ]
+  ],
+  "jalon-agarre-neutro": [
+   [
+    "lats"
+   ],
+   [
+    "biceps",
+    "upper_back"
+   ]
+  ],
+  "remo-barra": [
+   [
+    "lats",
+    "upper_back"
+   ],
+   [
+    "biceps",
+    "lower_back"
+   ]
+  ],
+  "remo-pendlay": [
+   [
+    "lats",
+    "upper_back"
+   ],
+   [
+    "biceps",
+    "lower_back"
+   ]
+  ],
+  "remo-mancuerna": [
+   [
+    "lats"
+   ],
+   [
+    "upper_back",
+    "biceps"
+   ]
+  ],
+  "remo-sentado-polea": [
+   [
+    "lats",
+    "upper_back"
+   ],
+   [
+    "biceps"
+   ]
+  ],
+  "remo-t": [
+   [
+    "lats",
+    "upper_back"
+   ],
+   [
+    "biceps",
+    "lower_back"
+   ]
+  ],
+  "remo-maquina": [
+   [
+    "lats",
+    "upper_back"
+   ],
+   [
+    "biceps"
+   ]
+  ],
+  "remo-pecho-apoyado": [
+   [
+    "upper_back",
+    "lats"
+   ],
+   [
+    "biceps",
+    "shoulders"
+   ]
+  ],
+  "pullover-polea": [
+   [
+    "lats"
+   ],
+   [
+    "triceps"
+   ]
+  ],
+  "peso-muerto": [
+   [
+    "lower_back",
+    "glutes",
+    "hamstrings"
+   ],
+   [
+    "upper_back",
+    "quads",
+    "forearms"
+   ]
+  ],
+  "rack-pull": [
+   [
+    "lower_back",
+    "upper_back"
+   ],
+   [
+    "glutes",
+    "forearms"
+   ]
+  ],
+  "hiperextensiones": [
+   [
+    "lower_back"
+   ],
+   [
+    "glutes",
+    "hamstrings"
+   ]
+  ],
+  "encogimientos-barra": [
+   [
+    "upper_back"
+   ],
+   [
+    "forearms"
+   ]
+  ],
+  "encogimientos-mancuernas": [
+   [
+    "upper_back"
+   ],
+   [
+    "forearms"
+   ]
+  ],
+  "press-militar": [
+   [
+    "shoulders"
+   ],
+   [
+    "triceps",
+    "upper_back",
+    "abs"
+   ]
+  ],
+  "press-hombro-mancuernas": [
+   [
+    "shoulders"
+   ],
+   [
+    "triceps",
+    "upper_back"
+   ]
+  ],
+  "press-arnold": [
+   [
+    "shoulders"
+   ],
+   [
+    "triceps",
+    "upper_back"
+   ]
+  ],
+  "press-hombro-maquina": [
+   [
+    "shoulders"
+   ],
+   [
+    "triceps",
+    "upper_back"
+   ]
+  ],
+  "elevaciones-laterales": [
+   [
+    "shoulders"
+   ],
+   [
+    "upper_back"
+   ]
+  ],
+  "elevaciones-laterales-polea": [
+   [
+    "shoulders"
+   ],
+   [
+    "upper_back"
+   ]
+  ],
+  "elevaciones-laterales-maquina": [
+   [
+    "shoulders"
+   ],
+   [
+    "upper_back"
+   ]
+  ],
+  "elevaciones-frontales": [
+   [
+    "shoulders"
+   ],
+   [
+    "chest"
+   ]
+  ],
+  "pajaros": [
+   [
+    "shoulders",
+    "upper_back"
+   ],
+   []
+  ],
+  "reverse-pec-deck": [
+   [
+    "shoulders",
+    "upper_back"
+   ],
+   []
+  ],
+  "face-pull": [
+   [
+    "shoulders",
+    "upper_back"
+   ],
+   [
+    "biceps"
+   ]
+  ],
+  "remo-al-menton": [
+   [
+    "shoulders",
+    "upper_back"
+   ],
+   [
+    "biceps"
+   ]
+  ],
+  "curl-barra": [
+   [
+    "biceps"
+   ],
+   [
+    "forearms"
+   ]
+  ],
+  "curl-barra-z": [
+   [
+    "biceps"
+   ],
+   [
+    "forearms"
+   ]
+  ],
+  "curl-mancuernas": [
+   [
+    "biceps"
+   ],
+   [
+    "forearms"
+   ]
+  ],
+  "curl-martillo": [
+   [
+    "biceps",
+    "forearms"
+   ],
+   []
+  ],
+  "curl-inclinado": [
+   [
+    "biceps"
+   ],
+   [
+    "forearms"
+   ]
+  ],
+  "curl-predicador": [
+   [
+    "biceps"
+   ],
+   [
+    "forearms"
+   ]
+  ],
+  "curl-concentrado": [
+   [
+    "biceps"
+   ],
+   [
+    "forearms"
+   ]
+  ],
+  "curl-polea": [
+   [
+    "biceps"
+   ],
+   [
+    "forearms"
+   ]
+  ],
+  "curl-bayesian": [
+   [
+    "biceps"
+   ],
+   [
+    "forearms"
+   ]
+  ],
+  "curl-maquina": [
+   [
+    "biceps"
+   ],
+   [
+    "forearms"
+   ]
+  ],
+  "press-frances": [
+   [
+    "triceps"
+   ],
+   []
+  ],
+  "extension-polea": [
+   [
+    "triceps"
+   ],
+   []
+  ],
+  "extension-polea-barra": [
+   [
+    "triceps"
+   ],
+   []
+  ],
+  "extension-sobre-cabeza": [
+   [
+    "triceps"
+   ],
+   []
+  ],
+  "extension-sobre-cabeza-polea": [
+   [
+    "triceps"
+   ],
+   []
+  ],
+  "press-cerrado": [
+   [
+    "triceps",
+    "chest"
+   ],
+   [
+    "shoulders"
+   ]
+  ],
+  "fondos-triceps": [
+   [
+    "triceps"
+   ],
+   [
+    "chest",
+    "shoulders"
+   ]
+  ],
+  "fondos-banco": [
+   [
+    "triceps"
+   ],
+   [
+    "shoulders",
+    "chest"
+   ]
+  ],
+  "patada-triceps": [
+   [
+    "triceps"
+   ],
+   []
+  ],
+  "extension-triceps-maquina": [
+   [
+    "triceps"
+   ],
+   []
+  ],
+  "curl-muneca": [
+   [
+    "forearms"
+   ],
+   []
+  ],
+  "curl-muneca-inverso": [
+   [
+    "forearms"
+   ],
+   []
+  ],
+  "curl-inverso": [
+   [
+    "forearms",
+    "biceps"
+   ],
+   []
+  ],
+  "paseo-granjero": [
+   [
+    "forearms",
+    "upper_back"
+   ],
+   [
+    "abs",
+    "obliques",
+    "calves"
+   ]
+  ],
+  "sentadilla": [
+   [
+    "quads",
+    "glutes"
+   ],
+   [
+    "hamstrings",
+    "lower_back",
+    "abs"
+   ]
+  ],
+  "sentadilla-frontal": [
+   [
+    "quads"
+   ],
+   [
+    "glutes",
+    "abs",
+    "upper_back"
+   ]
+  ],
+  "sentadilla-hack": [
+   [
+    "quads"
+   ],
+   [
+    "glutes"
+   ]
+  ],
+  "sentadilla-smith": [
+   [
+    "quads"
+   ],
+   [
+    "glutes",
+    "hamstrings"
+   ]
+  ],
+  "sentadilla-goblet": [
+   [
+    "quads",
+    "glutes"
+   ],
+   [
+    "abs"
+   ]
+  ],
+  "sentadilla-bulgara": [
+   [
+    "quads"
+   ],
+   [
+    "glutes",
+    "hamstrings"
+   ]
+  ],
+  "prensa": [
+   [
+    "quads"
+   ],
+   [
+    "glutes",
+    "hamstrings"
+   ]
+  ],
+  "extension-cuadriceps": [
+   [
+    "quads"
+   ],
+   []
+  ],
+  "zancadas": [
+   [
+    "quads",
+    "glutes"
+   ],
+   [
+    "hamstrings",
+    "calves"
+   ]
+  ],
+  "zancadas-caminando": [
+   [
+    "quads",
+    "glutes"
+   ],
+   [
+    "hamstrings",
+    "calves"
+   ]
+  ],
+  "pendulum-squat": [
+   [
+    "quads"
+   ],
+   [
+    "glutes"
+   ]
+  ],
+  "step-up": [
+   [
+    "quads",
+    "glutes"
+   ],
+   [
+    "hamstrings",
+    "calves"
+   ]
+  ],
+  "peso-muerto-rumano": [
+   [
+    "hamstrings",
+    "glutes"
+   ],
+   [
+    "lower_back",
+    "forearms"
+   ]
+  ],
+  "peso-muerto-rumano-mancuernas": [
+   [
+    "hamstrings",
+    "glutes"
+   ],
+   [
+    "lower_back",
+    "forearms"
+   ]
+  ],
+  "peso-muerto-piernas-rigidas": [
+   [
+    "hamstrings",
+    "glutes"
+   ],
+   [
+    "lower_back",
+    "forearms"
+   ]
+  ],
+  "curl-femoral-tumbado": [
+   [
+    "hamstrings"
+   ],
+   [
+    "calves"
+   ]
+  ],
+  "curl-femoral-sentado": [
+   [
+    "hamstrings"
+   ],
+   [
+    "calves"
+   ]
+  ],
+  "buenos-dias": [
+   [
+    "hamstrings",
+    "lower_back"
+   ],
+   [
+    "glutes"
+   ]
+  ],
+  "nordic-curl": [
+   [
+    "hamstrings"
+   ],
+   [
+    "calves"
+   ]
+  ],
+  "hip-thrust": [
+   [
+    "glutes"
+   ],
+   [
+    "hamstrings",
+    "quads"
+   ]
+  ],
+  "hip-thrust-maquina": [
+   [
+    "glutes"
+   ],
+   [
+    "hamstrings"
+   ]
+  ],
+  "prensa-gluteos": [
+   [
+    "glutes",
+    "hamstrings"
+   ],
+   [
+    "quads"
+   ]
+  ],
+  "sentadilla-bulgara-gluteos": [
+   [
+    "glutes"
+   ],
+   [
+    "hamstrings",
+    "quads"
+   ]
+  ],
+  "sentadilla-smith-gluteos": [
+   [
+    "glutes"
+   ],
+   [
+    "quads",
+    "hamstrings"
+   ]
+  ],
+  "puente-gluteo": [
+   [
+    "glutes"
+   ],
+   [
+    "hamstrings"
+   ]
+  ],
+  "patada-gluteo-polea": [
+   [
+    "glutes"
+   ],
+   [
+    "hamstrings"
+   ]
+  ],
+  "abductores-maquina": [
+   [
+    "glutes"
+   ],
+   []
+  ],
+  "aductores-maquina": [
+   [
+    "quads"
+   ],
+   [
+    "glutes"
+   ]
+  ],
+  "peso-muerto-sumo": [
+   [
+    "glutes",
+    "quads",
+    "hamstrings"
+   ],
+   [
+    "lower_back",
+    "upper_back",
+    "forearms"
+   ]
+  ],
+  "elevacion-talones-pie": [
+   [
+    "calves"
+   ],
+   []
+  ],
+  "elevacion-talones-sentado": [
+   [
+    "calves"
+   ],
+   []
+  ],
+  "elevacion-talones-prensa": [
+   [
+    "calves"
+   ],
+   []
+  ],
+  "elevacion-talones-smith": [
+   [
+    "calves"
+   ],
+   []
+  ],
+  "crunch": [
+   [
+    "abs"
+   ],
+   [
+    "obliques"
+   ]
+  ],
+  "crunch-polea": [
+   [
+    "abs"
+   ],
+   [
+    "obliques"
+   ]
+  ],
+  "crunch-maquina": [
+   [
+    "abs"
+   ],
+   [
+    "obliques"
+   ]
+  ],
+  "plancha": [
+   [
+    "abs"
+   ],
+   [
+    "obliques",
+    "shoulders",
+    "glutes"
+   ]
+  ],
+  "plancha-lateral": [
+   [
+    "obliques"
+   ],
+   [
+    "abs",
+    "glutes"
+   ]
+  ],
+  "elevacion-piernas-colgado": [
+   [
+    "abs"
+   ],
+   [
+    "obliques",
+    "forearms"
+   ]
+  ],
+  "elevacion-piernas-banco": [
+   [
+    "abs"
+   ],
+   [
+    "obliques"
+   ]
+  ],
+  "rueda-abdominal": [
+   [
+    "abs"
+   ],
+   [
+    "lats",
+    "shoulders",
+    "obliques"
+   ]
+  ],
+  "russian-twist": [
+   [
+    "obliques"
+   ],
+   [
+    "abs"
+   ]
+  ],
+  "pallof-press": [
+   [
+    "obliques",
+    "abs"
+   ],
+   []
+  ],
+  "woodchopper": [
+   [
+    "obliques"
+   ],
+   [
+    "abs",
+    "shoulders"
+   ]
+  ]
+ }
+}

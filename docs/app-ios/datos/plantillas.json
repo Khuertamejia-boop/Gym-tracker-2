@@ -1,0 +1,834 @@
+[
+ {
+  "key": "ppl",
+  "name": "Push / Pull / Legs",
+  "description": "Empuje, tracción y pierna, dos veces por semana. Ideal para 6 días.",
+  "daysPerWeek": 6,
+  "week": [
+   0,
+   1,
+   2,
+   0,
+   1,
+   2,
+   null
+  ],
+  "days": [
+   {
+    "name": "Push (empuje)",
+    "exercises": [
+     {
+      "exId": "press-banca",
+      "sets": 4,
+      "reps": "6-8"
+     },
+     {
+      "exId": "press-inclinado-mancuernas",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "press-hombro-mancuernas",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "elevaciones-laterales",
+      "sets": 4,
+      "reps": "12-15"
+     },
+     {
+      "exId": "cruce-poleas",
+      "sets": 3,
+      "reps": "12-15"
+     },
+     {
+      "exId": "extension-polea",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "extension-sobre-cabeza-polea",
+      "sets": 3,
+      "reps": "10-12"
+     }
+    ]
+   },
+   {
+    "name": "Pull (tracción)",
+    "exercises": [
+     {
+      "exId": "dominadas",
+      "sets": 4,
+      "reps": "6-10"
+     },
+     {
+      "exId": "remo-barra",
+      "sets": 4,
+      "reps": "8-10"
+     },
+     {
+      "exId": "remo-sentado-polea",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "face-pull",
+      "sets": 3,
+      "reps": "12-15"
+     },
+     {
+      "exId": "curl-barra",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "curl-martillo",
+      "sets": 3,
+      "reps": "10-12"
+     }
+    ]
+   },
+   {
+    "name": "Legs (pierna)",
+    "exercises": [
+     {
+      "exId": "sentadilla",
+      "sets": 4,
+      "reps": "6-8"
+     },
+     {
+      "exId": "peso-muerto-rumano",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "prensa",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "curl-femoral-tumbado",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "extension-cuadriceps",
+      "sets": 3,
+      "reps": "12-15"
+     },
+     {
+      "exId": "elevacion-talones-pie",
+      "sets": 4,
+      "reps": "10-15"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "key": "arnold",
+  "name": "Arnold Split",
+  "description": "Pecho y espalda, hombros y brazos, pierna. Exigente: para 6 días y experiencia previa.",
+  "daysPerWeek": 6,
+  "week": [
+   0,
+   1,
+   2,
+   0,
+   1,
+   2,
+   null
+  ],
+  "days": [
+   {
+    "name": "Pecho y espalda",
+    "exercises": [
+     {
+      "exId": "press-banca",
+      "sets": 4,
+      "reps": "6-10"
+     },
+     {
+      "exId": "press-inclinado-mancuernas",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "aperturas-mancuernas",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "dominadas",
+      "sets": 4,
+      "reps": "6-10"
+     },
+     {
+      "exId": "remo-barra",
+      "sets": 4,
+      "reps": "8-10"
+     },
+     {
+      "exId": "pullover",
+      "sets": 3,
+      "reps": "10-12"
+     }
+    ]
+   },
+   {
+    "name": "Hombros y brazos",
+    "exercises": [
+     {
+      "exId": "press-militar",
+      "sets": 4,
+      "reps": "6-10"
+     },
+     {
+      "exId": "press-arnold",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "elevaciones-laterales",
+      "sets": 4,
+      "reps": "12-15"
+     },
+     {
+      "exId": "curl-barra",
+      "sets": 4,
+      "reps": "8-10"
+     },
+     {
+      "exId": "press-frances",
+      "sets": 4,
+      "reps": "8-10"
+     },
+     {
+      "exId": "curl-inclinado",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "extension-polea",
+      "sets": 3,
+      "reps": "10-12"
+     }
+    ]
+   },
+   {
+    "name": "Pierna",
+    "exercises": [
+     {
+      "exId": "sentadilla",
+      "sets": 4,
+      "reps": "6-10"
+     },
+     {
+      "exId": "prensa",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "peso-muerto-piernas-rigidas",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "curl-femoral-tumbado",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "zancadas",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "elevacion-talones-pie",
+      "sets": 4,
+      "reps": "12-15"
+     },
+     {
+      "exId": "crunch-polea",
+      "sets": 3,
+      "reps": "12-15"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "key": "torso-pierna",
+  "name": "Torso / Pierna",
+  "description": "Dos días de torso y dos de pierna, con variantes A y B. Ideal para 4 días.",
+  "daysPerWeek": 4,
+  "week": [
+   0,
+   1,
+   null,
+   2,
+   3,
+   null,
+   null
+  ],
+  "days": [
+   {
+    "name": "Torso A",
+    "exercises": [
+     {
+      "exId": "press-banca",
+      "sets": 4,
+      "reps": "6-8"
+     },
+     {
+      "exId": "remo-barra",
+      "sets": 4,
+      "reps": "6-8"
+     },
+     {
+      "exId": "press-hombro-mancuernas",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "jalon-pecho",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "curl-barra-z",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "extension-polea",
+      "sets": 3,
+      "reps": "10-12"
+     }
+    ]
+   },
+   {
+    "name": "Pierna A",
+    "exercises": [
+     {
+      "exId": "sentadilla",
+      "sets": 4,
+      "reps": "6-8"
+     },
+     {
+      "exId": "peso-muerto-rumano",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "prensa",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "curl-femoral-sentado",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "elevacion-talones-pie",
+      "sets": 4,
+      "reps": "10-15"
+     }
+    ]
+   },
+   {
+    "name": "Torso B",
+    "exercises": [
+     {
+      "exId": "press-inclinado-mancuernas",
+      "sets": 4,
+      "reps": "8-10"
+     },
+     {
+      "exId": "dominadas",
+      "sets": 4,
+      "reps": "6-10"
+     },
+     {
+      "exId": "press-pecho-maquina",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "remo-mancuerna",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "elevaciones-laterales",
+      "sets": 4,
+      "reps": "12-15"
+     },
+     {
+      "exId": "curl-martillo",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "extension-sobre-cabeza-polea",
+      "sets": 3,
+      "reps": "10-12"
+     }
+    ]
+   },
+   {
+    "name": "Pierna B",
+    "exercises": [
+     {
+      "exId": "peso-muerto",
+      "sets": 3,
+      "reps": "4-6"
+     },
+     {
+      "exId": "sentadilla-bulgara",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "hip-thrust",
+      "sets": 3,
+      "reps": "8-12"
+     },
+     {
+      "exId": "extension-cuadriceps",
+      "sets": 3,
+      "reps": "12-15"
+     },
+     {
+      "exId": "curl-femoral-tumbado",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "elevacion-talones-sentado",
+      "sets": 4,
+      "reps": "12-15"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "key": "torso-pierna-ppl",
+  "name": "Torso / Pierna + PPL",
+  "description": "Torso y pierna, y luego empuje, tracción y pierna. Ideal para 5 días.",
+  "daysPerWeek": 5,
+  "week": [
+   0,
+   1,
+   null,
+   2,
+   3,
+   4,
+   null
+  ],
+  "days": [
+   {
+    "name": "Torso",
+    "exercises": [
+     {
+      "exId": "press-banca",
+      "sets": 4,
+      "reps": "6-8"
+     },
+     {
+      "exId": "remo-barra",
+      "sets": 4,
+      "reps": "6-8"
+     },
+     {
+      "exId": "press-hombro-mancuernas",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "jalon-pecho",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "curl-barra-z",
+      "sets": 2,
+      "reps": "10-12"
+     },
+     {
+      "exId": "extension-polea",
+      "sets": 2,
+      "reps": "10-12"
+     }
+    ]
+   },
+   {
+    "name": "Pierna A",
+    "exercises": [
+     {
+      "exId": "sentadilla",
+      "sets": 4,
+      "reps": "6-8"
+     },
+     {
+      "exId": "peso-muerto-rumano",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "prensa",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "curl-femoral-sentado",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "elevacion-talones-pie",
+      "sets": 4,
+      "reps": "10-15"
+     }
+    ]
+   },
+   {
+    "name": "Push (empuje)",
+    "exercises": [
+     {
+      "exId": "press-inclinado-mancuernas",
+      "sets": 4,
+      "reps": "8-10"
+     },
+     {
+      "exId": "press-pecho-maquina",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "elevaciones-laterales",
+      "sets": 4,
+      "reps": "12-15"
+     },
+     {
+      "exId": "cruce-poleas",
+      "sets": 3,
+      "reps": "12-15"
+     },
+     {
+      "exId": "extension-sobre-cabeza-polea",
+      "sets": 3,
+      "reps": "10-12"
+     }
+    ]
+   },
+   {
+    "name": "Pull (tracción)",
+    "exercises": [
+     {
+      "exId": "dominadas",
+      "sets": 4,
+      "reps": "6-10"
+     },
+     {
+      "exId": "remo-sentado-polea",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "remo-mancuerna",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "face-pull",
+      "sets": 3,
+      "reps": "12-15"
+     },
+     {
+      "exId": "curl-martillo",
+      "sets": 3,
+      "reps": "10-12"
+     }
+    ]
+   },
+   {
+    "name": "Pierna B",
+    "exercises": [
+     {
+      "exId": "peso-muerto",
+      "sets": 3,
+      "reps": "4-6"
+     },
+     {
+      "exId": "sentadilla-bulgara",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "hip-thrust",
+      "sets": 3,
+      "reps": "8-12"
+     },
+     {
+      "exId": "extension-cuadriceps",
+      "sets": 3,
+      "reps": "12-15"
+     },
+     {
+      "exId": "curl-femoral-tumbado",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "elevacion-talones-sentado",
+      "sets": 4,
+      "reps": "12-15"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "key": "full-body",
+  "name": "Full Body",
+  "description": "Todo el cuerpo en cada sesión. La mejor opción para empezar o si vas 2-3 días.",
+  "daysPerWeek": 3,
+  "week": [
+   0,
+   null,
+   1,
+   null,
+   0,
+   null,
+   null
+  ],
+  "days": [
+   {
+    "name": "Full Body A",
+    "exercises": [
+     {
+      "exId": "sentadilla",
+      "sets": 3,
+      "reps": "6-8"
+     },
+     {
+      "exId": "press-banca",
+      "sets": 3,
+      "reps": "6-8"
+     },
+     {
+      "exId": "remo-barra",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "elevaciones-laterales",
+      "sets": 3,
+      "reps": "12-15"
+     },
+     {
+      "exId": "curl-mancuernas",
+      "sets": 2,
+      "reps": "10-12"
+     }
+    ]
+   },
+   {
+    "name": "Full Body B",
+    "exercises": [
+     {
+      "exId": "peso-muerto",
+      "sets": 3,
+      "reps": "4-6"
+     },
+     {
+      "exId": "press-militar",
+      "sets": 3,
+      "reps": "6-8"
+     },
+     {
+      "exId": "dominadas",
+      "sets": 3,
+      "reps": "6-10"
+     },
+     {
+      "exId": "prensa",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "extension-polea",
+      "sets": 2,
+      "reps": "10-12"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "key": "excel-4-dias",
+  "name": "Torso / Pierna · glúteo",
+  "description": "Torso y pierna en 4 días, con un día de pierna centrado en glúteos y femorales.",
+  "daysPerWeek": 4,
+  "week": [
+   0,
+   1,
+   null,
+   2,
+   3,
+   null,
+   null
+  ],
+  "days": [
+   {
+    "name": "Torso A (Pecho / Espalda)",
+    "exercises": [
+     {
+      "exId": "press-inclinado-mancuernas",
+      "sets": 3,
+      "reps": "6-8"
+     },
+     {
+      "exId": "jalon-agarre-neutro",
+      "sets": 4,
+      "reps": "6-8"
+     },
+     {
+      "exId": "remo-barra",
+      "sets": 3,
+      "reps": "6-8"
+     },
+     {
+      "exId": "press-hombro-maquina",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "pec-deck",
+      "sets": 3,
+      "reps": "12-15"
+     },
+     {
+      "exId": "curl-martillo",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "extension-polea",
+      "sets": 2,
+      "reps": "10-12"
+     }
+    ]
+   },
+   {
+    "name": "Pierna A (Cuádriceps)",
+    "exercises": [
+     {
+      "exId": "sentadilla-hack",
+      "sets": 4,
+      "reps": "8-10"
+     },
+     {
+      "exId": "prensa",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "extension-cuadriceps",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "curl-femoral-sentado",
+      "sets": 2,
+      "reps": "10-12"
+     },
+     {
+      "exId": "elevacion-talones-smith",
+      "sets": 4,
+      "reps": "12-15"
+     }
+    ]
+   },
+   {
+    "name": "Torso B (Hombro / Tríceps + Espalda)",
+    "exercises": [
+     {
+      "exId": "press-pecho-maquina",
+      "sets": 4,
+      "reps": "6-8"
+     },
+     {
+      "exId": "jalon-agarre-neutro",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "elevaciones-laterales",
+      "sets": 4,
+      "reps": "12-15"
+     },
+     {
+      "exId": "face-pull",
+      "sets": 3,
+      "reps": "12-15"
+     },
+     {
+      "exId": "press-frances",
+      "sets": 3,
+      "reps": "6-8"
+     },
+     {
+      "exId": "extension-polea-barra",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "curl-barra-z",
+      "sets": 3,
+      "reps": "8-10"
+     }
+    ]
+   },
+   {
+    "name": "Pierna B (Glúteos / Femorales)",
+    "exercises": [
+     {
+      "exId": "sentadilla-bulgara",
+      "sets": 3,
+      "reps": "8-10"
+     },
+     {
+      "exId": "hip-thrust",
+      "sets": 4,
+      "reps": "8-10"
+     },
+     {
+      "exId": "curl-femoral-sentado",
+      "sets": 3,
+      "reps": "10-12"
+     },
+     {
+      "exId": "prensa-gluteos",
+      "sets": 2,
+      "reps": "10-12"
+     },
+     {
+      "exId": "elevacion-talones-sentado",
+      "sets": 4,
+      "reps": "12-15"
+     },
+     {
+      "exId": "crunch",
+      "sets": 3,
+      "reps": ""
+     }
+    ]
+   }
+  ]
+ }
+]

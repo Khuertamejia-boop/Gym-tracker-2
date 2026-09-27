@@ -1,0 +1,891 @@
+{
+ "muscles": [
+  "Pecho",
+  "Espalda",
+  "Hombros",
+  "Bíceps",
+  "Tríceps",
+  "Antebrazo",
+  "Cuádriceps",
+  "Isquios",
+  "Glúteos",
+  "Pantorrillas",
+  "Abdomen"
+ ],
+ "unilateral": {
+  "step-up": true,
+  "sentadilla-bulgara": true,
+  "sentadilla-bulgara-gluteos": true,
+  "zancadas": false,
+  "zancadas-caminando": false,
+  "jalon-pecho": false,
+  "jalon-agarre-cerrado": false,
+  "jalon-agarre-neutro": false,
+  "remo-mancuerna": true,
+  "remo-sentado-polea": false,
+  "curl-mancuernas": false,
+  "curl-martillo": false,
+  "curl-concentrado": true,
+  "curl-polea": false,
+  "extension-polea": false,
+  "extension-sobre-cabeza": false,
+  "patada-triceps": false,
+  "elevaciones-laterales": false,
+  "elevaciones-laterales-polea": false,
+  "extension-cuadriceps": false,
+  "curl-femoral-tumbado": false,
+  "curl-femoral-sentado": false,
+  "prensa": false,
+  "prensa-gluteos": false,
+  "peso-muerto-rumano-mancuernas": false,
+  "patada-gluteo-polea": true,
+  "elevacion-talones-pie": false
+ },
+ "families": {
+  "prensa": {
+   "name": "Prensa de piernas",
+   "variants": [
+    [
+     "prensa",
+     "Cuádriceps"
+    ],
+    [
+     "prensa-gluteos",
+     "Glúteos"
+    ]
+   ]
+  },
+  "bulgara": {
+   "name": "Sentadilla búlgara",
+   "variants": [
+    [
+     "sentadilla-bulgara",
+     "Cuádriceps"
+    ],
+    [
+     "sentadilla-bulgara-gluteos",
+     "Glúteos"
+    ]
+   ]
+  },
+  "smith": {
+   "name": "Sentadilla en Smith",
+   "variants": [
+    [
+     "sentadilla-smith",
+     "Cuádriceps"
+    ],
+    [
+     "sentadilla-smith-gluteos",
+     "Glúteos"
+    ]
+   ]
+  }
+ },
+ "exercises": [
+  {
+   "id": "press-banca",
+   "name": "Press de banca con barra",
+   "muscle": "Pecho",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "press-banca-mancuernas",
+   "name": "Press de banca con mancuernas",
+   "muscle": "Pecho",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "press-inclinado-barra",
+   "name": "Press inclinado con barra",
+   "muscle": "Pecho",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "press-inclinado-mancuernas",
+   "name": "Press inclinado con mancuernas",
+   "muscle": "Pecho",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "press-declinado",
+   "name": "Press declinado con barra",
+   "muscle": "Pecho",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "press-pecho-maquina",
+   "name": "Press de pecho en máquina",
+   "muscle": "Pecho",
+   "equipment": "Máquina",
+   "aliases": "press en maquina"
+  },
+  {
+   "id": "press-inclinado-smith",
+   "name": "Press inclinado en Smith",
+   "muscle": "Pecho",
+   "equipment": "Smith",
+   "aliases": ""
+  },
+  {
+   "id": "aperturas-mancuernas",
+   "name": "Aperturas con mancuernas",
+   "muscle": "Pecho",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "aperturas-inclinadas",
+   "name": "Aperturas inclinadas con mancuernas",
+   "muscle": "Pecho",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "cruce-poleas",
+   "name": "Cruce de poleas",
+   "muscle": "Pecho",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "cruce-poleas-bajo",
+   "name": "Cruce de poleas de abajo hacia arriba",
+   "muscle": "Pecho",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "pec-deck",
+   "name": "Pec deck (contractor)",
+   "muscle": "Pecho",
+   "equipment": "Máquina",
+   "aliases": "peck deck mariposa"
+  },
+  {
+   "id": "fondos-pecho",
+   "name": "Fondos en paralelas (pecho)",
+   "muscle": "Pecho",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "flexiones",
+   "name": "Flexiones de brazos",
+   "muscle": "Pecho",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "pullover",
+   "name": "Pullover con mancuerna",
+   "muscle": "Pecho",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "dominadas",
+   "name": "Dominadas",
+   "muscle": "Espalda",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "dominadas-supinas",
+   "name": "Dominadas supinas (chin-ups)",
+   "muscle": "Espalda",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "dominadas-lastradas",
+   "name": "Dominadas lastradas",
+   "muscle": "Espalda",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "jalon-pecho",
+   "name": "Jalón al pecho",
+   "muscle": "Espalda",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "jalon-agarre-cerrado",
+   "name": "Jalón con agarre cerrado",
+   "muscle": "Espalda",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "jalon-agarre-neutro",
+   "name": "Jalón al pecho con agarre neutro",
+   "muscle": "Espalda",
+   "equipment": "Polea",
+   "aliases": "jalon neutro"
+  },
+  {
+   "id": "remo-barra",
+   "name": "Remo con barra",
+   "muscle": "Espalda",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "remo-pendlay",
+   "name": "Remo Pendlay",
+   "muscle": "Espalda",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "remo-mancuerna",
+   "name": "Remo con mancuerna a una mano",
+   "muscle": "Espalda",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "remo-sentado-polea",
+   "name": "Remo sentado en polea",
+   "muscle": "Espalda",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "remo-t",
+   "name": "Remo en T",
+   "muscle": "Espalda",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "remo-maquina",
+   "name": "Remo en máquina",
+   "muscle": "Espalda",
+   "equipment": "Máquina",
+   "aliases": ""
+  },
+  {
+   "id": "remo-pecho-apoyado",
+   "name": "Remo con pecho apoyado",
+   "muscle": "Espalda",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "pullover-polea",
+   "name": "Pullover en polea alta",
+   "muscle": "Espalda",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "peso-muerto",
+   "name": "Peso muerto",
+   "muscle": "Espalda",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "rack-pull",
+   "name": "Rack pull",
+   "muscle": "Espalda",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "hiperextensiones",
+   "name": "Hiperextensiones",
+   "muscle": "Espalda",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "encogimientos-barra",
+   "name": "Encogimientos con barra",
+   "muscle": "Espalda",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "encogimientos-mancuernas",
+   "name": "Encogimientos con mancuernas",
+   "muscle": "Espalda",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "press-militar",
+   "name": "Press militar con barra",
+   "muscle": "Hombros",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "press-hombro-mancuernas",
+   "name": "Press de hombro con mancuernas",
+   "muscle": "Hombros",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "press-arnold",
+   "name": "Press Arnold",
+   "muscle": "Hombros",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "press-hombro-maquina",
+   "name": "Press de hombro en máquina",
+   "muscle": "Hombros",
+   "equipment": "Máquina",
+   "aliases": "press militar en maquina"
+  },
+  {
+   "id": "elevaciones-laterales",
+   "name": "Elevaciones laterales con mancuernas",
+   "muscle": "Hombros",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "elevaciones-laterales-polea",
+   "name": "Elevaciones laterales en polea",
+   "muscle": "Hombros",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "elevaciones-laterales-maquina",
+   "name": "Elevaciones laterales en máquina",
+   "muscle": "Hombros",
+   "equipment": "Máquina",
+   "aliases": ""
+  },
+  {
+   "id": "elevaciones-frontales",
+   "name": "Elevaciones frontales",
+   "muscle": "Hombros",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "pajaros",
+   "name": "Pájaros (elevaciones posteriores)",
+   "muscle": "Hombros",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "reverse-pec-deck",
+   "name": "Pec deck invertido",
+   "muscle": "Hombros",
+   "equipment": "Máquina",
+   "aliases": ""
+  },
+  {
+   "id": "face-pull",
+   "name": "Face pull",
+   "muscle": "Hombros",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "remo-al-menton",
+   "name": "Remo al mentón",
+   "muscle": "Hombros",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "curl-barra",
+   "name": "Curl con barra",
+   "muscle": "Bíceps",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "curl-barra-z",
+   "name": "Curl con barra Z",
+   "muscle": "Bíceps",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "curl-mancuernas",
+   "name": "Curl con mancuernas",
+   "muscle": "Bíceps",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "curl-martillo",
+   "name": "Curl martillo",
+   "muscle": "Bíceps",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "curl-inclinado",
+   "name": "Curl inclinado con mancuernas",
+   "muscle": "Bíceps",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "curl-predicador",
+   "name": "Curl en banco Scott (predicador)",
+   "muscle": "Bíceps",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "curl-concentrado",
+   "name": "Curl concentrado",
+   "muscle": "Bíceps",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "curl-polea",
+   "name": "Curl en polea",
+   "muscle": "Bíceps",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "curl-bayesian",
+   "name": "Curl bayesiano en polea",
+   "muscle": "Bíceps",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "curl-maquina",
+   "name": "Curl de bíceps en máquina",
+   "muscle": "Bíceps",
+   "equipment": "Máquina",
+   "aliases": ""
+  },
+  {
+   "id": "press-frances",
+   "name": "Press francés",
+   "muscle": "Tríceps",
+   "equipment": "Barra",
+   "aliases": "skull crusher rompecraneos"
+  },
+  {
+   "id": "extension-polea",
+   "name": "Extensión de tríceps en polea (cuerda)",
+   "muscle": "Tríceps",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "extension-polea-barra",
+   "name": "Extensión de tríceps en polea (barra)",
+   "muscle": "Tríceps",
+   "equipment": "Polea",
+   "aliases": "jalon de triceps con barra"
+  },
+  {
+   "id": "extension-sobre-cabeza",
+   "name": "Extensión sobre la cabeza con mancuerna",
+   "muscle": "Tríceps",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "extension-sobre-cabeza-polea",
+   "name": "Extensión sobre la cabeza en polea",
+   "muscle": "Tríceps",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "press-cerrado",
+   "name": "Press de banca agarre cerrado",
+   "muscle": "Tríceps",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "fondos-triceps",
+   "name": "Fondos en paralelas (tríceps)",
+   "muscle": "Tríceps",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "fondos-banco",
+   "name": "Fondos en banco",
+   "muscle": "Tríceps",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "patada-triceps",
+   "name": "Patada de tríceps",
+   "muscle": "Tríceps",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "extension-triceps-maquina",
+   "name": "Extensión de tríceps en máquina",
+   "muscle": "Tríceps",
+   "equipment": "Máquina",
+   "aliases": ""
+  },
+  {
+   "id": "curl-muneca",
+   "name": "Curl de muñeca",
+   "muscle": "Antebrazo",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "curl-muneca-inverso",
+   "name": "Curl de muñeca inverso",
+   "muscle": "Antebrazo",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "curl-inverso",
+   "name": "Curl inverso con barra",
+   "muscle": "Antebrazo",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "paseo-granjero",
+   "name": "Paseo del granjero",
+   "muscle": "Antebrazo",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "sentadilla",
+   "name": "Sentadilla con barra",
+   "muscle": "Cuádriceps",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "sentadilla-frontal",
+   "name": "Sentadilla frontal",
+   "muscle": "Cuádriceps",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "sentadilla-hack",
+   "name": "Sentadilla hack",
+   "muscle": "Cuádriceps",
+   "equipment": "Máquina",
+   "aliases": "sentadilla lat"
+  },
+  {
+   "id": "sentadilla-smith",
+   "name": "Sentadilla en Smith · cuádriceps",
+   "muscle": "Cuádriceps",
+   "equipment": "Smith",
+   "aliases": "",
+   "family": "smith"
+  },
+  {
+   "id": "sentadilla-goblet",
+   "name": "Sentadilla goblet",
+   "muscle": "Cuádriceps",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "sentadilla-bulgara",
+   "name": "Sentadilla búlgara · cuádriceps",
+   "muscle": "Cuádriceps",
+   "equipment": "Mancuernas",
+   "aliases": "",
+   "family": "bulgara"
+  },
+  {
+   "id": "prensa",
+   "name": "Prensa de piernas · cuádriceps",
+   "muscle": "Cuádriceps",
+   "equipment": "Máquina",
+   "aliases": "",
+   "family": "prensa"
+  },
+  {
+   "id": "extension-cuadriceps",
+   "name": "Extensión de cuádriceps",
+   "muscle": "Cuádriceps",
+   "equipment": "Máquina",
+   "aliases": ""
+  },
+  {
+   "id": "zancadas",
+   "name": "Zancadas (estocadas)",
+   "muscle": "Cuádriceps",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "zancadas-caminando",
+   "name": "Zancadas caminando",
+   "muscle": "Cuádriceps",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "pendulum-squat",
+   "name": "Sentadilla péndulo",
+   "muscle": "Cuádriceps",
+   "equipment": "Máquina",
+   "aliases": ""
+  },
+  {
+   "id": "step-up",
+   "name": "Step-up (subida al cajón)",
+   "muscle": "Cuádriceps",
+   "equipment": "Mancuernas",
+   "aliases": "subidas cajon unilateral"
+  },
+  {
+   "id": "peso-muerto-rumano",
+   "name": "Peso muerto rumano",
+   "muscle": "Isquios",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "peso-muerto-rumano-mancuernas",
+   "name": "Peso muerto rumano con mancuernas",
+   "muscle": "Isquios",
+   "equipment": "Mancuernas",
+   "aliases": ""
+  },
+  {
+   "id": "peso-muerto-piernas-rigidas",
+   "name": "Peso muerto con piernas rígidas",
+   "muscle": "Isquios",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "curl-femoral-tumbado",
+   "name": "Curl femoral tumbado",
+   "muscle": "Isquios",
+   "equipment": "Máquina",
+   "aliases": ""
+  },
+  {
+   "id": "curl-femoral-sentado",
+   "name": "Curl femoral sentado",
+   "muscle": "Isquios",
+   "equipment": "Máquina",
+   "aliases": ""
+  },
+  {
+   "id": "buenos-dias",
+   "name": "Buenos días",
+   "muscle": "Isquios",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "nordic-curl",
+   "name": "Curl nórdico",
+   "muscle": "Isquios",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "hip-thrust",
+   "name": "Hip thrust con barra",
+   "muscle": "Glúteos",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "hip-thrust-maquina",
+   "name": "Hip thrust en máquina",
+   "muscle": "Glúteos",
+   "equipment": "Máquina",
+   "aliases": ""
+  },
+  {
+   "id": "prensa-gluteos",
+   "name": "Prensa de piernas · glúteos",
+   "muscle": "Glúteos",
+   "equipment": "Máquina",
+   "aliases": "prensa pies altos enfocada",
+   "family": "prensa"
+  },
+  {
+   "id": "sentadilla-bulgara-gluteos",
+   "name": "Sentadilla búlgara · glúteos",
+   "muscle": "Glúteos",
+   "equipment": "Mancuernas",
+   "aliases": "torso inclinado enfocada",
+   "family": "bulgara"
+  },
+  {
+   "id": "sentadilla-smith-gluteos",
+   "name": "Sentadilla en Smith · glúteos",
+   "muscle": "Glúteos",
+   "equipment": "Smith",
+   "aliases": "pies adelantados enfocada",
+   "family": "smith"
+  },
+  {
+   "id": "puente-gluteo",
+   "name": "Puente de glúteo",
+   "muscle": "Glúteos",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "patada-gluteo-polea",
+   "name": "Patada de glúteo en polea",
+   "muscle": "Glúteos",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "abductores-maquina",
+   "name": "Abducción de cadera en máquina",
+   "muscle": "Glúteos",
+   "equipment": "Máquina",
+   "aliases": ""
+  },
+  {
+   "id": "aductores-maquina",
+   "name": "Aducción de cadera en máquina",
+   "muscle": "Glúteos",
+   "equipment": "Máquina",
+   "aliases": ""
+  },
+  {
+   "id": "peso-muerto-sumo",
+   "name": "Peso muerto sumo",
+   "muscle": "Glúteos",
+   "equipment": "Barra",
+   "aliases": ""
+  },
+  {
+   "id": "elevacion-talones-pie",
+   "name": "Elevación de pantorrillas en máquina",
+   "muscle": "Pantorrillas",
+   "equipment": "Máquina",
+   "aliases": "gemelos talones de pie"
+  },
+  {
+   "id": "elevacion-talones-sentado",
+   "name": "Elevación de pantorrillas sentado",
+   "muscle": "Pantorrillas",
+   "equipment": "Máquina",
+   "aliases": "gemelos talones maquina"
+  },
+  {
+   "id": "elevacion-talones-prensa",
+   "name": "Elevación de pantorrillas en prensa",
+   "muscle": "Pantorrillas",
+   "equipment": "Máquina",
+   "aliases": "gemelos talones"
+  },
+  {
+   "id": "elevacion-talones-smith",
+   "name": "Elevación de pantorrillas en Smith",
+   "muscle": "Pantorrillas",
+   "equipment": "Smith",
+   "aliases": "gemelos talones"
+  },
+  {
+   "id": "crunch",
+   "name": "Crunch abdominal",
+   "muscle": "Abdomen",
+   "equipment": "Peso corporal",
+   "aliases": "abdominales"
+  },
+  {
+   "id": "crunch-polea",
+   "name": "Crunch en polea",
+   "muscle": "Abdomen",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "crunch-maquina",
+   "name": "Crunch en máquina",
+   "muscle": "Abdomen",
+   "equipment": "Máquina",
+   "aliases": ""
+  },
+  {
+   "id": "plancha",
+   "name": "Plancha",
+   "muscle": "Abdomen",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "plancha-lateral",
+   "name": "Plancha lateral",
+   "muscle": "Abdomen",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "elevacion-piernas-colgado",
+   "name": "Elevación de piernas colgado",
+   "muscle": "Abdomen",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "elevacion-piernas-banco",
+   "name": "Elevación de piernas en banco",
+   "muscle": "Abdomen",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "rueda-abdominal",
+   "name": "Rueda abdominal",
+   "muscle": "Abdomen",
+   "equipment": "Otro",
+   "aliases": ""
+  },
+  {
+   "id": "russian-twist",
+   "name": "Giros rusos",
+   "muscle": "Abdomen",
+   "equipment": "Peso corporal",
+   "aliases": ""
+  },
+  {
+   "id": "pallof-press",
+   "name": "Press Pallof",
+   "muscle": "Abdomen",
+   "equipment": "Polea",
+   "aliases": ""
+  },
+  {
+   "id": "woodchopper",
+   "name": "Leñador en polea",
+   "muscle": "Abdomen",
+   "equipment": "Polea",
+   "aliases": ""
+  }
+ ]
+}

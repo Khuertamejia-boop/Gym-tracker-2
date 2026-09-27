@@ -12,7 +12,7 @@ Está pensada para usarse desde el celular en el gym.
 - Quien ya tiene cuenta toca **Ya tengo cuenta** y recupera todo, con su correo y contraseña.
 - En el iPhone aparece una vez una guía para **añadir la app a la pantalla de inicio** (en Android, un botón Instalar).
 
-Arriba a la derecha está tu **perfil**: iniciar sesión o ver tu cuenta, *Ajustes* (cuerpo de la guía, unidad de peso, modo simple, temporizador de descanso, esfuerzo y tema) y, sin sesión, *Respaldo de datos*.
+Arriba a la derecha está tu **perfil**: iniciar sesión o ver tu cuenta, *Ajustes* (cuerpo de la guía, unidad de peso, modo simple, temporizador de descanso, esfuerzo y tema) y *Respaldo de datos* (descargar o restaurar una copia; sirve para pasar el historial a la app del iPhone).
 
 La app tiene **tres pestañas**:
 - **Mi plan**: anillo con los entrenamientos de la semana (p. ej. 2/4), tira L–D con toda la semana (✓ hechos, hoy marcado), botón **Próximo entrenamiento** que lleva directo a él, y solo tus días de entreno en una cuadrícula 2×2. Toca un día (en la cuadrícula o en la tira) para **moverlo solo esta semana** o entrenar en un día de descanso; **Volver al plan original** deshace los cambios. El **volumen semanal** por músculo (zona 10–20 series para hipertrofia) está plegado y se abre al tocarlo. Abajo, **Cambiar de rutina**.
