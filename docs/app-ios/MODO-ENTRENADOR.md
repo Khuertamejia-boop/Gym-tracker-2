@@ -27,8 +27,9 @@ Cuando la app esté en el App Store, hay que poner su enlace en `APP_STORE_URL` 
 2. **Mis rutinas de entrenador** (lista estilo Ajustes, la más reciente arriba; cada fila: nombre y «4 días · 25 ejercicios»).
    - **Nueva rutina**: empieza vacía o desde una plantilla y se edita con el **mismo editor de rutina** de la app.
    - Tocar una fila la abre en el editor; los cambios se guardan solos.
-   - Menú contextual / deslizar: **Renombrar**, **Duplicar** («copia» al final del nombre), **Compartir**, **Borrar**
-     (con confirmación).
+   - Cada fila lleva a la derecha un **botón Compartir siempre visible** (icono `square.and.arrow.up` en carmesí sobre
+     círculo `accentSoft`). Al deslizar o mantener pulsado aparecen además **Renombrar**, **Duplicar** («copia» al
+     final del nombre) y **Borrar** (con confirmación). Decidido el 03-10-2026: escondido al deslizar no era intuitivo.
    - Estas rutinas **no** aparecen en Mi plan ni en Entrenar: son plantillas del entrenador.
 3. **Compartir** abre una hoja corta:
    - «Tu nombre» (se pide la primera vez y se recuerda en Ajustes);

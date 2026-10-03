@@ -121,6 +121,7 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   renombra y duplica sus rutinas para reenviarlas o adaptarlas. El mensaje de WhatsApp lleva el enlace y pide «pega este
   mensaje»: la app busca el código dentro (seleccionar a mano un código de ~700 caracteres en WhatsApp es incómodo).
   Se hace en la app de Xcode; la web solo aloja la página del enlace. Cuando la app salga, poner `APP_STORE_URL` en `r/index.html`.
+  En «Mis rutinas de entrenador», Compartir es un botón siempre visible en cada fila (al deslizar no era intuitivo).
 
 ## Plan: app nativa para iOS (decidido el 26-09-2026)
 
