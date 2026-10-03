@@ -45,6 +45,14 @@ Al tocar un ejercicio se abre su ficha: Acerca de (con la **guía muscular**: cu
 
 **Cambiar de rutina o de días**: tu perfil (arriba a la derecha) → *Mi rutina* → *Cambiar de rutina*.
 
+## Rutinas de entrenador por enlace (para la app de iPhone)
+
+La app de iPhone tendrá un **Modo entrenador** (Ajustes): el entrenador guarda sus rutinas y las comparte por WhatsApp con un enlace. La rutina va **dentro del enlace** (sin servidor ni cuentas). Este repo aloja la página que abre ese enlace:
+
+- `r/index.html` — vista previa de la rutina, botón del App Store («Muy pronto» hasta que la app esté publicada: cambia `APP_STORE_URL`), «Copiar código» y «Ya tengo la app: abrir la rutina».
+- `r/codigo.js` — formato del código `GT1-…` (comprimir, comprobar y validar).
+- `docs/app-ios/MODO-ENTRENADOR.md` — especificación completa para Xcode, con un ejemplo en `docs/app-ios/datos/codigo-rutina/`.
+
 ## Datos y cuenta en la nube
 
 Los datos se guardan siempre en el navegador (`localStorage`), así que la app funciona sin conexión. La app abre al instante desde la copia guardada, aunque en el gym no haya señal; las versiones nuevas se descargan solas en segundo plano.
@@ -100,6 +108,7 @@ js/data/muscles.js    músculos principales y secundarios de cada ejercicio
 js/body.js            guía muscular (usa js/vendor/muscle-map)
 js/vendor/muscle-map  js-rich-body-highlighter 0.1.1 (MIT): ilustraciones del cuerpo
 sw.js                 caché sin conexión
+r/                    página del enlace de rutina de entrenador (no pasa por la caché)
 ```
 
 ### Entrar con código por correo (desactivado)

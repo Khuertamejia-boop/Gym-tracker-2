@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Tu rutina · GymTracker</title>
+  <meta name="description" content="Tu entrenador te envió una rutina. Descarga GymTracker y pégala para empezar.">
+  <meta property="og:title" content="Tu rutina de entrenamiento">
+  <meta property="og:description" content="Tu entrenador te envió una rutina. Ábrela en GymTracker.">
+  <meta property="og:image" content="https://khuertamejia-boop.github.io/Gym-tracker-2/icons/icon-512.png">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#f4f4f2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#101112" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../icons/icon-180.png">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f4f2; --surface: #fcfcfb; --surface-2: #efeeeb; --border: #e0dfdb;
+      --text: #0b0b0b; --text-2: #52514e; --text-3: #7a7974;
+      --accent: #c8102e; --accent-soft: #fbe1e4; --good: #0c8a0c;
+      --shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 4px 16px rgb(0 0 0 / 5%);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #101112; --surface: #1a1a19; --surface-2: #242423; --border: #2f2f2d;
+        --text: #ffffff; --text-2: #c3c2b7; --text-3: #8f8e86;
+        --accent: #d9233a; --accent-soft: #361519; --good: #0ca30c; --shadow: none;
+      }
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #101112; --surface: #1a1a19; --surface-2: #242423; --border: #2f2f2d;
+      --text: #ffffff; --text-2: #c3c2b7; --text-3: #8f8e86;
+      --accent: #d9233a; --accent-soft: #361519; --good: #0ca30c; --shadow: none;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font: 16px/1.45 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    main { max-width: 520px; margin: 0 auto; padding: calc(20px + env(safe-area-inset-top)) 16px calc(200px + env(safe-area-inset-bottom)); }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -0.01em; }
+    .brand img { width: 30px; height: 30px; }
+    .eyebrow { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-3); }
+    .hero { margin: 36px 0 22px; }
+    .hero h1 { font-size: 2rem; line-height: 1.08; letter-spacing: -0.02em; margin: 6px 0 6px; overflow-wrap: anywhere; }
+    .hero .for { color: var(--text-2); margin: 0; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); padding: 16px 4px; text-align: center; }
+    .stats div + div { border-left: 1px solid var(--border); }
+    .stats b { display: block; font-size: 1.6rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .stats span { font-size: 0.62rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-3); }
+    .note { margin: 18px 0 0; padding: 14px 16px; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); color: var(--text-2); white-space: pre-line; overflow-wrap: anywhere; }
+    .note .eyebrow { display: block; margin-bottom: 4px; }
+    h2.eyebrow { margin: 30px 0 10px 4px; }
+    .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .week div { text-align: center; padding: 8px 0 7px; border-radius: 12px; background: var(--surface-2); color: var(--text-3); font-size: 0.75rem; font-weight: 600; }
+    .week div.on { background: var(--accent-soft); color: var(--accent); }
+    .week small { display: block; font-size: 0.6rem; font-weight: 500; margin-top: 1px; min-height: 0.9em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 2px; }
+    .days { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+    details + details { border-top: 1px solid var(--border); }
+    summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+    summary::-webkit-details-marker { display: none; }
+    summary .t { flex: 1; min-width: 0; }
+    summary .t b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+    summary .t span { font-size: 0.82rem; color: var(--text-3); }
+    summary::after { content: ""; width: 8px; height: 8px; border-right: 2px solid var(--text-3); border-bottom: 2px solid var(--text-3); transform: rotate(45deg); margin: -4px 4px 0 0; transition: transform .2s; }
+    details[open] summary::after { transform: rotate(225deg); margin-top: 4px; }
+    ol.ex { list-style: none; margin: 0; padding: 0 16px 8px; }
+    ol.ex li { display: flex; gap: 12px; padding: 10px 0; border-top: 1px solid var(--border); }
+    ol.ex .n { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    ol.ex .n small { display: block; color: var(--text-3); font-size: 0.82rem; margin-top: 2px; white-space: pre-line; }
+    ol.ex .sr { color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 500; }
+    .steps { list-style: none; margin: 0; padding: 4px 16px; background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); counter-reset: s; }
+    .steps li { counter-increment: s; display: flex; align-items: center; gap: 12px; padding: 12px 0; color: var(--text-2); }
+    .steps li + li { border-top: 1px solid var(--border); }
+    .steps li::before { content: counter(s); flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; font-weight: 700; font-size: 0.85rem; }
+    .steps b { color: var(--text); font-weight: 600; }
+    .bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 1px solid var(--border); }
+    .bar .in { max-width: 520px; margin: 0 auto; display: grid; gap: 10px; }
+    .btn { display: block; width: 100%; border: 0; border-radius: 14px; padding: 15px 16px; font: inherit; font-weight: 600; text-align: center; text-decoration: none; cursor: pointer; }
+    .btn.primary { background: var(--accent); color: #fff; }
+    .btn.primary[aria-disabled="true"] { background: var(--surface-2); color: var(--text-3); cursor: default; }
+    .btn.secondary { background: var(--surface-2); color: var(--text); }
+    .btn.secondary.done { color: var(--good); }
+    .link { display: block; text-align: center; color: var(--accent); font-size: 0.9rem; font-weight: 500; text-decoration: none; padding: 2px 0; }
+    .empty { margin: 60px 0 0; text-align: center; }
+    .empty .ico { width: 64px; height: 64px; border-radius: 50%; background: var(--accent-soft); display: grid; place-items: center; margin: 0 auto 18px; }
+    .empty h1 { font-size: 1.5rem; letter-spacing: -0.02em; margin: 0 0 8px; }
+    .empty p { color: var(--text-2); margin: 0 auto; max-width: 340px; }
+    .toast { position: fixed; left: 50%; top: calc(14px + env(safe-area-inset-top)); transform: translate(-50%, -150%); background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-weight: 600; font-size: 0.9rem; transition: transform .3s; }
+    .toast.show { transform: translate(-50%, 0); }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand"><img src="../icons/icon.svg" alt=""><span>GymTracker</span></div>
+    <div id="content" aria-live="polite"></div>
+  </main>
+  <div class="bar" id="bar" hidden>
+    <div class="in">
+      <a class="btn primary" id="store">Descargar en el App Store</a>
+      <button class="btn secondary" id="copy" type="button">Copiar código</button>
+      <a class="link" id="open">Ya tengo la app: abrir la rutina</a>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script type="module">
+    import { decodeRoutine, summarize } from './codigo.js';
+    import { BASE_EXERCISES } from '../js/data/exercises.js';
+
+    // Cuando la app esté publicada, pon aquí su enlace del App Store (https://apps.apple.com/…).
+    const APP_STORE_URL = '';
+    // Esquema que registra la app de iPhone para abrir la rutina directamente (ver docs/app-ios/MODO-ENTRENADOR.md).
+    const APP_SCHEME = 'gymtracker://rutina?c=';
+
+    const DAYS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    const names = Object.fromEntries(BASE_EXERCISES.map((e) => [e.id, e.name]));
+    const $ = (id) => document.getElementById(id);
+    const el = (tag, props = {}, ...kids) => {
+      const n = document.createElement(tag);
+      for (const [k, v] of Object.entries(props)) (k === 'class' ? (n.className = v) : n.setAttribute(k, v));
+      for (const k of kids) if (k !== null && k !== undefined && k !== false) n.append(k); // texto siempre como texto
+      return n;
+    };
+    const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 1800); };
+
+    const exName = (r, id) => names[id] || r.x?.[id]?.n || 'Ejercicio nuevo (actualiza la app)';
+    const setsReps = (x) => (x.r ? `${x.s} × ${x.r}` : `${x.s} series`);
+
+    function emptyView(title, text) {
+      $('content').replaceChildren(el('div', { class: 'empty' },
+        el('div', { class: 'ico' }, Object.assign(document.createElement('img'), { src: '../icons/icon.svg', width: 36, height: 36, alt: '' })),
+        el('h1', {}, title), el('p', {}, text)));
+    }
+
+    function routineView(r) {
+      const s = summarize(r);
+      const hero = el('section', { class: 'hero' },
+        el('div', { class: 'eyebrow' }, r.c ? `Rutina de ${r.c}` : 'Rutina de tu entrenador'),
+        el('h1', {}, r.n),
+        r.a ? el('p', { class: 'for' }, `Para ${r.a}`) : null);
+      const stats = el('div', { class: 'stats' },
+        el('div', {}, el('b', {}, String(s.days)), el('span', {}, s.days === 1 ? 'Día' : 'Días')),
+        el('div', {}, el('b', {}, String(s.exercises)), el('span', {}, 'Ejercicios')),
+        el('div', {}, el('b', {}, String(s.weeklySets)), el('span', {}, 'Series / sem')));
+      const note = r.m ? el('div', { class: 'note' }, el('span', { class: 'eyebrow' }, 'Nota del entrenador'), r.m) : null;
+
+      let week = null;
+      if (r.w) {
+        week = el('div', { class: 'week' }, ...r.w.map((di, i) => el('div', { class: di === null ? '' : 'on' },
+          DAYS[i], el('small', {}, di === null ? '' : r.d[di].n))));
+      }
+      const days = el('div', { class: 'days' }, ...r.d.map((d, i) => el('details', i === 0 ? { open: '' } : {},
+        el('summary', {}, el('div', { class: 't' }, el('b', {}, d.n),
+          el('span', {}, `${d.e.length} ejercicios · ${d.e.reduce((n, x) => n + x.s, 0)} series`))),
+        el('ol', { class: 'ex' }, ...d.e.map((x) => el('li', {},
+          el('div', { class: 'n' }, exName(r, x.i), x.o ? el('small', {}, x.o) : null),
+          el('div', { class: 'sr' }, setsReps(x))))))));
+      const steps = el('ol', { class: 'steps' },
+        el('li', {}, el('span', {}, el('b', {}, 'Descarga GymTracker'), ' en tu iPhone.')),
+        el('li', {}, el('span', {}, 'Ábrela y toca ', el('b', {}, '«Tengo una rutina»'), '.')),
+        el('li', {}, el('span', {}, el('b', {}, 'Pega el código'), ' (o el mensaje completo de tu entrenador).')));
+
+      $('content').replaceChildren(hero, stats, note,
+        week ? el('h2', { class: 'eyebrow' }, 'Tu semana') : null, week,
+        el('h2', { class: 'eyebrow' }, 'Entrenamientos'), days,
+        el('h2', { class: 'eyebrow' }, 'Cómo empezar'), steps);
+    }
+
+    async function copy(text) {
+      try { await navigator.clipboard.writeText(text); return true; } catch {}
+      const ta = el('textarea', { readonly: '' }); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.append(ta); ta.select(); ta.setSelectionRange(0, text.length);
+      let ok = false; try { ok = document.execCommand('copy'); } catch {}
+      ta.remove(); return ok;
+    }
+
+    async function main() {
+      let raw = location.hash.slice(1);
+      try { raw = decodeURIComponent(raw); } catch {}
+      raw = raw.replace(/^r=/, '');
+      if (!raw) {
+        emptyView('Rutinas de entrenador', 'Si tu entrenador te envió una rutina, abre el enlace completo que te mandó por WhatsApp.');
+        return;
+      }
+      let r, code;
+      try {
+        r = await decodeRoutine(raw);
+        code = raw.match(/GT1-[A-Za-z0-9_-]+\.[0-9a-fA-F]{6}/)[0];
+      } catch (e) {
+        emptyView('No pudimos abrir la rutina', e.message || 'El enlace está incompleto.');
+        return;
+      }
+      document.title = `${r.n} · GymTracker`;
+      routineView(r);
+
+      const store = $('store');
+      if (APP_STORE_URL) store.href = APP_STORE_URL;
+      else { store.textContent = 'Muy pronto en el App Store'; store.setAttribute('aria-disabled', 'true'); }
+      $('open').href = APP_SCHEME + code;
+      $('copy').addEventListener('click', async () => {
+        const ok = await copy(code);
+        toast(ok ? 'Código copiado' : 'No se pudo copiar');
+        if (ok) { $('copy').textContent = '✓ Código copiado'; $('copy').classList.add('done'); }
+      });
+      $('bar').hidden = false;
+    }
+    main();
+    addEventListener('hashchange', () => location.reload());
+  </script>
+</body>
+</html>

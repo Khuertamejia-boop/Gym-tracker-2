@@ -297,3 +297,6 @@ Cada fase termina con algo que el dueño puede probar en su iPhone.
 *(Claude: apunta aquí lo que quede a medias y cada decisión nueva que tome el dueño.)*
 
 - Pedidas para más adelante: **superseries** y **semana de descarga** (enseñar una maqueta antes).
+- **Modo entrenador** (03-10-2026): rutinas que un entrenador guarda y comparte por enlace + código, sin servidor.
+  Especificación completa en `MODO-ENTRENADOR.md` (cópialo junto a este archivo, con `datos/codigo-rutina/`).
+  Se hace después de la fase 4 (necesita el editor de rutina y los modelos de rutina).

@@ -1,0 +1,173 @@
+{
+ "v": 1,
+ "n": "Hipertrofia 4 días — Luis",
+ "c": "Carlos Ríos",
+ "a": "Luis",
+ "m": "Semana 1: deja 2 reps en reserva. Calienta 10 min antes.",
+ "w": [
+  0,
+  1,
+  null,
+  2,
+  3,
+  null,
+  null
+ ],
+ "d": [
+  {
+   "n": "Torso A",
+   "e": [
+    {
+     "i": "press-banca",
+     "s": 4,
+     "r": "6-8",
+     "t": 150,
+     "o": "Pausa de 1 s abajo"
+    },
+    {
+     "i": "remo-barra",
+     "s": 4,
+     "r": "6-8"
+    },
+    {
+     "i": "press-hombro-mancuernas",
+     "s": 3,
+     "r": "8-10"
+    },
+    {
+     "i": "jalon-pecho",
+     "s": 3,
+     "r": "8-10"
+    },
+    {
+     "i": "curl-barra-z",
+     "s": 3,
+     "r": "10-12"
+    },
+    {
+     "i": "extension-polea",
+     "s": 3,
+     "r": "10-12"
+    }
+   ]
+  },
+  {
+   "n": "Pierna A",
+   "e": [
+    {
+     "i": "sentadilla",
+     "s": 4,
+     "r": "6-8"
+    },
+    {
+     "i": "peso-muerto-rumano",
+     "s": 3,
+     "r": "8-10"
+    },
+    {
+     "i": "prensa",
+     "s": 3,
+     "r": "10-12"
+    },
+    {
+     "i": "curl-femoral-sentado",
+     "s": 3,
+     "r": "10-12"
+    },
+    {
+     "i": "elevacion-talones-pie",
+     "s": 4,
+     "r": "10-15"
+    },
+    {
+     "i": "c-hip-thrust-banda",
+     "s": 3,
+     "r": "12-15",
+     "o": "Banda sobre las rodillas"
+    }
+   ]
+  },
+  {
+   "n": "Torso B",
+   "e": [
+    {
+     "i": "press-inclinado-mancuernas",
+     "s": 4,
+     "r": "8-10"
+    },
+    {
+     "i": "dominadas",
+     "s": 4,
+     "r": "6-10"
+    },
+    {
+     "i": "press-pecho-maquina",
+     "s": 3,
+     "r": "10-12"
+    },
+    {
+     "i": "remo-mancuerna",
+     "s": 3,
+     "r": "10-12"
+    },
+    {
+     "i": "elevaciones-laterales",
+     "s": 4,
+     "r": "12-15"
+    },
+    {
+     "i": "curl-martillo",
+     "s": 3,
+     "r": "10-12"
+    },
+    {
+     "i": "extension-sobre-cabeza-polea",
+     "s": 3,
+     "r": "10-12"
+    }
+   ]
+  },
+  {
+   "n": "Pierna B",
+   "e": [
+    {
+     "i": "peso-muerto",
+     "s": 3,
+     "r": "4-6"
+    },
+    {
+     "i": "sentadilla-bulgara",
+     "s": 3,
+     "r": "8-10"
+    },
+    {
+     "i": "hip-thrust",
+     "s": 3,
+     "r": "8-12"
+    },
+    {
+     "i": "extension-cuadriceps",
+     "s": 3,
+     "r": "12-15"
+    },
+    {
+     "i": "curl-femoral-tumbado",
+     "s": 3,
+     "r": "10-12"
+    },
+    {
+     "i": "elevacion-talones-sentado",
+     "s": 4,
+     "r": "12-15"
+    }
+   ]
+  }
+ ],
+ "x": {
+  "c-hip-thrust-banda": {
+   "n": "Hip thrust con banda",
+   "g": "Glúteos",
+   "q": "Banda"
+  }
+ }
+}

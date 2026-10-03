@@ -39,6 +39,7 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - `js/share.js` — imagen para compartir (1080×1920) dibujada en canvas.
 - `js/charts.js` — Chart.js (CDN jsdelivr): líneas y mini-gráficos de evolución.
 - `js/data/` — catálogo de ejercicios, músculos por ejercicio y plantillas de rutinas.
+- `r/` — página del enlace de rutina de entrenador (`r/index.html` + formato `r/codigo.js`); el service worker no la guarda en caché.
 - `sw.js` — funciona sin señal: abre desde la caché y descarga versiones nuevas en segundo plano.
 
 ## Estilo y preferencias del dueño
@@ -115,6 +116,11 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   día, quitar) y ≡ para arrastrar. Nombre/semana/días plegados en «Más opciones». Se quitaron las flechas ↑↓.
 - Cuentas del dueño: la de **iCloud** es la principal (datos reales); la de **Gmail** es solo para probar la app.
   Al cerrar sesión se sincroniza y se vacía el dispositivo (`S.clearLocal()`), para cambiar de cuenta sin mezclar datos.
+- Modo entrenador (03-10-2026): **sin servidor**. La rutina viaja dentro del enlace (`…/r/#GT1-…`, formato en
+  `r/codigo.js` y `docs/app-ios/MODO-ENTRENADOR.md`). Interruptor **visible** en Ajustes (no escondido). El entrenador guarda,
+  renombra y duplica sus rutinas para reenviarlas o adaptarlas. El mensaje de WhatsApp lleva el enlace y pide «pega este
+  mensaje»: la app busca el código dentro (seleccionar a mano un código de ~700 caracteres en WhatsApp es incómodo).
+  Se hace en la app de Xcode; la web solo aloja la página del enlace. Cuando la app salga, poner `APP_STORE_URL` en `r/index.html`.
 
 ## Plan: app nativa para iOS (decidido el 26-09-2026)
 

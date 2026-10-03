@@ -2,6 +2,11 @@
 
 Cada actualización de la app, de la más nueva a la más antigua.
 
+## 2026-10-03
+- Nueva página para las rutinas de entrenador (`/r/`): al abrir el enlace que manda un entrenador se ve la rutina (días, ejercicios, series, nota), con «Copiar código», el botón del App Store («Muy pronto» por ahora) y «Ya tengo la app: abrir la rutina».
+- Especificación del **Modo entrenador** para la app de iPhone en `docs/app-ios/MODO-ENTRENADOR.md` (rutinas guardadas, renombrar, duplicar, compartir; «Tengo una rutina» para el alumno).
+- La app web no cambia; solo se actualizó la caché para que no guarde la página nueva.
+
 ## 2026-09-27
 - «Respaldo de datos» se ve también con la sesión iniciada (para pasar tu historial a la app del iPhone).
 - Arreglo: en la lista de ejercicios del resumen final, el trofeo de récord salía como texto.
