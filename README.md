@@ -51,6 +51,7 @@ La app de iPhone tendrá un **Modo entrenador** (Ajustes): el entrenador guarda 
 
 - `r/index.html` — vista previa de la rutina, botón del App Store («Muy pronto» hasta que la app esté publicada: cambia `APP_STORE_URL`), «Copiar código» y «Ya tengo la app: abrir la rutina».
 - `r/codigo.js` — formato del código `GT1-…` (comprimir, comprobar y validar).
+- `worker/rutinas.js` — enlaces cortos (`…/r/k7Qx2pA`) con Cloudflare Workers + KV (gratis); se sube desde el panel de Cloudflare.
 - `docs/app-ios/MODO-ENTRENADOR.md` — especificación completa para Xcode, con un ejemplo en `docs/app-ios/datos/codigo-rutina/`.
 
 ## Datos y cuenta en la nube

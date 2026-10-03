@@ -122,6 +122,9 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   mensaje»: la app busca el código dentro (seleccionar a mano un código de ~700 caracteres en WhatsApp es incómodo).
   Se hace en la app de Xcode; la web solo aloja la página del enlace. Cuando la app salga, poner `APP_STORE_URL` en `r/index.html`.
   En «Mis rutinas de entrenador», Compartir es un botón siempre visible en cada fila (al deslizar no era intuitivo).
+  Enlaces cortos (03-10-2026): el enlace largo se veía mal; `worker/rutinas.js` (Cloudflare Worker + KV, gratis, cuenta del
+  dueño) guarda el código con una clave de 7 letras (`…/r/k7Qx2pA` → redirige a `r/#GT1-…`) y permite actualizar la rutina
+  con el mismo enlace. El enlace largo queda de respaldo sin internet. Se sube a mano desde el panel de Cloudflare.
 
 ## Plan: app nativa para iOS (decidido el 26-09-2026)
 

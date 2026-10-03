@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-10-03
+- Enlaces cortos para las rutinas de entrenador: programa para Cloudflare en `worker/rutinas.js` (gratis). El enlace pasa de ~750 caracteres a uno como `…/r/k7Qx2pA`, y el entrenador puede corregir la rutina sin mandar otro enlace.
 - Nueva página para las rutinas de entrenador (`/r/`): al abrir el enlace que manda un entrenador se ve la rutina (días, ejercicios, series, nota), con «Copiar código», el botón del App Store («Muy pronto» por ahora) y «Ya tengo la app: abrir la rutina».
 - Especificación del **Modo entrenador** para la app de iPhone en `docs/app-ios/MODO-ENTRENADOR.md` (rutinas guardadas, renombrar, duplicar, compartir; «Tengo una rutina» para el alumno).
 - La app web no cambia; solo se actualizó la caché para que no guarde la página nueva.

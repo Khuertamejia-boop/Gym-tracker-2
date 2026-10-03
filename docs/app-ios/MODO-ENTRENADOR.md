@@ -98,6 +98,8 @@ Hola Luis, te dejo tu rutina «Hipertrofia 4 días» 💪
 - Sin «Hola Luis» si no hay alumno; sin «— Carlos» si no hay nombre.
 - «Copiar código» (en la hoja de compartir y en la página del enlace) copia solo `GT1-…`, por si el alumno lo prefiere.
 - Lo que va después de `#` nunca llega a ningún servidor (ni a GitHub).
+- **Con enlace corto (sección 7, 03-10-2026)** el mensaje usa `…/r/k7Qx2pA` en lugar del enlace largo. El enlace largo
+  queda solo como respaldo si no hay internet o el servicio falla.
 
 ## 4. Formato del código «GT1» (versión 1)
 
@@ -227,3 +229,27 @@ FNV-1a: `h = 0x811C9DC5`; por cada byte `b`: `h = (h XOR b) × 0x01000193` (mód
   código de ejemplo (`ejemplo.codigo.txt`).
 - Más adelante, con un dominio propio, se puede añadir *Universal Links* para que el enlace abra la app directamente
   (hoy no se puede: GitHub Pages de un proyecto no sirve `/.well-known/` en la raíz del dominio).
+
+## 7. Enlaces cortos (Cloudflare Worker, decidido el 03-10-2026)
+
+El enlace largo (~750 caracteres) se veía mal en WhatsApp. Un pequeño servicio gratuito en Cloudflare guarda el código y
+da una clave de 7 letras: `https://<servicio>/r/k7Qx2pA`. El código del servicio está en `worker/rutinas.js` del repo de
+la web (probado en `tests/enlace-corto.test.js`).
+
+- **Dirección del servicio:** una constante `SHORT_LINK_BASE` en la app (hoy la de `workers.dev`; cuando haya dominio,
+  p. ej. `https://gymtracker.app`). Los enlaces de `workers.dev` siguen funcionando aunque luego se cambie.
+- **Crear** (al tocar Compartir, la primera vez para esa rutina):
+  `POST {BASE}/api/r` con `{"code":"GT1-…"}` → `201 {"id","url","editKey"}`.
+  Guardar `shortId` y `editKey` en la `CoachRoutine` (campos nuevos opcionales).
+- **Actualizar** (si la rutina cambió desde el último envío): `PUT {BASE}/api/r/{shortId}` con el código nuevo y la
+  cabecera `Authorization: Bearer {editKey}` → `200`. El **mismo enlace** muestra la versión nueva a todos los alumnos
+  que ya lo tienen. «Duplicar» crea una rutina sin `shortId` (tendrá su propio enlace).
+- **Respaldo:** si no hay internet o la respuesta tarda más de 6 s o falla, compartir con el enlace largo de siempre
+  (sección 3), sin mostrar error.
+- **Alumno:** «Tengo una rutina» acepta también el enlace corto. Buscar `/r/([A-Za-z2-9]{7})` en el texto pegado,
+  pedir `GET {BASE}/api/r/{id}` → `{"code"}` y seguir como siempre. Sin internet: «Necesitas conexión para abrir este
+  enlace.» Si responde 404: «No encontramos esta rutina. Pide a tu entrenador que te la vuelva a enviar.»
+  `onOpenURL` igual: la página web siempre abre la app con el código completo.
+- Abrir `{BASE}/r/{id}` en el navegador redirige a la página de la rutina de GitHub Pages con el código completo.
+- Privacidad: la rutina (con el nombre del entrenador y del alumno) se guarda en la cuenta de Cloudflare del dueño.
+  Mencionarlo en la política de privacidad.
