@@ -38,7 +38,7 @@ App para registrar entrenamientos de gimnasio y ver el progreso, pensada para us
 - La app te sugiere cuánto subir (doble progresión), detecta **récords** y te enseña tu **progreso**.
 - Compartes el entreno como imagen para historias.
 
-Tres pestañas: **Mi plan · Entrenar · Progreso**. La app abre en **Entrenar**.
+Tres pestañas: **Mi plan · Entrenar · Progreso**. La app abre en **Mi plan** (al abrirla y al terminar la configuración inicial), para ver y planificar la semana (cambiado el 04-10-2026; antes abría en Entrenar).
 
 ## 2. Decisiones técnicas
 
@@ -296,6 +296,7 @@ Cada fase termina con algo que el dueño puede probar en su iPhone.
 
 *(Claude: apunta aquí lo que quede a medias y cada decisión nueva que tome el dueño.)*
 
+- 04-10-2026: la app abre siempre en **Mi plan**. Mi plan sin textos sueltos: «Tengo una rutina» es un widget, «Cambiar de rutina» va en el editor y en el menú de «Tu rutina», «Personalizar» al mantener pulsado o con el icono de arriba.
 - Pedidas para más adelante: **superseries** y **semana de descarga** (enseñar una maqueta antes).
 - **Modo entrenador** (03-10-2026): rutinas que un entrenador guarda y comparte por enlace + código, sin servidor.
   Especificación completa en `MODO-ENTRENADOR.md` (cópialo junto a este archivo, con `datos/codigo-rutina/`).

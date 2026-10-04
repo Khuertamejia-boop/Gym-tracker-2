@@ -54,7 +54,7 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 
 ## Decisiones
 
-- 3 pestañas; la app abre en **Entrenar**. Mi plan: anillo semanal, tira L–D, próximo entreno,
+- 3 pestañas; la web abre en **Entrenar** (la app de iPhone abre en **Mi plan** desde el 04-10-2026, ver `docs/app-ios/PLAN.md`). Mi plan: anillo semanal, tira L–D, próximo entreno,
   días de entreno en 2×2 y volumen semanal plegado (zona 10–20 series para hipertrofia).
 - La cuenta **no** se pide en la configuración inicial: se ofrece tras el 1.er entrenamiento (y el 5.º y 15.º).
   Tarjeta «Guarda tu progreso» (opción A, 26-09-2026): fondo neutro, icono de nube con check (línea carmesí sobre círculo
