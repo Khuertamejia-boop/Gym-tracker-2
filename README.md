@@ -76,6 +76,10 @@ Abrir la app con `?importar=excel` al final de la dirección añade la rutina *T
 
 También puedes descargar una copia `.json` desde tu perfil → **Respaldo de datos**.
 
+## Moderar fotos y reportes (administrador)
+
+`moderar.html` es una página aparte, pensada para el celular: se abre en `…/Gym-tracker-2/moderar.html`, se entra con el correo y la contraseña de una cuenta que esté en la tabla `admins` de Supabase, y se puede añadir a la pantalla de inicio del iPhone. Las fotos de perfil reportadas salen borrosas hasta tocarlas; se puede **eliminar** la foto (suma un strike y borra el archivo) o dejarla («Está bien»). La pestaña «Otros reportes» muestra reportes de usuarios y entrenos. Solo funciona con las funciones `admin_*` de Supabase; una cuenta que no sea administrador no ve nada.
+
 ## Publicar con GitHub Pages
 
 1. Sube este repositorio a GitHub.
@@ -103,6 +107,7 @@ js/charts.js          gráficos (Chart.js)
 js/cloud.js           inicio de sesión y sincronización (Supabase)
 js/config.js          datos de conexión de Supabase
 supabase/setup.sql    tabla y permisos en Supabase
+moderar.html          página de moderación para el administrador
 js/data/exercises.js  catálogo de ejercicios
 js/data/templates.js  rutinas predefinidas
 js/data/muscles.js    músculos principales y secundarios de cada ejercicio

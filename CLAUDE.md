@@ -40,6 +40,7 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - `js/charts.js` — Chart.js (CDN jsdelivr): líneas y mini-gráficos de evolución.
 - `js/data/` — catálogo de ejercicios, músculos por ejercicio y plantillas de rutinas.
 - `r/` — página del enlace de rutina de entrenador (`r/index.html` + formato `r/codigo.js`); el service worker no la guarda en caché.
+- `moderar.html` — página de moderación del administrador (fotos de perfil reportadas y otros reportes) para usar desde el celular; llama a las funciones `admin_*` de Supabase; el service worker no la guarda en caché.
 - `sw.js` — funciona sin señal: abre desde la caché y descarga versiones nuevas en segundo plano.
 
 ## Estilo y preferencias del dueño
@@ -125,6 +126,7 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
   Enlaces cortos (03-10-2026): el enlace largo se veía mal; `worker/rutinas.js` (Cloudflare Worker + KV, gratis, cuenta del
   dueño) guarda el código con una clave de 7 letras (`…/r/k7Qx2pA` → redirige a `r/#GT1-…`) y permite actualizar la rutina
   con el mismo enlace. El enlace largo queda de respaldo sin internet. Se sube a mano desde el panel de Cloudflare.
+- Moderación (08-10-2026): `moderar.html` se publica junto a la web. Usa solo la clave pública (publishable) y entra con correo y contraseña de una cuenta que esté en la tabla `admins`; la seguridad la dan las funciones `admin_*` y `is_admin()` de Supabase, no esconder la página (lleva `noindex`). Las fotos reportadas salen borrosas hasta tocarlas. Reglas actuales en Supabase: 2 reportes distintos ocultan la foto sola; con 2 strikes el usuario ya no puede subir foto. El archivo se borra del bucket `avatars` desde la página (políticas `avatars_admin_select`/`avatars_admin_delete`).
 
 ## Plan: app nativa para iOS (decidido el 26-09-2026)
 

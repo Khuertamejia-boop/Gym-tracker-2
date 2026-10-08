@@ -3,7 +3,7 @@
 // cada versión nueva cambia CACHE y se descarga completa al instalarse.
 // Librerías del CDN: primero la copia guardada (nunca cambian de versión).
 // Las peticiones a Supabase (datos y sesión) nunca se guardan en caché.
-const CACHE = 'gymtrack-v65';
+const CACHE = 'gymtrack-v66';
 const SHELL = [
   './', 'index.html', 'css/styles.css', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png',
   'js/app.js', 'js/store.js', 'js/charts.js', 'js/cloud.js', 'js/config.js',
@@ -37,6 +37,7 @@ self.addEventListener('fetch', (e) => {
   const cdn = url.hostname === 'cdn.jsdelivr.net';
   if (!sameOrigin && !cdn) return; // Supabase y demás: directo a la red
   if (sameOrigin && url.pathname.includes('/r/')) return; // página del enlace de rutina: siempre la versión publicada
+  if (sameOrigin && url.pathname.endsWith('/moderar.html')) return; // página de moderación (solo administrador): siempre la versión publicada
 
   if (cdn) {
     e.respondWith(caches.open(CACHE).then(async (cache) => {

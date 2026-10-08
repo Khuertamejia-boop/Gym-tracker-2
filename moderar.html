@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Moderar">
+<meta name="theme-color" content="#0b0d0c">
+<title>Moderar</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--bg:#0b0d0c;--card:#151917;--line:#26302b;--text:#eef3f0;--muted:#8b9a92;--green:#22c55e;--red:#ef4444;--amber:#f59e0b}
+  *{box-sizing:border-box}
+  html,body{background:var(--bg)}
+  body{margin:0;color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+       padding:calc(env(safe-area-inset-top) + 8px) 16px calc(24px + env(safe-area-inset-bottom));max-width:520px;margin-inline:auto}
+  h1{font-size:22px;margin:0}
+  header{display:flex;align-items:center;justify-content:space-between;padding:12px 0 8px}
+  .muted{color:var(--muted)} .small{font-size:13px}
+  button{font:inherit;border:0;border-radius:12px;padding:13px 16px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  button:disabled{opacity:.5}
+  .ghost{background:var(--card);color:var(--text);border:1px solid var(--line)}
+  .icon{padding:8px 14px;font-size:20px}
+  .danger{background:var(--red);color:#fff}
+  .ok{background:var(--green);color:#000}
+  .full{width:100%}
+  .link{background:none;color:var(--muted);text-decoration:underline;padding:8px}
+  input{width:100%;font:inherit;padding:14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);margin-bottom:12px}
+  .login{padding-top:12vh;text-align:center}
+  .login form{margin-top:20px;text-align:left}
+  .logo{width:56px;height:56px;border-radius:50%;border:3px solid var(--green);margin:0 auto 16px}
+  .error{color:var(--red)}
+  .tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+  .tabs button{flex:1;padding:10px;background:none;color:var(--muted);border-radius:9px}
+  .tabs button.on{background:#1f2723;color:var(--text)}
+  .n{display:inline-block;min-width:20px;margin-left:6px;padding:0 6px;border-radius:999px;background:var(--line);color:var(--text);font-size:12px;line-height:20px}
+  .n.alert{background:var(--green);color:#000}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:14px;transition:opacity .25s,transform .25s}
+  .card.fuera{opacity:0;transform:translateX(40px)}
+  .ph{position:relative;border-radius:14px;overflow:hidden;cursor:pointer;background:#000}
+  .photo{width:100%;aspect-ratio:1;object-fit:cover;display:block;filter:blur(28px);transform:scale(1.1);transition:filter .2s}
+  .hint{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:600;text-shadow:0 1px 8px #000}
+  .ph.visto .photo{filter:none;transform:none}
+  .ph.visto .hint{display:none}
+  .meta{display:flex;justify-content:space-between;align-items:flex-start;margin-top:12px;gap:8px}
+  .badge{font-size:12px;font-weight:700;color:var(--amber);border:1px solid var(--amber);border-radius:6px;padding:2px 6px;white-space:nowrap}
+  .tipo{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .chip{font-size:13px;padding:3px 10px;border-radius:999px;background:#1f2723;color:var(--muted)}
+  .row{display:flex;gap:10px;margin-top:14px}
+  .row button{flex:1}
+  .empty{text-align:center;color:var(--muted);padding:64px 0}
+  footer{text-align:center;margin-top:24px}
+  .toast{position:fixed;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));max-width:488px;margin:auto;
+         background:#000;border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:center;
+         opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div id="toast" class="toast" role="status"></div>
+
+<script>
+// ===================== CONFIGURA AQUÍ =====================
+const SUPABASE_URL = 'https://nrrgnhpudjkvidwfbvie.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_ylJr2UpGSfZaQgdFDqOAuw_Mgkjkr0E'; // clave pública (la misma de js/config.js). NUNCA la secret / service_role
+// ==========================================================
+
+const app = document.getElementById('app');
+const MOTIVOS = { desnudo:'Desnudo / sexual', sexual:'Sexual', nudity:'Desnudo', violencia:'Violencia', violence:'Violencia',
+                  odio:'Odio u ofensiva', hate:'Odio', spam:'Spam', acoso:'Acoso', harassment:'Acoso', otro:'Otro', other:'Otro' };
+const TIPOS = { user:'Usuario', workout:'Entreno' };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const motivo = m => MOTIVOS[String(m).toLowerCase()] || m;
+const hace = iso => {
+  const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000));
+  if (m < 60) return `hace ${m} min`;
+  const h = Math.round(m / 60);
+  return h < 24 ? `hace ${h} h` : `hace ${Math.round(h / 24)} d`;
+};
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+if (SUPABASE_URL.includes('TU-PROYECTO')) {
+  app.innerHTML = '<p class="empty">Falta poner SUPABASE_URL y SUPABASE_ANON_KEY al inicio del archivo.</p>';
+  throw new Error('Configura Supabase');
+}
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let pestaña = 'fotos';
+
+function vistaLogin(msg = ''){
+  app.innerHTML = `
+    <div class="login">
+      <div class="logo"></div>
+      <h1>Moderación</h1>
+      <p class="muted">Entra con tu cuenta de administrador.</p>
+      ${msg ? `<p class="error">${esc(msg)}</p>` : ''}
+      <form id="f">
+        <input id="email" type="email" placeholder="Correo" autocomplete="username" required>
+        <input id="pass" type="password" placeholder="Contraseña" autocomplete="current-password" required>
+        <button class="ok full" type="submit">Entrar</button>
+      </form>
+    </div>`;
+  document.getElementById('f').onsubmit = async e => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true; btn.textContent = 'Entrando…';
+    const { error } = await sb.auth.signInWithPassword({
+      email: document.getElementById('email').value.trim(),
+      password: document.getElementById('pass').value
+    });
+    if (error) return vistaLogin('Correo o contraseña incorrectos.');
+    entrar();
+  };
+}
+
+async function entrar(){
+  const { data: esAdmin, error } = await sb.rpc('is_admin');
+  if (error || !esAdmin) { await sb.auth.signOut(); return vistaLogin('Esta cuenta no tiene permisos de administrador.'); }
+  app.innerHTML = `
+    <header>
+      <h1>Moderación</h1>
+      <button class="ghost icon" id="recargar" aria-label="Recargar">↻</button>
+    </header>
+    <div class="tabs">
+      <button data-t="fotos">Fotos<span class="n" id="nf">0</span></button>
+      <button data-t="otros">Otros reportes<span class="n" id="no">0</span></button>
+    </div>
+    <section id="lista"></section>
+    <footer><button class="link" id="salir">Cerrar sesión</button></footer>`;
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { pestaña = b.dataset.t; cargar(); });
+  document.getElementById('recargar').onclick = cargar;
+  document.getElementById('salir').onclick = async () => { await sb.auth.signOut(); vistaLogin(); };
+  cargar();
+}
+
+function contador(id, n){
+  const el = document.getElementById(id);
+  el.textContent = n; el.classList.toggle('alert', n > 0);
+}
+
+async function cargar(){
+  const lista = document.getElementById('lista');
+  if (!lista) return;
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === pestaña));
+  lista.innerHTML = '<p class="empty">Cargando…</p>';
+
+  const [fotos, otros] = await Promise.all([sb.rpc('admin_pending_avatars'), sb.rpc('admin_other_reports')]);
+  const err = fotos.error || otros.error;
+  if (err) { lista.innerHTML = `<p class="empty">Error: ${esc(err.message)}</p>`; return; }
+
+  contador('nf', fotos.data.length);
+  contador('no', otros.data.length);
+  const total = fotos.data.length + otros.data.length;
+  document.title = total ? `(${total}) Moderar` : 'Moderar';
+
+  const datos = pestaña === 'fotos' ? fotos.data : otros.data;
+  if (!datos.length) { lista.innerHTML = '<p class="empty">✓ Nada pendiente</p>'; return; }
+  lista.innerHTML = '';
+  datos.forEach(it => lista.appendChild(pestaña === 'fotos' ? tarjetaFoto(it) : tarjetaOtro(it)));
+}
+
+// ---------- Fotos de perfil ----------
+function tarjetaFoto(it){
+  const url = sb.storage.from('avatars').getPublicUrl(it.photo_path).data.publicUrl;
+  const n = Number(it.reports);
+  const motivos = [...new Set(it.reasons || [])];
+  const el = document.createElement('article');
+  el.className = 'card';
+  el.innerHTML = `
+    <div class="ph"><img class="photo" src="${esc(url)}" alt="Foto reportada" loading="lazy"><span class="hint">Toca para ver</span></div>
+    <div class="meta">
+      <div>
+        <strong>@${esc(it.username || 'sin nombre')}</strong>
+        <div class="muted small">${n} persona${n === 1 ? '' : 's'} la reportaron · ${hace(it.first_report)}</div>
+      </div>
+      ${it.hidden ? '<span class="badge">OCULTA AUTO</span>' : ''}
+    </div>
+    <div class="chips">${motivos.map(m => `<span class="chip">${esc(motivo(m))}</span>`).join('')}</div>
+    <div class="row">
+      <button class="ghost" data-a="keep">Está bien</button>
+      <button class="danger" data-a="remove">Eliminar foto</button>
+    </div>`;
+  const ph = el.querySelector('.ph');
+  ph.onclick = () => ph.classList.toggle('visto');
+  el.querySelectorAll('button[data-a]').forEach(b => b.onclick = () => resolverFoto(it, b.dataset.a, el));
+  return el;
+}
+
+async function resolverFoto(it, accion, el){
+  if (accion === 'remove' && !confirm(`¿Eliminar la foto de @${it.username || 'usuario'}?\n\nLe suma 1 strike. Con 2 strikes ya no podrá subir fotos.`)) return;
+  const botones = el.querySelectorAll('button');
+  botones.forEach(b => b.disabled = true);
+
+  const { error } = await sb.rpc('admin_resolve_avatar', { p_user: it.user_id, p_path: it.photo_path, p_action: accion });
+  if (error) { toast('Error: ' + error.message); botones.forEach(b => b.disabled = false); return; }
+
+  if (accion === 'remove') {
+    // Borra también el archivo para que deje de existir en el bucket
+    const { data, error: e2 } = await sb.storage.from('avatars').remove([it.photo_path]);
+    if (e2 || !data?.length) toast('Foto quitada del perfil, pero el archivo no se borró del bucket.');
+    else toast('Foto eliminada');
+  } else {
+    toast(it.hidden ? 'Foto aprobada y restaurada' : 'Reportes descartados');
+  }
+  el.classList.add('fuera');
+  setTimeout(cargar, 260);
+}
+
+// ---------- Otros reportes (usuarios y entrenos) ----------
+function tarjetaOtro(it){
+  const el = document.createElement('article');
+  el.className = 'card';
+  el.innerHTML = `
+    <div class="tipo">${esc(TIPOS[it.target_type] || it.target_type)}</div>
+    <div class="meta" style="margin-top:4px">
+      <div>
+        <strong>@${esc(it.target_username || 'desconocido')}</strong>
+        <div class="muted small">Reportado por @${esc(it.reporter_username || '—')} · ${hace(it.created_at)}</div>
+      </div>
+    </div>
+    <div class="chips"><span class="chip">${esc(motivo(it.reason))}</span></div>
+    <div class="row">
+      <button class="ghost" data-s="dismissed">Descartar</button>
+      <button class="ok" data-s="reviewed">Revisado</button>
+    </div>`;
+  el.querySelectorAll('button[data-s]').forEach(b => b.onclick = async () => {
+    el.querySelectorAll('button').forEach(x => x.disabled = true);
+    const { error } = await sb.rpc('admin_close_report', { p_id: it.id, p_status: b.dataset.s });
+    if (error) { toast('Error: ' + error.message); el.querySelectorAll('button').forEach(x => x.disabled = false); return; }
+    toast(b.dataset.s === 'reviewed' ? 'Marcado como revisado' : 'Reporte descartado');
+    el.classList.add('fuera');
+    setTimeout(cargar, 260);
+  });
+  return el;
+}
+
+// Al volver a la página (p. ej. desde el ícono en la pantalla de inicio), refresca.
+document.addEventListener('visibilitychange', () => { if (!document.hidden) cargar(); });
+
+sb.auth.getSession().then(({ data }) => data.session ? entrar() : vistaLogin());
+</script>
+</body>
+</html>

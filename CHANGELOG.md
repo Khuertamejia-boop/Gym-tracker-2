@@ -2,6 +2,10 @@
 
 Cada actualización de la app, de la más nueva a la más antigua.
 
+## 2026-10-08
+- Nueva página para moderar desde el celular: `moderar.html` (solo para el administrador, con su correo y contraseña). Pestaña **Fotos**: las fotos de perfil reportadas salen borrosas hasta tocarlas; «Eliminar foto» la borra y suma un strike, «Está bien» la aprueba. Pestaña **Otros reportes**: reportes de usuarios y entrenos, con «Descartar» y «Revisado». Se puede añadir a la pantalla de inicio del iPhone.
+- La app web no cambia; solo se actualizó la caché para que no guarde la página nueva (así siempre se ve la versión publicada).
+
 ## 2026-10-03
 - Enlaces cortos para las rutinas de entrenador: programa para Cloudflare en `worker/rutinas.js` (gratis). El enlace pasa de ~750 caracteres a uno como `…/r/k7Qx2pA`, y el entrenador puede corregir la rutina sin mandar otro enlace.
 - Nueva página para las rutinas de entrenador (`/r/`): al abrir el enlace que manda un entrenador se ve la rutina (días, ejercicios, series, nota), con «Copiar código», el botón del App Store («Muy pronto» por ahora) y «Ya tengo la app: abrir la rutina».
