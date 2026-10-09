@@ -3,6 +3,7 @@
 Cada actualización de la app, de la más nueva a la más antigua.
 
 ## 2026-10-08
+- Se guarda en el repo la parte de Supabase de **límites y borrar cuenta** (`supabase/limites-y-cuenta.sql`): una revisión cada hora del espacio usado, un freno automático (al 85 % se pausan las cuentas y las historias nuevas; se apaga al bajar del 75 %) y las funciones para que la app de iPhone borre la cuenta de una persona con todos sus datos. La web no cambia.
 - Se guarda en el repo la parte de Supabase de los **Crews** de la app de iPhone (`supabase/crews.sql`): crear un grupo, entrar con un código, ranking de la semana y entrenos de los miembros. La web no cambia.
 - `moderar.html` ahora tiene la pestaña **Historias** (entre Fotos y Otros): las historias de 24 h reportadas salen borrosas hasta tocarlas, con el nombre, cuántas personas las reportaron, los motivos y cuánto falta para que se borren solas. «Quitar historia» le suma un strike al usuario (con 2 ya no puede publicar) y borra la foto del almacén; «Está bien» la deja. Si las historias fallan, Fotos y Otros siguen funcionando. La pestaña «Otros reportes» pasó a llamarse **Otros** para que quepan las tres.
 - Se guardan en el repo el programa de las historias para Cloudflare (`worker/historias.js`) y la parte de Supabase (`supabase/historias-parte1.sql` y `historias-parte2.sql`), como respaldo.
