@@ -32,10 +32,10 @@
   .login form{margin-top:20px;text-align:left}
   .logo{width:56px;height:56px;border-radius:50%;border:3px solid var(--green);margin:0 auto 16px}
   .error{color:var(--red)}
-  .tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
-  .tabs button{flex:1;padding:10px 4px;font-size:15px;background:none;color:var(--muted);border-radius:9px}
+  .tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;gap:2px}
+  .tabs button{flex:1 1 auto;padding:10px 2px;font-size:14px;white-space:nowrap;background:none;color:var(--muted);border-radius:9px}
   .tabs button.on{background:#1f2723;color:var(--text)}
-  .n{display:inline-block;min-width:20px;margin-left:6px;padding:0 6px;border-radius:999px;background:var(--line);color:var(--text);font-size:12px;line-height:20px}
+  .n{display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;border-radius:999px;background:var(--line);color:var(--text);font-size:12px;line-height:20px}
   .n.alert{background:var(--green);color:#000}
   .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:14px;transition:opacity .25s,transform .25s}
   .card.fuera{opacity:0;transform:translateX(40px)}
@@ -53,6 +53,17 @@
   .chip{font-size:13px;padding:3px 10px;border-radius:999px;background:#1f2723;color:var(--muted)}
   .row{display:flex;gap:10px;margin-top:14px}
   .row button{flex:1}
+  .medida{margin-top:16px}
+  .medida:first-child{margin-top:0}
+  .medida .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .medida .num{font-size:13px;color:var(--muted)}
+  .barra{height:10px;border-radius:999px;background:#1f2723;margin-top:8px;overflow:hidden}
+  .barra i{display:block;height:100%;border-radius:999px;background:var(--green)}
+  .barra.amarillo i{background:var(--amber)}
+  .barra.rojo i{background:var(--red)}
+  .estado{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .estado .si{color:var(--amber);font-weight:700}
+  .estado .no{color:var(--green);font-weight:700}
   .empty{text-align:center;color:var(--muted);padding:64px 0}
   footer{text-align:center;margin-top:24px}
   .toast{position:fixed;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));max-width:488px;margin:auto;
@@ -135,6 +146,7 @@ async function entrar(){
       <button data-t="fotos">Fotos<span class="n" id="nf">0</span></button>
       <button data-t="historias">Historias<span class="n" id="nh">0</span></button>
       <button data-t="otros">Otros<span class="n" id="no">0</span></button>
+      <button data-t="salud">Salud</button>
     </div>
     <section id="lista"></section>
     <footer><button class="link" id="salir">Cerrar sesión</button></footer>`;
@@ -172,11 +184,62 @@ async function cargar(){
     lista.innerHTML = `<p class="empty">No se pudieron cargar las historias.<br><span class="small">${esc(hist.error.message)}</span></p>`;
     return;
   }
+  if (pestaña === 'salud') return vistaSalud(lista);
   const datos = { fotos: fotos.data, historias, otros: otros.data }[pestaña];
   if (!datos.length) { lista.innerHTML = '<p class="empty">✓ Nada pendiente</p>'; return; }
   lista.innerHTML = '';
   const tarjeta = { fotos: tarjetaFoto, historias: tarjetaHistoria, otros: tarjetaOtro }[pestaña];
   datos.forEach(it => lista.appendChild(tarjeta(it)));
+}
+
+// ---------- Salud: cuánto llevas usado del plan gratis ----------
+function medida(nombre, usado, limite, unidad, nota = ''){
+  const pct = limite ? Math.min(100, usado / limite * 100) : 0;
+  const color = pct >= 85 ? 'rojo' : pct >= 60 ? 'amarillo' : '';
+  const fmt = n => unidad === 'MB' && n >= 1024 ? (n / 1024).toLocaleString('es', { maximumFractionDigits: 1 }) + ' GB'
+                 : n.toLocaleString('es', { maximumFractionDigits: 1 }) + (unidad === 'MB' ? ' MB' : '');
+  return `<div class="medida">
+    <div class="top"><strong>${nombre}</strong><span class="num">${fmt(usado)} de ${fmt(limite)} · ${pct < 1 && usado > 0 ? '<1' : Math.round(pct)} %</span></div>
+    <div class="barra ${color}"><i style="width:${pct}%"></i></div>${nota ? `<div class="muted small" style="margin-top:4px">${nota}</div>` : ''}</div>`;
+}
+
+async function vistaSalud(lista){
+  const { data, error } = await sb.rpc('admin_usage');
+  if (error) {
+    lista.innerHTML = `<p class="empty">No se pudo medir el uso.<br><span class="small">${esc(error.message)}</span></p>`;
+    return;
+  }
+  const u = Array.isArray(data) ? data[0] : data;
+  const frenado = u.brake_auto || u.brake_manual;
+  lista.innerHTML = `
+    <article class="card">
+      <div class="estado">
+        <div>
+          <div class="tipo">Freno</div>
+          <div class="${frenado ? 'si' : 'no'}" id="estadoFreno">${u.brake_auto ? 'Encendido solo: casi al límite' : u.brake_manual ? 'Encendido por ti' : 'Apagado: todo normal'}</div>
+          <div class="muted small">Encendido = no entran cuentas ni historias nuevas. Lo demás sigue igual.</div>
+        </div>
+      </div>
+      <div class="row"><button class="${u.brake_manual ? 'ghost' : 'danger'}" id="freno">${u.brake_manual ? 'Quitar mi freno' : 'Encender freno a mano'}</button></div>
+    </article>
+    <article class="card">
+      ${medida('Base de datos', Number(u.db_mb), Number(u.db_limit), 'MB')}
+      ${medida('Fotos de perfil', Number(u.storage_mb), Number(u.storage_limit), 'MB')}
+      ${medida('Personas activas', u.users_30d, u.users_limit, '', 'Las que entraron en los últimos 30 días')}
+      ${medida('Historias (Cloudflare)', Number(u.r2_mb), Number(u.r2_limit), 'MB', 'Estimado: cada historia pesa hasta 0,6 MB')}
+      <p class="muted small" style="margin-top:16px">${u.users_total} cuentas · ${u.workouts} entrenos · ${u.stories_live} historias vivas<br>
+      El freno se enciende solo al 85 % y se apaga al bajar del 75 %. Actualizado ${hace(u.updated_at)}.<br>
+      No se puede medir aquí: la transferencia de Supabase y las peticiones del Worker. Míralas en Supabase → Usage y en Cloudflare → Workers.</p>
+    </article>`;
+  document.getElementById('freno').onclick = async (ev) => {
+    const poner = !u.brake_manual;
+    if (poner && !confirm('¿Encender el freno? No entrarán cuentas ni historias nuevas hasta que lo quites.')) return;
+    ev.target.disabled = true;
+    const { error: e2 } = await sb.rpc('admin_set_brake', { p_on: poner });
+    if (e2) { toast('Error: ' + e2.message); ev.target.disabled = false; return; }
+    toast(poner ? 'Freno encendido' : 'Freno quitado');
+    cargar();
+  };
 }
 
 // ---------- Fotos de perfil ----------

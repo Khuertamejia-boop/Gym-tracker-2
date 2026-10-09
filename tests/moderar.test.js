@@ -32,7 +32,7 @@ const { chromium, devices } = require('playwright'); const OUT = process.env.OUT
   console.log('contadores: fotos', await p.textContent('#nf'), '| historias', await p.textContent('#nh'), '| otros', await p.textContent('#no'), '| título', await p.title());
   ok(await p.textContent('#nf') === '2' && await p.textContent('#nh') === '2' && await p.textContent('#no') === '1', 'contadores');
   ok(await p.title() === '(5) Moderar', 'título con pendientes');
-  ok(await p.evaluate(() => [...document.querySelectorAll('.tabs button')].every(b => b.offsetHeight < 50)), 'las 3 pestañas caben en una línea');
+  ok(await p.evaluate(() => [...document.querySelectorAll('.tabs button')].every(b => b.offsetHeight < 50) && document.querySelector('.tabs').scrollWidth <= document.querySelector('.tabs').clientWidth && document.documentElement.scrollWidth <= 390), 'las 4 pestañas caben en una línea');
   ok(await p.locator('.badge').count() === 1, 'solo la foto oculta lleva «OCULTA AUTO»');
   ok((await p.textContent('.card .chips')).trim() === 'Desnudo / sexual', 'motivos sin repetir y traducidos');
   const blur = () => p.evaluate(() => getComputedStyle(document.querySelector('.photo')).filter);
@@ -87,6 +87,18 @@ const { chromium, devices } = require('playwright'); const OUT = process.env.OUT
   deleteStatus = 403; await p.click('.card [data-a=remove]'); await p.waitForTimeout(500);
   ok((await p.textContent('#toast')).includes('se borra solo'), 'si no se pudo borrar el archivo, lo dice'); deleteStatus = 204;
   ok(await p.textContent('#nh') === '0', 'la historia caducada también se pudo quitar');
+
+  // Salud
+  await p.click('.tabs [data-t=salud]'); await p.waitForTimeout(400);
+  const salud = await p.textContent('#lista');
+  ok(salud.includes('Base de datos') && salud.includes('42,5') && salud.includes('Personas activas'), 'salud muestra las medidas');
+  ok(await p.evaluate(() => document.querySelectorAll('.barra.rojo').length === 1 && document.querySelectorAll('.barra.amarillo').length === 0), 'solo la barra de personas (88 %) sale en rojo');
+  await p.screenshot({ path: OUT + '/moderar-salud.png' });
+  await p.click('#freno'); await p.waitForTimeout(500);
+  ok((await state()).calls.some(([n, a]) => n === 'admin_set_brake' && a.p_on === true), 'enciende el freno a mano');
+  ok((await p.textContent('#estadoFreno')).includes('por ti'), 'muestra freno encendido por ti');
+  await p.click('#freno'); await p.waitForTimeout(500);
+  ok((await state()).calls.some(([n, a]) => n === 'admin_set_brake' && a.p_on === false), 'quita el freno');
 
   // Otros reportes
   await p.click('.tabs [data-t=otros]'); await p.waitForTimeout(300);

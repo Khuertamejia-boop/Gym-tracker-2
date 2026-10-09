@@ -40,7 +40,7 @@ Sin compilación: HTML + CSS + JavaScript (módulos ES) servidos tal cual.
 - `js/charts.js` — Chart.js (CDN jsdelivr): líneas y mini-gráficos de evolución.
 - `js/data/` — catálogo de ejercicios, músculos por ejercicio y plantillas de rutinas.
 - `r/` — página del enlace de rutina de entrenador (`r/index.html` + formato `r/codigo.js`); el service worker no la guarda en caché.
-- `moderar.html` — página de moderación del administrador (pestañas Fotos · Historias · Otros) para usar desde el celular; llama a las funciones `admin_*` de Supabase; el service worker no la guarda en caché.
+- `moderar.html` — página de moderación del administrador (pestañas Fotos · Historias · Otros · Salud) para usar desde el celular; llama a las funciones `admin_*` de Supabase; el service worker no la guarda en caché.
 - `worker/historias.js` + `supabase/historias-parte1.sql`/`historias-parte2.sql` — backend de las historias de 24 h de la app de iPhone (Cloudflare R2 + Worker, y Supabase). La web no las usa.
 - `sw.js` — funciona sin señal: abre desde la caché y descarga versiones nuevas en segundo plano.
 

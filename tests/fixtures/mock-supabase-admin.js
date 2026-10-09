@@ -7,6 +7,7 @@ const state = (globalThis.__mod = {
     { user_id: 'u-leo', username: 'leo', photo_path: 'u-leo/9.jpg', hidden: false, reports: 1, reasons: ['spam'], first_report: new Date(Date.now() - 86400e3 * 2).toISOString() },
   ],
   storiesFail: false,
+  usage: { db_mb: 42.5, db_limit: 500, storage_mb: 310, storage_limit: 1024, r2_mb: 12, r2_limit: 10240, users_30d: 44000, users_limit: 50000, users_total: 120, stories_live: 20, workouts: 900, brake_auto: false, brake_manual: false, updated_at: new Date(Date.now() - 600e3).toISOString() },
   stories: [
     { story_id: 's-eva', user_id: 'u-eva', username: 'eva', key: 'e0000000-0000-0000-0000-00000000000e/11111111-1111-1111-1111-111111111111.jpg', hidden: true, reports: 2, reasons: ['spam', 'acoso'], first_report: new Date(Date.now() - 1800e3).toISOString(), expires_at: new Date(Date.now() + 5 * 3600e3).toISOString() },
     { story_id: 's-tom', user_id: 'u-tom', username: 'tom', key: 'd0000000-0000-0000-0000-00000000000d/22222222-2222-2222-2222-222222222222.jpg', hidden: false, reports: 1, reasons: ['violencia'], first_report: new Date(Date.now() - 7200e3).toISOString(), expires_at: new Date(Date.now() + 90 * 60e3).toISOString() },
@@ -30,6 +31,8 @@ export function createClient() {
       if (name === 'is_admin') return { data: state.admin, error: null };
       if (!state.admin) return { data: null, error: { message: 'Solo administradores' } };
       if (name === 'admin_pending_avatars') return { data: state.avatars, error: null };
+      if (name === 'admin_usage') return { data: [state.usage], error: null };
+      if (name === 'admin_set_brake') { state.usage.brake_manual = args.p_on; return { data: null, error: null }; }
       if (name === 'admin_other_reports') return { data: state.others, error: null };
       if (name === 'admin_pending_stories') return state.storiesFail ? { data: null, error: { message: 'Could not find the function public.admin_pending_stories' } } : { data: state.stories, error: null };
       if (name === 'admin_resolve_story') {
