@@ -33,7 +33,7 @@
   .logo{width:56px;height:56px;border-radius:50%;border:3px solid var(--green);margin:0 auto 16px}
   .error{color:var(--red)}
   .tabs{display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
-  .tabs button{flex:1;padding:10px;background:none;color:var(--muted);border-radius:9px}
+  .tabs button{flex:1;padding:10px 4px;font-size:15px;background:none;color:var(--muted);border-radius:9px}
   .tabs button.on{background:#1f2723;color:var(--text)}
   .n{display:inline-block;min-width:20px;margin-left:6px;padding:0 6px;border-radius:999px;background:var(--line);color:var(--text);font-size:12px;line-height:20px}
   .n.alert{background:var(--green);color:#000}
@@ -44,6 +44,8 @@
   .hint{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:600;text-shadow:0 1px 8px #000}
   .ph.visto .photo{filter:none;transform:none}
   .ph.visto .hint{display:none}
+  .photo.vertical{aspect-ratio:9/16;max-height:52vh;object-fit:contain;background:#000}
+  .gone{background:#000;border-radius:14px;padding:48px 16px;text-align:center;color:var(--muted)}
   .meta{display:flex;justify-content:space-between;align-items:flex-start;margin-top:12px;gap:8px}
   .badge{font-size:12px;font-weight:700;color:var(--amber);border:1px solid var(--amber);border-radius:6px;padding:2px 6px;white-space:nowrap}
   .tipo{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
@@ -67,6 +69,7 @@
 // ===================== CONFIGURA AQUÍ =====================
 const SUPABASE_URL = 'https://nrrgnhpudjkvidwfbvie.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_ylJr2UpGSfZaQgdFDqOAuw_Mgkjkr0E'; // clave pública (la misma de js/config.js). NUNCA la secret / service_role
+const HISTORIAS_URL = 'https://historias.khuertamejia.workers.dev'; // Worker de Cloudflare que guarda las fotos de las historias
 // ==========================================================
 
 const app = document.getElementById('app');
@@ -130,7 +133,8 @@ async function entrar(){
     </header>
     <div class="tabs">
       <button data-t="fotos">Fotos<span class="n" id="nf">0</span></button>
-      <button data-t="otros">Otros reportes<span class="n" id="no">0</span></button>
+      <button data-t="historias">Historias<span class="n" id="nh">0</span></button>
+      <button data-t="otros">Otros<span class="n" id="no">0</span></button>
     </div>
     <section id="lista"></section>
     <footer><button class="link" id="salir">Cerrar sesión</button></footer>`;
@@ -151,19 +155,28 @@ async function cargar(){
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === pestaña));
   lista.innerHTML = '<p class="empty">Cargando…</p>';
 
-  const [fotos, otros] = await Promise.all([sb.rpc('admin_pending_avatars'), sb.rpc('admin_other_reports')]);
+  const [fotos, otros, hist] = await Promise.all([
+    sb.rpc('admin_pending_avatars'), sb.rpc('admin_other_reports'), sb.rpc('admin_pending_stories')]);
   const err = fotos.error || otros.error;
   if (err) { lista.innerHTML = `<p class="empty">Error: ${esc(err.message)}</p>`; return; }
+  // Si las historias fallan (p. ej. aún no se instaló su parte en Supabase), el resto sigue funcionando.
+  const historias = hist.error ? [] : hist.data;
 
   contador('nf', fotos.data.length);
+  contador('nh', historias.length);
   contador('no', otros.data.length);
-  const total = fotos.data.length + otros.data.length;
+  const total = fotos.data.length + historias.length + otros.data.length;
   document.title = total ? `(${total}) Moderar` : 'Moderar';
 
-  const datos = pestaña === 'fotos' ? fotos.data : otros.data;
+  if (pestaña === 'historias' && hist.error) {
+    lista.innerHTML = `<p class="empty">No se pudieron cargar las historias.<br><span class="small">${esc(hist.error.message)}</span></p>`;
+    return;
+  }
+  const datos = { fotos: fotos.data, historias, otros: otros.data }[pestaña];
   if (!datos.length) { lista.innerHTML = '<p class="empty">✓ Nada pendiente</p>'; return; }
   lista.innerHTML = '';
-  datos.forEach(it => lista.appendChild(pestaña === 'fotos' ? tarjetaFoto(it) : tarjetaOtro(it)));
+  const tarjeta = { fotos: tarjetaFoto, historias: tarjetaHistoria, otros: tarjetaOtro }[pestaña];
+  datos.forEach(it => lista.appendChild(tarjeta(it)));
 }
 
 // ---------- Fotos de perfil ----------
@@ -208,6 +221,69 @@ async function resolverFoto(it, accion, el){
     else toast('Foto eliminada');
   } else {
     toast(it.hidden ? 'Foto aprobada y restaurada' : 'Reportes descartados');
+  }
+  el.classList.add('fuera');
+  setTimeout(cargar, 260);
+}
+
+// ---------- Historias de 24 h ----------
+const faltan = iso => {
+  const m = Math.max(0, Math.round((new Date(iso) - Date.now()) / 60000));
+  return m < 60 ? `${m} min` : `${Math.round(m / 60)} h`;
+};
+
+function tarjetaHistoria(it){
+  const n = Number(it.reports);
+  const motivos = [...new Set(it.reasons || [])];
+  const el = document.createElement('article');
+  el.className = 'card';
+  el.innerHTML = `
+    <div class="ph"><img class="photo vertical" src="${esc(`${HISTORIAS_URL}/s/${it.key}`)}" alt="Historia reportada" loading="lazy"><span class="hint">Toca para ver</span></div>
+    <div class="meta">
+      <div>
+        <strong>@${esc(it.username || 'sin nombre')}</strong>
+        <div class="muted small">${n} persona${n === 1 ? '' : 's'} la reportaron · ${hace(it.first_report)}</div>
+        <div class="muted small">Se borra sola en ${faltan(it.expires_at)}</div>
+      </div>
+      ${it.hidden ? '<span class="badge">OCULTA AUTO</span>' : ''}
+    </div>
+    <div class="chips">${motivos.map(m => `<span class="chip">${esc(motivo(m))}</span>`).join('')}</div>
+    <div class="row">
+      <button class="ghost" data-a="keep">Está bien</button>
+      <button class="danger" data-a="remove">Quitar historia</button>
+    </div>`;
+  const ph = el.querySelector('.ph');
+  ph.onclick = () => ph.classList.toggle('visto');
+  // La foto caduca a las 24 h (el Worker responde 410): se puede resolver igual.
+  el.querySelector('img').onerror = () => { ph.outerHTML = '<div class="gone">La foto ya no está disponible (caducó o se borró).</div>'; };
+  el.querySelectorAll('button[data-a]').forEach(b => b.onclick = () => resolverHistoria(it, b.dataset.a, el));
+  return el;
+}
+
+// Pide al Worker que borre el archivo de R2 (solo lo permite si la historia ya quedó «quitada»).
+async function borrarArchivoHistoria(key){
+  try {
+    const { data } = await sb.auth.getSession();
+    const token = data.session?.access_token;
+    if (!token) return false;
+    const r = await fetch(`${HISTORIAS_URL}/s/${key}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    return r.status === 204;
+  } catch { return false; }
+}
+
+async function resolverHistoria(it, accion, el){
+  if (accion === 'remove' && !confirm(`¿Quitar la historia de @${it.username || 'usuario'}?\n\nLe suma 1 strike. Con 2 strikes ya no podrá publicar historias.`)) return;
+  const botones = el.querySelectorAll('button');
+  botones.forEach(b => b.disabled = true);
+
+  const { data: key, error } = await sb.rpc('admin_resolve_story', { p_story: it.story_id, p_action: accion });
+  if (error) { toast('Error: ' + error.message); botones.forEach(b => b.disabled = false); return; }
+
+  if (accion === 'remove') {
+    const borrado = await borrarArchivoHistoria(key || it.key);
+    toast(borrado ? 'Historia quitada' : 'Historia quitada. El archivo se borra solo en 24 h.');
+  } else {
+    toast(it.hidden ? 'Historia aprobada y restaurada' : 'Reportes descartados');
   }
   el.classList.add('fuera');
   setTimeout(cargar, 260);

@@ -76,9 +76,13 @@ Abrir la app con `?importar=excel` al final de la dirección añade la rutina *T
 
 También puedes descargar una copia `.json` desde tu perfil → **Respaldo de datos**.
 
-## Moderar fotos y reportes (administrador)
+## Moderar fotos, historias y reportes (administrador)
 
-`moderar.html` es una página aparte, pensada para el celular: se abre en `…/Gym-tracker-2/moderar.html`, se entra con el correo y la contraseña de una cuenta que esté en la tabla `admins` de Supabase, y se puede añadir a la pantalla de inicio del iPhone. Las fotos de perfil reportadas salen borrosas hasta tocarlas; se puede **eliminar** la foto (suma un strike y borra el archivo) o dejarla («Está bien»). La pestaña «Otros reportes» muestra reportes de usuarios y entrenos. Solo funciona con las funciones `admin_*` de Supabase; una cuenta que no sea administrador no ve nada.
+`moderar.html` es una página aparte, pensada para el celular: se abre en `…/Gym-tracker-2/moderar.html`, se entra con el correo y la contraseña de una cuenta que esté en la tabla `admins` de Supabase, y se puede añadir a la pantalla de inicio del iPhone. Las fotos de perfil reportadas salen borrosas hasta tocarlas; se puede **eliminar** la foto (suma un strike y borra el archivo) o dejarla («Está bien»). La pestaña «Historias» hace lo mismo con las historias de 24 h reportadas («Quitar historia» suma un strike y borra la foto del almacén de Cloudflare). La pestaña «Otros» muestra reportes de usuarios y entrenos. Solo funciona con las funciones `admin_*` de Supabase; una cuenta que no sea administrador no ve nada.
+
+## Historias de 24 h (app de iPhone)
+
+Las fotos de las historias no se guardan en Supabase sino en Cloudflare R2 (bucket privado `historias`, con una regla que borra todo al día). Un programa pequeño, el Worker `historias` (`worker/historias.js`), las sube, las muestra y las borra; cada permiso se lo pregunta a Supabase con la sesión del usuario. La parte de Supabase (tablas, reglas y limpieza diaria) está en `supabase/historias-parte1.sql` y `historias-parte2.sql`. Dirección del Worker: `https://historias.khuertamejia.workers.dev` (necesita el almacén `HISTORIAS` y las variables `SUPABASE_URL` y `SUPABASE_ANON_KEY` en Cloudflare). La web no usa historias; es para la app de Xcode.
 
 ## Publicar con GitHub Pages
 
@@ -108,6 +112,8 @@ js/cloud.js           inicio de sesión y sincronización (Supabase)
 js/config.js          datos de conexión de Supabase
 supabase/setup.sql    tabla y permisos en Supabase
 moderar.html          página de moderación para el administrador
+worker/historias.js   Worker de Cloudflare: fotos de las historias de 24 h (app de iPhone)
+supabase/historias-*.sql  historias en Supabase (tablas, reglas, limpieza)
 js/data/exercises.js  catálogo de ejercicios
 js/data/templates.js  rutinas predefinidas
 js/data/muscles.js    músculos principales y secundarios de cada ejercicio

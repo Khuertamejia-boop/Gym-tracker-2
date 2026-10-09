@@ -6,6 +6,11 @@ const state = (globalThis.__mod = {
     { user_id: 'u-ana', username: 'ana', photo_path: 'u-ana/1.jpg', hidden: true, reports: 2, reasons: ['desnudo', 'desnudo'], first_report: new Date(Date.now() - 3600e3).toISOString() },
     { user_id: 'u-leo', username: 'leo', photo_path: 'u-leo/9.jpg', hidden: false, reports: 1, reasons: ['spam'], first_report: new Date(Date.now() - 86400e3 * 2).toISOString() },
   ],
+  storiesFail: false,
+  stories: [
+    { story_id: 's-eva', user_id: 'u-eva', username: 'eva', key: 'e0000000-0000-0000-0000-00000000000e/11111111-1111-1111-1111-111111111111.jpg', hidden: true, reports: 2, reasons: ['spam', 'acoso'], first_report: new Date(Date.now() - 1800e3).toISOString(), expires_at: new Date(Date.now() + 5 * 3600e3).toISOString() },
+    { story_id: 's-tom', user_id: 'u-tom', username: 'tom', key: 'd0000000-0000-0000-0000-00000000000d/22222222-2222-2222-2222-222222222222.jpg', hidden: false, reports: 1, reasons: ['violencia'], first_report: new Date(Date.now() - 7200e3).toISOString(), expires_at: new Date(Date.now() + 90 * 60e3).toISOString() },
+  ],
   others: [
     { id: 7, target_type: 'workout', target_id: 'w1', target_username: 'marta', reporter_username: 'ana', reason: 'otro', created_at: new Date(Date.now() - 600e3).toISOString() },
   ],
@@ -16,7 +21,7 @@ export function createClient() {
       getSession: async () => ({ data: { session: state.session } }),
       signInWithPassword: async ({ password }) => {
         if (password !== 'secreto1') return { error: { message: 'Invalid login credentials' } };
-        state.session = { user: { id: 'admin' } }; return { error: null };
+        state.session = { user: { id: 'admin' }, access_token: 'token-admin' }; return { error: null };
       },
       signOut: async () => { state.session = null; },
     },
@@ -26,6 +31,12 @@ export function createClient() {
       if (!state.admin) return { data: null, error: { message: 'Solo administradores' } };
       if (name === 'admin_pending_avatars') return { data: state.avatars, error: null };
       if (name === 'admin_other_reports') return { data: state.others, error: null };
+      if (name === 'admin_pending_stories') return state.storiesFail ? { data: null, error: { message: 'Could not find the function public.admin_pending_stories' } } : { data: state.stories, error: null };
+      if (name === 'admin_resolve_story') {
+        const s = state.stories.find((x) => x.story_id === args.p_story);
+        state.stories = state.stories.filter((x) => x.story_id !== args.p_story);
+        return { data: args.p_action === 'remove' && s ? s.key : null, error: null };
+      }
       if (name === 'admin_resolve_avatar') { state.avatars = state.avatars.filter((a) => a.user_id !== args.p_user); return { data: null, error: null }; }
       if (name === 'admin_close_report') { state.others = state.others.filter((o) => o.id !== args.p_id); return { data: null, error: null }; }
       return { data: null, error: { message: 'función desconocida ' + name } };
