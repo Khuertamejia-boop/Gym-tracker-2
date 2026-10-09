@@ -114,6 +114,7 @@ supabase/setup.sql    tabla y permisos en Supabase
 moderar.html          página de moderación para el administrador
 worker/historias.js   Worker de Cloudflare: fotos de las historias de 24 h (app de iPhone)
 supabase/historias-*.sql  historias en Supabase (tablas, reglas, limpieza)
+supabase/crews.sql    crews en Supabase (grupos, ranking semanal, entrenos del crew)
 js/data/exercises.js  catálogo de ejercicios
 js/data/templates.js  rutinas predefinidas
 js/data/muscles.js    músculos principales y secundarios de cada ejercicio
