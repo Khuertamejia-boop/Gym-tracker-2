@@ -1,0 +1,5 @@
+# Python 3.13 (bpy 5.2 is Blender 5.2 as a Python module)
+bpy==5.2.2
+numpy==2.5.4
+scipy==1.18.1
+pillow==12.3.0
