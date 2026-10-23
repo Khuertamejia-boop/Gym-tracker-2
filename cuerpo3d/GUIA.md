@@ -17,7 +17,7 @@ de esta guía y Claude seguirá desde aquí.
 | Estilo de dibujo **v8** (`ill/style_v8.env`) | aprobado: «bastante cerca» de la referencia; cortes grises aclarados el 23-10 | `ejemplos/espalda_cortes_antes_ahora_16x9.jpg` |
 | Remo con barra | aprobado (v6, estilo v7) | `ejemplos/remo_barra_v6.gif` |
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
-| Peso muerto con barra (convencional) | hecho (v1, 23-10-2026), falta el visto bueno del dueño | `ejemplos/pesomuerto_v1.gif`, `ejemplos/pesomuerto_f0*_16x9.jpg` |
+| Peso muerto con barra (convencional) | v2 (23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta; falta el visto bueno | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
 | Mapa de músculos: pecho, abdomen, oblicuos, serrato, cuello por delante (`ill/spec/front.py`) | aprobado el 23-10-2026 | `ejemplos/facepull_frente_16x9_v2.jpg` (antes: `facepull_frente_16x9.jpg`) |
 
@@ -108,9 +108,10 @@ abdominal en 4 segmentos (grupo `rectus_abdominis`) y esternocleidomastoideo. No
 ```bash
 export GT3D=~/cuerpo3d-trabajo; cd $GT3D
 ill/mapas.sh maps_dl "gluteus_maximus:1,biceps_femoris:1,semitendinosus:1,semimembranosus:1,erector_spinae:1"
-export LEAN0=80 SPX0=22 SPX1=2 MIDF=0.07 SHDY=-0.04 NECK0=0 PFX=DLe
-for g in "0 1 2 3" "4 5 6 7" "8 9 10"; do for f in $g; do ./anim_dl.sh $f 20 & done; wait; done   # ~15 s por fotograma
-ill/anim_dl.sh        # render 1920x1080 estilo v8 -> out/pesomuerto.gif (~4-5 min)
+export LEAN0=80 SPX0=22 SPX1=2 MIDF=0.07 SHDY=-0.04 NECK0=0 PFX=DLf
+for g in $(seq 0 4 30); do for f in $(seq $g $((g+3))); do [ $f -le 30 ] && ./anim_dl.sh $f 60 & done; wait; done   # 31 posturas, ~15 s c/u
+ill/anim_dl.sh        # render 1920x1080 estilo v8 de las 31 -> out/pesomuerto.gif (~15 min; REDO=1 rehace los PNG)
+python3 ill/mkmp4.py out/pesomuerto.mp4 ill/r/dl_final/f*.png   # vídeo 16:9, mismo ritmo (más fluido en el iPhone)
 ```
 - `deadlift.py` (hecho a partir de `barrow.py`): pies fijos, barra en línea recta sobre el centro del pie (`MIDF` 7 cm
   delante del tobillo), brazos colgando rectos. Abajo (P=0) la flexión de rodilla se calcula sola para que los discos
@@ -125,6 +126,13 @@ ill/anim_dl.sh        # render 1920x1080 estilo v8 -> out/pesomuerto.gif (~4-5 m
 - Rojo: glúteo mayor, isquiotibiales (bíceps femoral, semitendinoso, semimembranoso) y erectores de la columna.
   Cuádriceps no (no es el principal). Los glúteos están bajo el short: `rendsculpt.py` tiene `SHRED` (0-1) para que el
   rojo se vea a través del short; el peso muerto usa `SHRED=0.7`.
+- **La barra nunca entra en las piernas** (pedido del dueño, 23-10): en cada postura `deadlift.py` mide la piel de las
+  piernas a la altura de la barra y, si está por delante de la línea del centro del pie, adelanta la barra hasta que
+  quede a 6 mm (`GAP`). Abajo pasa a ~1,5 cm de las espinillas; arriba queda delante de los muslos/short con los brazos
+  algo inclinados (como en el bloqueo real). Comprobar con `python -I barcheck.py -- w/DLf*.blend` (copia en la carpeta).
+- **Velocidad** (pedido del dueño, 23-10): la subida (concéntrica) rápida y la bajada (excéntrica) lenta, con pausas.
+  `ill/mkgif2.py`: 31 posturas (P = 0,5 - 0,5·cos), subida 40 ms por imagen (~1,2 s), arriba 0,4 s, bajada 80 ms por
+  imagen (~2,4 s), abajo 0,6 s (`UP`, `DOWN`, `HOLDT`, `HOLDB`). Antes: 0,9 s + 0,9 s sin pausas (demasiado rápido).
 - Pendiente: puntitos negros sueltos en el borde del rojo del glúteo (de cerca), y el short del lateral de la cadera
   queda negro con forma algo rara al flexionar mucho.
 

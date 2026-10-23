@@ -168,6 +168,25 @@ AT,loc=place(kf,SHDY0*(1-hph))
 sh={s:Vector(pb['upper_arm.'+Ls].head) for s,Ls in ((1,'L'),(-1,'R'))}
 zb=bar_z_hang() if P>0 else KF0[2]
 if P>0: zb=max(zb,z_floor)
+# the bar must never go into the legs: if the skin in front of the legs at bar height is ahead of the bar line,
+# the bar moves forward to just touch it (it slides along the thighs at the top, as in a real deadlift)
+_R=np.load(os.path.join(os.environ.get('GT3D',os.path.dirname(os.path.abspath(__file__))),'ill','rest.npz'),allow_pickle=True)
+_legs=np.isin(np.array([str(m) for m in _R['main']]),['thigh.L','thigh.R','shin.L','shin.R','hips','foot.L','foot.R'])
+def leg_front(z):
+    md.show_viewport=True; upd(); dg=bpy.context.evaluated_depsgraph_get(); ev=hi.evaluated_get(dg); mm=ev.to_mesh()
+    co=np.zeros(len(mm.vertices)*3); mm.vertices.foreach_get('co',co); co=co.reshape(-1,3); ev.to_mesh_clear(); md.show_viewport=False
+    if len(co)!=len(_legs): return None
+    band=_legs&(np.abs(co[:,0])<E('LEGX',0.30))&(np.abs(co[:,2]-z)<rB+E('GAP',0.006))
+    if not band.any(): return None
+    # nearest skin to the bar circle: the most forward point, corrected for its height offset from the bar axis
+    dz=np.clip(np.abs(co[band,2]-z),0,rB+E('GAP',0.006)); reach=np.sqrt(np.maximum((rB+E('GAP',0.006))**2-dz*dz,0))
+    return float(np.min(co[band,1]-reach))
+YBAR0=YBAR
+for it in range(3):
+    fy=leg_front(zb)
+    YBAR=YBAR0 if fy is None else min(YBAR0,fy)
+    if P>0: zb=max(bar_z_hang(),z_floor)
+print('bar y %.3f (line %.3f)'%(YBAR,YBAR0))
 BAR=Vector((0,YBAR,zb))
 hd0=Vector((0,E('HDY',0.0),-1)).normalized()
 print('P %.3f lean %.1f knee %.1f thigh %.1f bar z %.3f'%(P,LEAN,kf,AT,BAR.z))
