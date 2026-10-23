@@ -18,7 +18,7 @@ de esta guía y Claude seguirá desde aquí.
 | Remo con barra | aprobado (v6, estilo v7) | `ejemplos/remo_barra_v6.gif` |
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
-| Mapa de músculos: **pecho, abdomen, oblicuos, serrato, cuello por delante** | **FALTA**: el frente del torso sale liso | `ejemplos/facepull_frente_16x9.jpg` |
+| Mapa de músculos: pecho, abdomen, oblicuos, serrato, cuello por delante (`ill/spec/front.py`) | hecho el 23-10-2026, falta el visto bueno del dueño | `ejemplos/facepull_frente_16x9_v2.jpg` (antes: `facepull_frente_16x9.jpg`) |
 
 **Formato final (decidido el 23-10-2026):** todo se renderiza en **1920×1080 horizontal (16:9)**, cuerpo entero con
 pies y máquina en el centro. Hay que juzgar el resultado a ese tamaño, no de cerca. (Si el dueño dice que quería
@@ -86,18 +86,22 @@ PFX=FPd ill/anim_fp.sh
 - Nombres de músculos para el rojo: los de `ill/spec/*.py` sin `.L/.R` (`trapezius` agrupa trap_upper/middle/lower).
   Los tendones nunca van en rojo. Solo los **principales** en rojo (decisión del dueño: en el remo, sin bíceps).
 
-## 5. Siguiente tarea: pecho y abdomen (frente del torso)
+## 5. Frente del torso (hecho el 23-10-2026)
 
-Hoy el frente del torso es una sola zona «none» (se comprueba con `MDEBUG=lab`). Hay que crear `ill/spec/front.py`
-(lado izquierdo, ver `ill/AUTHORING.md` y los puntos compartidos de `spec/shared.py`: jug, xiph, pubis, sc_l,
-clav_mid, ax_front, lat_ax, lat_mid, crest_side, asis, dp_low…) con, como mínimo:
-- pectoral mayor (porción clavicular y esternal, división suave `~`), deltoides anterior ya existe: compartir borde;
-- serrato anterior (dientes bajo la axila), oblicuo externo, recto abdominal con 3 intersecciones tendinosas
-  (suaves) y línea alba (tendón), y si hace falta esternocleidomastoideo;
-- vecinos: dorsal ancho y trapecio (espalda), deltoides (brazo), sartorio/tensor de la fascia (pierna).
-Luego `ill/atlas_rebuild.sh` (~2 min, sale `PROBLEM` si un contorno no cierra), `ill/mapas.sh` de cada ejercicio
-otra vez, y comparar con `referencias/697dfdbd-image.jpg` y `14cf49ef-image.jpg` a tamaño 16:9.
-Probar con el face pull de frente (fotograma 0, brazos extendidos) que es lo que pidió el dueño.
+`ill/spec/front.py` (lado izquierdo, prefijo `fr_`): pectoral mayor en dos porciones (clavicular y esternal, división
+suave `~`, grupo `pectoralis_major`), serrato anterior (3 dientes en zigzag con el oblicuo), oblicuo externo, recto
+abdominal en 4 segmentos (grupo `rectus_abdominis`) y esternocleidomastoideo. Notas:
+- La línea alba es la línea del centro entre los dos rectos: como franja de tendón no cabe (la malla es de ~6 mm).
+- Las 3 intersecciones del recto van como bordes **marcados**, no suaves: suaves casi no se veían a 16:9 y el abdomen
+  parecía dos tiras largas (`ejemplos/abdominales_suave_vs_marcado.jpg`, izquierda suave, derecha marcado).
+- Entre los pectorales queda una franja lisa de esternón (x < 1 cm), y el triángulo entre el esternocleidomastoideo y
+  el trapecio queda liso (como en las láminas).
+- Para el rojo: `pectoralis_major` (o `pec_clavicular` / `pec_sternal`), `rectus_abdominis`, `external_oblique`,
+  `serratus_anterior`, `sternocleidomastoid`.
+- Tras cambiarlo: `ill/atlas_rebuild.sh` y `ill/mapas.sh` de cada ejercicio (ya hecho para `maps_fp2`).
+
+**Siguiente:** según lo que diga el dueño de la imagen de frente, rehacer el GIF completo del face pull
+(sección 4) o pasar a otro ejercicio.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
@@ -127,3 +131,5 @@ lo aprobado. Mandar imágenes en 16:9. Chats cortos: uno por tarea grande (los l
 > Vamos a seguir con el muñeco 3D de ejercicios. Trae la rama `claude/youthful-maxwell-ns8lt5` de mi repositorio
 > Gym-tracker-2, lee `cuerpo3d/GUIA.md` y restaura el proyecto con `cuerpo3d/restaurar.sh`. Luego haz el mapa de
 > músculos del pecho y el abdomen (sección 5) y enséñame el face pull de frente con los brazos extendidos, en 16:9.
+>
+> (Ya hecho el 23-10-2026: para el siguiente chat, cambiar la última frase por la tarea nueva.)
