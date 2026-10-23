@@ -17,8 +17,9 @@ de esta guía y Claude seguirá desde aquí.
 | Estilo de dibujo **v8** (`ill/style_v8.env`) | aprobado: «bastante cerca» de la referencia; cortes grises aclarados el 23-10 | `ejemplos/espalda_cortes_antes_ahora_16x9.jpg` |
 | Remo con barra | aprobado (v6, estilo v7) | `ejemplos/remo_barra_v6.gif` |
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
+| Peso muerto con barra (convencional) | hecho (v1, 23-10-2026), falta el visto bueno del dueño | `ejemplos/pesomuerto_v1.gif`, `ejemplos/pesomuerto_f0*_16x9.jpg` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
-| Mapa de músculos: pecho, abdomen, oblicuos, serrato, cuello por delante (`ill/spec/front.py`) | hecho el 23-10-2026, falta el visto bueno del dueño | `ejemplos/facepull_frente_16x9_v2.jpg` (antes: `facepull_frente_16x9.jpg`) |
+| Mapa de músculos: pecho, abdomen, oblicuos, serrato, cuello por delante (`ill/spec/front.py`) | aprobado el 23-10-2026 | `ejemplos/facepull_frente_16x9_v2.jpg` (antes: `facepull_frente_16x9.jpg`) |
 
 **Formato final (decidido el 23-10-2026):** todo se renderiza en **1920×1080 horizontal (16:9)**, cuerpo entero con
 pies y máquina en el centro. Hay que juzgar el resultado a ese tamaño, no de cerca. (Si el dueño dice que quería
@@ -100,8 +101,32 @@ abdominal en 4 segmentos (grupo `rectus_abdominis`) y esternocleidomastoideo. No
   `serratus_anterior`, `sternocleidomastoid`.
 - Tras cambiarlo: `ill/atlas_rebuild.sh` y `ill/mapas.sh` de cada ejercicio (ya hecho para `maps_fp2`).
 
-**Siguiente:** según lo que diga el dueño de la imagen de frente, rehacer el GIF completo del face pull
-(sección 4) o pasar a otro ejercicio.
+**Siguiente:** rehacer el GIF del face pull con el frente nuevo cuando haga falta (sección 4).
+
+## 5b. Peso muerto (hecho el 23-10-2026, v1)
+
+```bash
+export GT3D=~/cuerpo3d-trabajo; cd $GT3D
+ill/mapas.sh maps_dl "gluteus_maximus:1,biceps_femoris:1,semitendinosus:1,semimembranosus:1,erector_spinae:1"
+export LEAN0=80 SPX0=22 SPX1=2 MIDF=0.07 SHDY=-0.04 NECK0=0 PFX=DLe
+for g in "0 1 2 3" "4 5 6 7" "8 9 10"; do for f in $g; do ./anim_dl.sh $f 20 & done; wait; done   # ~15 s por fotograma
+ill/anim_dl.sh        # render 1920x1080 estilo v8 -> out/pesomuerto.gif (~4-5 min)
+```
+- `deadlift.py` (hecho a partir de `barrow.py`): pies fijos, barra en línea recta sobre el centro del pie (`MIDF` 7 cm
+  delante del tobillo), brazos colgando rectos. Abajo (P=0) la flexión de rodilla se calcula sola para que los discos
+  (45 cm) toquen el suelo; los hombros quedan 4 cm por delante de la barra (`SHDY`). Las rodillas se estiran primero y
+  la cadera empieza algo después (`KDEL`), como en la técnica real.
+- `LEAN0` es la inclinación de la cadera; la extensión de espalda (`SPX0`) le resta, así que el tronco queda a ~60-65°
+  de la vertical. Con `LEAN0` 55-65 salía una sentadilla (cadera a la altura de las rodillas).
+- Cuello: `NECKT`/`NECK0` **positivo levanta la cabeza** y negativo la baja. 0 = cabeza en línea con la espalda y mirada
+  al suelo un poco adelante (lo correcto en el peso muerto). El remo usa -40: por eso su cuello mira hacia abajo.
+- Cámara: de perfil puro el disco tapa el cuerpo. Elegida: diagonal desde atrás por la izquierda
+  `YAW=140 PIT=14 TX=0 TY=0 TZ=0.84 OSC=3.4` (se ve la técnica y de lleno glúteos, isquiotibiales y lumbares).
+- Rojo: glúteo mayor, isquiotibiales (bíceps femoral, semitendinoso, semimembranoso) y erectores de la columna.
+  Cuádriceps no (no es el principal). Los glúteos están bajo el short: `rendsculpt.py` tiene `SHRED` (0-1) para que el
+  rojo se vea a través del short; el peso muerto usa `SHRED=0.7`.
+- Pendiente: puntitos negros sueltos en el borde del rojo del glúteo (de cerca), y el short del lateral de la cadera
+  queda negro con forma algo rara al flexionar mucho.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 

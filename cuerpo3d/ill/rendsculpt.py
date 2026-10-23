@@ -267,7 +267,8 @@ if os.environ.get('SHADE')=='matcap':
         rpat=MIX(1.0,redb,C('REDINV','%f,%f,%f'%(1/0.86,1/0.26,1/0.15)),'MULTIPLY')
         rsh=MIX(1.0,rr.outputs['Color'],rpat,'MULTIPLY')
         rsh=MIX(1.0,rsh,G(rimf),'MULTIPLY'); rsh=MIX(1.0,rsh,G(M('POWER',ao.outputs['AO'],E('MAOP',1.0))),'MULTIPLY')
-        outc=MIX(M('MULTIPLY',red,M('SUBTRACT',1.0,sh)),outc,rsh)
+        # SHRED>0: worked muscles under the shorts show through the fabric (e.g. glutes in a deadlift)
+        outc=MIX(M('MULTIPLY',red,M('SUBTRACT',1.0,M('MULTIPLY',sh,1.0-E('SHRED',0.0)))),outc,rsh)
     outc=MIX(1.0,outc,G(spec),'ADD')
     if os.environ.get('MDEBUG')=='n':
         mp=N.new('ShaderNodeVectorMath'); mp.operation='MULTIPLY_ADD'; L.new(vt.outputs['Vector'],mp.inputs[0]); mp.inputs[1].default_value=(0.5,0.5,0.5); mp.inputs[2].default_value=(0.5,0.5,0.5)
