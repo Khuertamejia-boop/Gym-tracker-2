@@ -17,7 +17,7 @@ de esta guía y Claude seguirá desde aquí.
 | Estilo de dibujo **v8** (`ill/style_v8.env`) | aprobado: «bastante cerca» de la referencia; cortes grises aclarados el 23-10 | `ejemplos/espalda_cortes_antes_ahora_16x9.jpg` |
 | Remo con barra | aprobado (v6, estilo v7) | `ejemplos/remo_barra_v6.gif` |
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
-| Peso muerto con barra (convencional) | v2 (23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta; falta el visto bueno | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
+| Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
 | Mapa de músculos: pecho, abdomen, oblicuos, serrato, cuello por delante (`ill/spec/front.py`) | aprobado el 23-10-2026 | `ejemplos/facepull_frente_16x9_v2.jpg` (antes: `facepull_frente_16x9.jpg`) |
 
@@ -135,6 +135,41 @@ python3 ill/mkmp4.py out/pesomuerto.mp4 ill/r/dl_final/f*.png   # vídeo 16:9, m
   imagen (~2,4 s), abajo 0,6 s (`UP`, `DOWN`, `HOLDT`, `HOLDB`). Antes: 0,9 s + 0,9 s sin pausas (demasiado rápido).
 - Pendiente: puntitos negros sueltos en el borde del rojo del glúteo (de cerca), y el short del lateral de la cadera
   queda negro con forma algo rara al flexionar mucho.
+
+## 5c. Plan para hacer los 114 ejercicios del catálogo gastando pocos créditos (23-10-2026)
+
+Lo que gasta no es el render (es cálculo de la máquina), sino lo que Claude lee y mira: imágenes, pruebas y chats largos.
+
+**Estándar congelado (no volver a discutirlo):** estilo v8; 1920×1080 (16:9); 31 posturas; ritmo del peso muerto
+(subida ~1,2 s, pausa 0,4 s, bajada ~2,4 s, pausa 0,6 s; `ill/mkgif2.py` y `ill/mkmp4.py`; **aprobado por el dueño**);
+vídeo MP4 + GIF; rojo solo en los músculos principales (glúteos a través del short con `SHRED`); comprobación
+automática de que la barra/mancuernas no atraviesan el cuerpo (`barcheck.py`).
+
+**Paso 1 (un chat, una vez):** sistema genérico: una *ficha* corta por ejercicio (programa de movimiento, parámetros,
+músculos en rojo, cámara, máquina) y un solo comando que hace todo sin supervisión: texturas, 31 posturas, comprobación de
+choques, render, MP4/GIF y una hoja con 3 posturas pequeñas para revisar.
+
+**Paso 2 (un chat por familia):** el dueño manda en un solo mensaje la lista de la familia (y una imagen de referencia
+si la tiene). Claude hace las fichas, enseña UNA hoja con todos los ejercicios en pequeño, el dueño corrige todo en un
+mensaje y se lanza el render final de la familia de golpe. Máximo 2 rondas de correcciones.
+
+Familias (por "motor" y máquina compartidos; de más barata a más cara):
+1. Barra de pie con bisagra o tirón (base `deadlift.py`/`barrow.py`): rumano, piernas rígidas, sumo, rack pull, buenos días,
+   Pendlay, remo en T, encogimientos, curl con barra/Z, curl inverso, press militar, remo al mentón.
+2. Mancuernas de pie o sentado: curls, martillo, laterales, frontales, pájaros, press de hombro, Arnold, encogimientos,
+   granjero, goblet, zancadas, rumano con mancuernas, step-up, búlgara.
+3. Polea (torre ya hecha en el face pull): cruces, jalones, remo sentado, curl/extensiones en polea, laterales en polea,
+   pullover, crunch en polea, patada de glúteo, Pallof, leñador.
+4. Banco y barra/mancuernas tumbado: press banca/inclinado/declinado/cerrado, aperturas, press francés, pullover,
+   hip thrust, puente, fondos en banco, curl Scott, curl inclinado, remo con pecho apoyado.
+5. Peso corporal: dominadas (hay base), fondos, flexiones, planchas, crunch, elevaciones de piernas, rueda, giros rusos,
+   hiperextensiones, curl nórdico.
+6. Smith (una máquina para todos): press inclinado, sentadillas, pantorrillas.
+7. Sentadillas y piernas libres: sentadilla con barra, frontal.
+8. Máquinas (22, cada una necesita su modelo 3D: lo más caro, al final; reutilizar asiento, respaldo y pila de pesas).
+
+**Ahorros:** las variantes «· cuádriceps / · glúteos» (búlgara, prensa, Smith) usan las mismas posturas, solo cambia el
+rojo; «Dominadas lastradas» = dominadas + disco. Chats cortos (uno por familia), empezando con el mensaje de la sección 9.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
