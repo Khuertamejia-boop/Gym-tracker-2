@@ -216,7 +216,7 @@ El dueño ve las sombras de los músculos muy fuertes y quiere algo más natural
 (remo, face pull, peso muerto) siguen con el estilo y el cuerpo viejos hasta rehacerlos (posturas + render).
 Si se usan las otras bases (`NB_mc`, `NB_mc_hs`, `NB_s`), pasarles también `shrink.py` con el mismo `SHRINK`.
 
-## 5f. Músculos redondeados: estilo v11 (28-10-2026, pendiente del visto bueno)
+## 5f. Músculos redondeados: estilo v11 (28-10-2026, aprobado: «me gusta un poco más como está ahora»)
 
 El dueño veía los músculos «en punta». Causa: el oscurecimiento del borde de cada músculo crecía en línea recta hasta
 el centro (perfil de tejado con arista en medio; muy visible en los rojos, que tenían el borde más oscuro y más
@@ -228,6 +228,14 @@ abombado). `style_v11.env` = v10 + :
 Probadas (`ejemplos/redondeo_antes_despues_v11.jpg`): con `GBUMP=1.3 EMIN=0.8` los contornos vuelven a verse oscuros.
 `style_v11` es ya el estilo por defecto de `ill/render31.sh`, `ill/anim_dl.sh`, `ill/anim_fp.sh`. El dueño pidió no
 animar más hasta dar el visto bueno.
+
+## 5g. Fibras del rojo visibles de lejos: estilo v12 (28-10-2026)
+
+El dueño no veía la textura (fibras) de los músculos rojos en el 16:9 completo: eran rayas de 6-9 mm (3-5 px) y en
+v10 se habían aclarado. `style_v12.env` = v11 + rayas el doble de anchas `FSTR=0.42`, más contraste `FIBR=0.85 FIBL=0.9`,
+fibra oscura `FIBRC=0.40,0.12,0.08`, borde de raya más nítido `FS0=0.38 FS1=0.64` (`ejemplos/fibras_rojo_1a1.jpg`,
+`fibras_rojo_lejos.jpg`: la intermedia `FSTR=0.55 FIBR=0.7 FIBL=0.75` aún no se distinguía a tamaño de móvil).
+`style_v12` es el estilo por defecto (`ill/render31.sh`, `ill/anim_dl.sh`, `ill/anim_fp.sh`).
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
