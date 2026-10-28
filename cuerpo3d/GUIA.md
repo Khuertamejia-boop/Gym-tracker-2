@@ -17,7 +17,7 @@ de esta guía y Claude seguirá desde aquí.
 | Estilo de dibujo **v8** (`ill/style_v8.env`) | aprobado: «bastante cerca» de la referencia; cortes grises aclarados el 23-10 | `ejemplos/espalda_cortes_antes_ahora_16x9.jpg` |
 | Remo con barra | v7 (28-10-2026): estilo v12, cuerpo v2, ritmo aprobado, cuello neutro, barra sin atravesar las piernas | `ejemplos/remo_barra_v7.mp4`, `.gif` |
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
-| **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v2 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v2_*.jpg` |
+| **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v3 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v3_*.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
@@ -314,7 +314,26 @@ Pedido del dueño: «lo mismo de la versión hombre en cuerpo de mujer, el dise�
     mechones sutiles en `style_mujer.env` (con mucho contraste parecían un gorro de natación).
   * figura: menos musculatura heredada del hombre (`PHYK=0.25`); líneas de los músculos grises más suaves
     (mapas con `SWW=0.45`, p. ej. `maps_curl2f`) y estilo `style_mujer.env` (`EMIN=0.93 GBUMP=0.55 MAOP=0.12`).
-- Pendiente (de cerca): algunas zonas lisas del mapa de músculos del hombre (axila, clavícula) se ven como manchas
+- v3 (28-10, pedido del dueño: «dale un rostro femenino, aún se le aprecia fisonomía de hombre», «mejora la ropa
+  debajo del brazo», «oscurece su cabello»):
+  * rostro: `femface.py` (lo llama `facebuild.py` en modo mujer), cambios suaves y locales de la cabeza de Blender:
+    mandíbula más estrecha hacia el ángulo (`JN`), mentón más estrecho (`CN`) y más corto (`CH` = 6,5 mm: la parte baja
+    de la cara era larga, rasgo de hombre), mejillas más llenas (`CF`, `CA`), ceja ósea más suave (`BR`), nariz más
+    pequeña con la punta algo arriba (`NOSEK`, `NOSEW`, `NT`), labios más llenos (`LP`), ojos un 6 % mayores (`ES`) con
+    el párpado de arriba un poco más bajo (`LIDA`: quita la mirada «asustada»), cuello más fino (`NK`; el mismo cambio en
+    el cuello del cuerpo). Todo se apaga antes de la franja que se pega al cuello (si no, sale una línea en el cuello).
+    Probado y descartado: exagerar la diferencia entre las cabezas de hombre y mujer de Blender (casi toda está en el
+    cráneo, y en el nivel de detalle alto los puntos no coinciden: salen manchas).
+  * labios con su forma (línea de la boca medida en la malla, arco del labio de arriba, comisuras apenas más bajas
+    `LIPDN`, borde de 2 mm lineal `LIPS`: con 0,8 mm salía dentado) y línea de la boca más oscura (`MLINE`); cejas algo
+    más gruesas con arco suave y el inicio no bajo (`BTH`, `BDROP`: si no, parecía enfadada); pestañas de abajo algo
+    más marcadas (`LASHB=0.30`).
+  * pelo más oscuro (`HAIRT=0.93`) y sienes más llenas (`HREC=-0.010`).
+  * ropa bajo el brazo: el top se cortaba según el hueso de cada punto (la piel del costado bajo la axila es del hueso
+    del brazo) -> borde en escalera. Ahora `topbuild.py` corta con un cilindro liso alrededor del CENTRO REAL del brazo
+    (medido con la superficie del brazo; el hueso está descentrado), radio `RC0..RC3` (5,6–7,2 cm): curva limpia
+    delante, bajo la axila y detrás. Los lados de la copa suben algo más (`TZS=1.235`) y tapan la mancha blanca de la axila.
+- Pendiente (de cerca): algunas zonas lisas del mapa de músculos del hombre (clavícula, cuello) se ven como manchas
   blancas de borde irregular en la mujer; contorno del pelo detrás de la oreja.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
@@ -347,7 +366,7 @@ lo aprobado. Mandar imágenes en 16:9. Chats cortos: uno por tarea grande (los l
 > mujer). Luego: <TAREA NUEVA>.
 
 Estado al 28-10-2026: hombre con estilo v13 (sombras suaves, músculos redondeados, fibras visibles de lejos, borde del
-rojo suave), cuerpo v3 (rostro, pelo corto, cejas gruesas; trapecio y pectorales reducidos) y mujer v2 (sección 5j;
+rojo suave), cuerpo v3 (rostro, pelo corto, cejas gruesas; trapecio y pectorales reducidos) y mujer v3 (sección 5j;
 pendiente del visto bueno). Vídeos hechos con el estilo actual: curl a un brazo y remo con barra (los de antes de la
 cara: hay que volver a posarlos con `NB_mc_row3.blend` / `NBF_row3.blend` para que salga el rostro).
 Ritmo, formato 16:9 y plan por familias: sección 5c.

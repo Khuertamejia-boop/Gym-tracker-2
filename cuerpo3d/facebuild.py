@@ -66,14 +66,15 @@ def make(name,verts,faces):
     ob=bpy.data.objects.new(name,m); bpy.context.scene.collection.objects.link(ob)
     for p in m.polygons: p.use_smooth=True
     return ob
-if os.environ.get('HAIRSTYLE','')=='bun' and E('FEMFACE',1)>0:
-    # softer, more feminine features (smooth local edits of the source face): narrower, slightly smaller nose, softer jaw
-    ss0=lambda t: np.clip(t,0,1)**2*(3-2*np.clip(t,0,1))
-    X,Y,Z=hco[:,0],hco[:,1],hco[:,2]
-    wn=ss0((0.024-np.abs(X))/0.008)*ss0((Z-1.482)/0.006)*ss0((1.532-Z)/0.008)*ss0((-0.138-Y)/0.006)
-    hco[:,1]=Y+wn*(-0.142-Y)*(1-E('NOSEK',0.86)); hco[:,0]=X*(1-wn*(1-E('NOSEW',0.90)))
-    wj=ss0((np.abs(X)-0.018)/0.02)*ss0((Z-1.418)/0.012)*ss0((1.495-Z)/0.02)*ss0((Y+0.135)/0.02)*ss0((-0.005-Y)/0.03)
-    hco[:,0]=hco[:,0]*(1-E('JAWK',0.055)*wj)
+FEM=os.environ.get('HAIRSTYLE','')=='bun' and E('FEMFACE',1)>0
+if FEM:
+    # feminine face (femface.py): narrower jaw and chin, shorter chin, fuller cheeks and lips, softer brow ridge, smaller
+    # nose, eyes a little larger; slimmer neck (the same function is applied to the body's neck below)
+    sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); import femface
+    ss_f=femface.ss
+    # the face edits fade out before the band that is glued to the neck (1.2 cm): no crease at the joint
+    hco,eyes=femface.deform(hco,hfaces,eyes,prot=ss_f((hco[:,2]-cutz(hco[:,1])-E('SNAPH',0.012))/0.02))
+    hco=femface.neck_scale(hco,femface.neck_mask(hco))
 cab=make('Cabeza',hco,hfaces)
 # ---- hair (short, buzz cut) and eyebrows: darkness 'tint' for the renderer
 ss_=lambda t: np.clip(t,0,1)**2*(3-2*np.clip(t,0,1))
@@ -110,8 +111,8 @@ for sg in (1,-1):
     xs=sg*hco[:,0]
     u=(xs-E('BX0',0.011))/(E('BX1',0.062)-E('BX0',0.011)); uc=np.clip(u,0,1)
     if os.environ.get('HAIRSTYLE','')=='bun':      # female: thinner, more arched
-        bot=E('BZB',1.5885)+ZO+0.0045*ss_(uc/0.62)-0.008*ss_((uc-0.62)/0.38)
-        top=bot+E('BTH',0.0050)*(1-0.55*uc)+0.001*ss_(uc/0.5)
+        bot=E('BZB',1.5885)+ZO-E('BDROP',0.0003)+0.0026*ss_(uc/0.62)-0.0068*ss_((uc-0.62)/0.38)   # soft arch, head not low (no frown)
+        top=bot+E('BTH',0.0060)*(1-0.50*uc)+0.001*ss_(uc/0.5)
     else:
         bot=E('BZB',1.5885)+ZO+0.003*uc-0.005*ss_((uc-0.7)/0.3)
         top=E('BZT',1.5965)+ZO+0.0025*ss_(uc/0.6)-0.0075*ss_((uc-0.6)/0.4)
@@ -129,8 +130,16 @@ tint=np.maximum(hair*E('HAIRT',0.51),brow*E('BROWT',0.95))
 if os.environ.get('HAIRSTYLE','')=='bun' and E('FEMFACE',1)>0:
     ss1=lambda t: np.clip(t,0,1)**2*(3-2*np.clip(t,0,1))
     # lips: a little darker (natural lip colour in a grey plate), upper lip thinner than the lower one
-    zc=E('LIPZ',1.466); dz=np.where(hco[:,2]>zc,(hco[:,2]-zc)/0.0105,(zc-hco[:,2])/0.0125)
-    lip=ss1((1-np.hypot(hco[:,0]/E('LIPW',0.0235),dz))/0.25)*(hn[:,1]<-0.3)*(hco[:,1]<-0.13)
+    # (28-10 v3) real lip shape: mouth line measured on the head (corners a little lower), upper lip with the cupid's bow
+    # (two peaks, dip in the middle), fuller rounded lower lip, soft 0.8 mm edge; a thin darker mouth line
+    W_=E('LIPW',0.0235); ax_=np.abs(hco[:,0])/W_; Zh=hco[:,2]
+    zm=E('LIPZ',1.4673)-E('LIPDN',0.0015)*np.clip(np.abs(hco[:,0])/0.022,0,1.2)**2     # corners only a little lower (not sad)
+    hu=(0.0088+0.0017*np.exp(-((np.abs(hco[:,0])-0.0058)/0.0030)**2))*np.clip(1-ax_**2.2,0,1)**0.65
+    hl=0.0102*np.clip(1-ax_**2,0,1)**0.6
+    lin=lambda t: np.clip(t,0,1)                      # linear ramps ~2 mm (wider than the mesh): smooth edge, no staircase
+    lip=lin((zm+hu-Zh)/E('LIPS',0.0022)+0.5)*lin((Zh-zm+hl)/E('LIPS',0.0022)+0.5)*ss1((1-ax_)/0.10)
+    lip=lip*(1+0.12*(Zh>zm))*(hn[:,1]<-0.3)*(hco[:,1]<-0.13)
+    mline=np.exp(-((Zh-zm)/0.0011)**2)*ss1((1-ax_)/0.15)*(hn[:,1]<-0.1)*(hco[:,1]<-0.13)
     # lash line: dark along the upper lid margin (thicker towards the outer corner), lighter below
     lash=np.zeros(len(hco))
     for L_,ec_,ef_ in eyes:
@@ -138,7 +147,7 @@ if os.environ.get('HAIRSTYLE','')=='bun' and E('FEMFACE',1)>0:
         near=ss1((r_+E('LASHD',0.0032)-d_)/0.0012)*(v_[:,1]<0)
         up=ss1(v_[:,2]/0.002); outer=0.75+0.25*ss1((np.sign(c_[0])*v_[:,0])/0.008)
         lash=np.maximum(lash,near*(up*outer*E('LASHT',0.92)+(1-up)*E('LASHB',0.35)))
-    tint=np.maximum.reduce([tint,lip*E('LIPT',0.30),lash])
+    tint=np.maximum.reduce([tint,lip*E('LIPT',0.36),mline*E('MLINE',0.55),lash])
     print('lips verts',int((lip>0.5).sum()),'lash verts',int((lash>0.5).sum()))
 # hair volume: pulled-back hair lies a few mm over the skull (fuller head, soft step at the hairline)
 if E('HVOL',0)>0:
@@ -198,6 +207,7 @@ hb=np.isin(main,['head','neck'])
 hh=bco[:,2]-cutz(bco[:,1])
 push=np.clip((hh-E('CAP0',0.008))/(E('CAP1',0.03)-E('CAP0',0.008)),0,1); push=push*push*(3-2*push)*hb
 bco=bco-bno*(push[:,None]*E('CAPIN',12)/1000.0)
+if FEM: bco=femface.neck_scale(bco,femface.neck_mask(bco))
 # guarantee: no vertex of the old cap pokes through the new head (keep it >= CAPMIN mm inside)
 from mathutils.bvhtree import BVHTree
 _bv=BVHTree.FromPolygons([tuple(v) for v in hco],[tuple(f) for f in hfaces])

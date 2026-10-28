@@ -12,7 +12,7 @@ ramp=lambda sd: np.clip(0.5+sd/TW,0,1)
 cs=lambda a,b,t: a+(b-a)*0.5*(1-np.cos(np.pi*np.clip(t,0,1)))
 # ---- top: signed functions (metres, >0 inside), combined with min (and) / max (or)
 zb0=E('TZB',1.100)
-top_f=np.where(x<0.085,E('TZN',1.262)+E('TNK',7.0)*x**2,cs(E('TZN',1.262)+E('TNK',7.0)*0.085**2,E('TZS',1.225),(x-0.085)/0.045))
+top_f=np.where(x<0.085,E('TZN',1.262)+E('TNK',7.0)*x**2,cs(E('TZN',1.262)+E('TNK',7.0)*0.085**2,E('TZS',1.235),(x-0.085)/0.045))
 sd_front=np.minimum(z-zb0,top_f-z)
 wz=np.interp(z,[1.10,1.16,1.22,1.27,1.31],[0.30,0.16,0.09,0.055,0.045])
 sd_back=np.minimum.reduce([z-zb0,wz-x,E('TZBT',1.315)-z])
@@ -21,8 +21,20 @@ sd_body=wf*sd_front+(1-wf)*sd_back
 xs_f=np.interp(z,[1.28,1.34,1.40],[0.088,0.090,0.092]); xs_b=np.interp(z,[1.30,1.35,1.40],[0.048,0.072,0.092])
 xs=wf*xs_f+(1-wf)*xs_b
 sd_strap=np.minimum(E('TSW',0.032)/2-np.abs(x-xs),z-1.26)
-torso=np.isin(main,['chest','spine','clavicle.L','clavicle.R','neck'])
-top=ramp(np.maximum(sd_body,sd_strap))*torso
+# armholes (28-10, owner: «mejora la ropa debajo del brazo»): the fabric used to stop where the skin belongs to the arm
+# bone -> vertex staircase under the arm. Now it stops at a smooth cylinder around the upper arm bone (wider towards the
+# armpit): a clean curve from the front fold, under the armpit, to the back fold. Straps are not cut by it.
+bn=[str(b) for b in F['bn']]; ia=bn.index('upper_arm.L'); ah,at_=F['bh'][ia],F['bt'][ia]; ad=(at_-ah)/np.linalg.norm(at_-ah)
+P_=np.stack([x,y,z],1); nrm=F['no'].copy(); nrm[:,0]*=np.where(co[:,0]<0,-1.0,1.0)   # normals in the |x| frame
+v_=P_-ah; rr=np.linalg.norm(v_-np.outer(v_@ad,ad),axis=1); rad=(v_-np.outer(v_@ad,ad))/np.maximum(rr[:,None],1e-9)
+arms=(x>0.08)&((rad*nrm).sum(1)>0.5)&(rr<0.09)                       # arm surface (normal away from the bone)
+cen=np.array([P_[arms&(np.abs(z-z0)<0.006)].mean(0) for z0 in np.arange(1.08,1.19,0.02)])   # real centre of the arm
+am=cen.mean(0); _,_,vt=np.linalg.svd(cen-am); ad=vt[0]*np.sign(-vt[0][2])
+v_=P_-am; r_arm=np.linalg.norm(v_-np.outer(v_@ad,ad),axis=1)
+rc=np.interp(z,[1.10,1.20,1.24,1.28],[E('RC0',0.056),E('RC1',0.058),E('RC2',0.064),E('RC3',0.072)])
+sd_arm=r_arm-rc
+keep=~np.isin(main,['head','forearm.L','forearm.R','hand.L','hand.R','fa_tw1.L','fa_tw1.R','fa_tw2.L','fa_tw2.R','fa_tw3.L','fa_tw3.R'])
+top=ramp(np.maximum(np.minimum(sd_body,sd_arm),sd_strap))*keep
 # ---- shorts: same fabric; replace the jagged waist edge with a smooth line (front 0.908, sides 0.926, back 0.940)
 bpy.ops.wm.open_mainfile(filepath=src)
 me=bpy.data.objects['Hi'].data
