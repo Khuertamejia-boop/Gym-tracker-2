@@ -18,6 +18,7 @@ de esta guía y Claude seguirá desde aquí.
 | Remo con barra | aprobado (v6, estilo v7) | `ejemplos/remo_barra_v6.gif` |
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
+| Curl de bíceps a un brazo con mancuerna (de pie) | hecho (v1, 28-10-2026), falta el visto bueno del dueño | `ejemplos/curl_un_brazo_v1.mp4`, `.gif` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
 | Mapa de músculos: pecho, abdomen, oblicuos, serrato, cuello por delante (`ill/spec/front.py`) | aprobado el 23-10-2026 | `ejemplos/facepull_frente_16x9_v2.jpg` (antes: `facepull_frente_16x9.jpg`) |
 
@@ -135,6 +136,30 @@ python3 ill/mkmp4.py out/pesomuerto.mp4 ill/r/dl_final/f*.png   # vídeo 16:9, m
   imagen (~2,4 s), abajo 0,6 s (`UP`, `DOWN`, `HOLDT`, `HOLDB`). Antes: 0,9 s + 0,9 s sin pausas (demasiado rápido).
 - Pendiente: puntitos negros sueltos en el borde del rojo del glúteo (de cerca), y el short del lateral de la cadera
   queda negro con forma algo rara al flexionar mucho.
+
+## 5d. Curl de bíceps a un brazo (hecho el 28-10-2026, v1)
+
+```bash
+export GT3D=~/cuerpo3d-trabajo; cd $GT3D
+NONEFIX=1 ill/mapas.sh maps_curl1 "biceps_brachii.L:1,brachialis.L:1,brachioradialis.L:1"   # solo el brazo izquierdo
+export PFX=CUe; for g in $(seq 0 4 30); do for f in $(seq $g $((g+3))); do [ $f -le 30 ] && ./anim_curl1.sh $f 60 & done; wait; done
+cd w && ../venv/bin/python -I ../objcheck.py -- CUe*.blend; cd ..       # mancuernas: nunca dentro del cuerpo (mm > 0)
+YAW=70 PIT=8 ill/render31.sh CUe maps_curl1 curl_un_brazo              # -> out/curl_un_brazo.mp4 / .gif
+```
+- `curl1.py` (hecho con las piezas de `barrow.py`: cálculo anatómico del brazo, agarre aprobado, piel `cor` + `arap2`):
+  trabaja el brazo **izquierdo** (supino, codo pegado al costado y quieto, solo avanza un poco arriba; flexión 14° → 140°,
+  muñeca algo flexionada arriba). El derecho cuelga quieto con su mancuerna (agarre neutro). De pie, cuello neutro.
+- Codo como bisagra: `WPA=4` (el codo va donde se le pide), `WFV=1e9` (sin la preferencia de antebrazo vertical del remo),
+  `CARRY=0` (con ángulo de carga el húmero giraba 33° al empezar). Brazos algo separados (`UAX=0.20`, `UAXR=0.24`):
+  más pegados, las mancuernas se metían 2-3 cm en los muslos.
+- Rojo de un solo lado: `redmap.py`/`linemap.py` aceptan `nombre.L` / `nombre.R`. Rojo como en la lámina de referencia
+  del curl (`14cf49ef`): bíceps, braquial y braquiorradial.
+- `NONEFIX=1` en `bakemaps.py`: en la punta del bíceps quedaba una franja en «U» marcada como piel sin músculo (la curva
+  cerrada del borde confundía el lado). Solo se usa en mapas nuevos; los aprobados (remo, face pull, peso muerto) no
+  se han regenerado con ella. Si se ve bien, usarla siempre.
+- Cámara: de lado desde el brazo que trabaja (`YAW=70`); a 45° el antebrazo apunta a la cámara y no se entiende el
+  movimiento.
+- `ill/render31.sh <PFX> <mapas> <nombre>`: render estándar de las 31 posturas + GIF + MP4 para cualquier ejercicio.
 
 ## 5c. Plan para hacer los 114 ejercicios del catálogo gastando pocos créditos (23-10-2026)
 

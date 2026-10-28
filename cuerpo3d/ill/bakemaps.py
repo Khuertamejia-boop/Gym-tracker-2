@@ -111,6 +111,11 @@ for t in sorted(set(tile.tolist())):
         ok_=((L3[nb]==vp[:,None])|(L3[nb]==vm[:,None])).any(1)
         # a label the triangle does not have is taken only right next to the line (not from far, unreliable sides)
         ok_&=(L3[nb]==cand[:,None]).any(1)|(dmin[nb]<E('LNEAR',0.006))
+        if E('NONEFIX',0)>0:
+            # NONEFIX=1: a triangle that is all one muscle never turns into plain skin ('none'): at tight curves of a
+            # border (e.g. the tip of the biceps) the side test can flip and leave a plain band inside the muscle
+            uni=(L3[nb]==L3[nb][:,:1]).all(1)
+            ok_&=~(uni&(cand==0)&(L3[nb][:,0]!=0))
         lab[nb[ok_]]=cand[ok_]
     img=np.zeros((R*R,3),np.uint8); li=np.zeros(R*R,np.uint8)
     img[cov,0]=np.clip(np.round(dh_eff*10000),0,255); img[cov,1]=np.clip(np.round(ds*10000),0,255); img[cov,2]=np.where(tendon_id[lab],255,0)
