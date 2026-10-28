@@ -145,6 +145,22 @@ d_hang=math.sqrt(Lu*Lu+Lf*Lf+2*Lu*Lf*math.cos(math.radians(E('FLEX0',8))))
 vx=GRIPX-doff.x-sh0.x*0-0.0-(sh0.x+0.175*0); vx=GRIPX-doff.x-abs(Vector(pb['upper_arm.L'].head).x); vy=sh0.y-doff.y-sh0.y
 z_hang=sh0.z+doff.z-math.sqrt(max(d_hang**2-vx*vx-vy*vy,0.0))
 BAR=Vector((0,ybar,lerp(z_hang,z_touch,q)))
+# the bar must never go into the legs (knees at the bottom, thighs on the way up): if the leg skin at bar height is
+# ahead of the bar, the bar moves forward to just touch it (GAP), like in deadlift.py
+_R=np.load(os.path.join(os.environ.get('GT3D',os.path.dirname(os.path.abspath(__file__))),'ill','rest.npz'),allow_pickle=True)
+_legs=np.isin(np.array([str(m) for m in _R['main']]),['thigh.L','thigh.R','shin.L','shin.R','hips','foot.L','foot.R'])
+def leg_front(z):
+    md.show_viewport=True; upd(); dg=bpy.context.evaluated_depsgraph_get(); ev=hi.evaluated_get(dg); mm=ev.to_mesh()
+    co=np.zeros(len(mm.vertices)*3); mm.vertices.foreach_get('co',co); co=co.reshape(-1,3); ev.to_mesh_clear(); md.show_viewport=False
+    g=rB+E('LGAP',0.006)
+    band=_legs&(np.abs(co[:,0])<E('LEGX',0.30))&(np.abs(co[:,2]-z)<g)
+    if not band.any(): return None
+    dz=np.abs(co[band,2]-z); reach=np.sqrt(np.maximum(g*g-dz*dz,0))
+    return float(np.min(co[band,1]-reach))
+if E('LEGPUSH',1)>0:
+    fy=leg_front(BAR.z)
+    if fy is not None and fy<BAR.y:
+        print('bar pushed forward by the legs: y %.3f -> %.3f'%(BAR.y,fy)); BAR=Vector((0,fy,BAR.z))
 print('bar z hang %.3f touch %.3f now %.3f'%(z_hang,z_touch,BAR.z))
 HAX=Vector((1,0,0)); res={}
 for s,Ls in ((1,'L'),(-1,'R')):

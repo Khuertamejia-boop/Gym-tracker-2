@@ -15,7 +15,7 @@ de esta guía y Claude seguirá desde aquí.
 | Qué | Estado | Ejemplo |
 |---|---|---|
 | Estilo de dibujo **v8** (`ill/style_v8.env`) | aprobado: «bastante cerca» de la referencia; cortes grises aclarados el 23-10 | `ejemplos/espalda_cortes_antes_ahora_16x9.jpg` |
-| Remo con barra | aprobado (v6, estilo v7) | `ejemplos/remo_barra_v6.gif` |
+| Remo con barra | v7 (28-10-2026): estilo v12, cuerpo v2, ritmo aprobado, cuello neutro, barra sin atravesar las piernas | `ejemplos/remo_barra_v7.mp4`, `.gif` |
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
@@ -237,6 +237,21 @@ fibra oscura `FIBRC=0.40,0.12,0.08`, borde de raya más nítido `FS0=0.38 FS1=0.
 `fibras_rojo_lejos.jpg`: la intermedia `FSTR=0.55 FIBR=0.7 FIBL=0.75` aún no se distinguía a tamaño de móvil).
 `style_v12` es el estilo por defecto (`ill/render31.sh`, `ill/anim_dl.sh`, `ill/anim_fp.sh`).
 
+## 5h. Remo con barra v7 (28-10-2026)
+
+```bash
+export GT3D=~/cuerpo3d-trabajo; cd $GT3D
+NONEFIX=1 ill/mapas.sh maps_row2 "trapezius:1,latissimus_dorsi:1,infraspinatus:1,teres_major:1,teres_minor:1,rhomboid_major:1,deltoid_posterior:1,deltoid_lateral:1"
+PFX=BRh ./pose_row_v6.sh                                   # 31 posturas
+cd w && ../venv/bin/python -I ../barcheck.py -- BRh*.blend; cd ..   # barra fuera de las piernas (mm > 0)
+YAW=135 PIT=20 TX=0 TY=0 TZ=0.68 OSC=3.0 ill/render31.sh BRh maps_row2 remo_barra
+```
+- La comprobación encontró que el remo aprobado (v6) tenía la barra 1-1,4 cm dentro de las rodillas abajo y de los
+  muslos arriba (tocaba el cuerpo a la altura del ombligo, `TOUCHZ=1.02`, entre la barriga y los muslos).
+  Ahora `barrow.py` adelanta la barra si choca con la pierna (`LEGPUSH=1`, 6 mm de holgura) y toca un poco más arriba
+  (`TOUCHZ=1.05`; con 1.10 no hay choque pero los antebrazos se inclinan 43° en vez de ~35°).
+- Cuello neutro `NECKT=0` (en línea con la espalda). En `barrow.py`/`deadlift.py` NECKT positivo levanta la cabeza.
+
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
 - Lo que importa es cómo se ve **renderizado a distancia normal/lejana**, no de cerca.
@@ -252,7 +267,7 @@ fibra oscura `FIBRC=0.40,0.12,0.08`, borde de raya más nítido `FS0=0.38 FS1=0.
 
 - Face pull: de cerca, al final del movimiento, el borde del rojo en el hombro se ve irregular (la piel se estira);
   a distancia no se nota.
-- Remo: el cuello aún mira algo hacia abajo.
+- Remo: el cuello miraba hacia abajo (`NECKT=-40`); corregido en v7 con `NECKT=0`.
 - Contraste general algo menor que la referencia.
 
 ## 8. Cómo trabajar con el dueño
