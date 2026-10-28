@@ -17,7 +17,7 @@ de esta guía y Claude seguirá desde aquí.
 | Estilo de dibujo **v8** (`ill/style_v8.env`) | aprobado: «bastante cerca» de la referencia; cortes grises aclarados el 23-10 | `ejemplos/espalda_cortes_antes_ahora_16x9.jpg` |
 | Remo con barra | v7 (28-10-2026): estilo v12, cuerpo v2, ritmo aprobado, cuello neutro, barra sin atravesar las piernas | `ejemplos/remo_barra_v7.mp4`, `.gif` |
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
-| **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v1 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v1_*.jpg` |
+| **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v2 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v2_*.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
@@ -303,8 +303,19 @@ Pedido del dueño: «lo mismo de la versión hombre en cuerpo de mujer, el dise�
 - Posar cualquier ejercicio con `BASEB=NBF_row3.blend` (mismos programas) y renderizar con `RESTNPZ=$GT3D/ill/rest_f.npz`
   y `ill/style_mujer.env` (= v13 + mechones `HRSW=4 HRJ=0.8 HAIRSTK=0.5`). El curl funciona (agarre bien, sin choques).
 - `objcheck.py` confirma con rayos si un punto está dentro del cuerpo (las normales entre dedos cerrados engañaban).
-- Pendiente (de cerca): borde de los tirantes algo dentado (resolución de la malla), algo de ruido de líneas en cuello y
-  clavículas, contorno del pelo junto a la oreja todavía «corto».
+- v2 (28-10, pedido del dueño: rostro de mujer, pelo más oscuro, más femenina, ropa sin «dientes de sierra»):
+  * ropa: `topbuild.py` guarda en `shorts` una RAMPA LINEAL (`TW` 12 mm) de la distancia con signo a cada borde (líneas
+    analíticas combinadas con min/max, delante/detrás mezclados por `y`, sin cortes bruscos) y el render la corta en 0,5
+    -> bordes limpios dentro de los triángulos. Cintura del short redibujada igual; el bajo usa `SHLIN=1` en el render
+    (rampa lineal de `SHORTZ`, también mejora el bajo del hombre).
+  * rostro (`FEMFACE=1`): nariz algo más fina y pequeña, mandíbula más suave (ediciones locales suaves), labios con
+    tono (`LIPT`), línea de pestañas arriba (`LASHT`, más suave abajo `LASHB`), iris algo mayor (`IRISA=33`).
+  * pelo más oscuro (`HAIRT=0.80`), con volumen (`HVOL=9` mm) y **moño alto** visible de frente (`BUNR/BUNY/BUNZ`);
+    mechones sutiles en `style_mujer.env` (con mucho contraste parecían un gorro de natación).
+  * figura: menos musculatura heredada del hombre (`PHYK=0.25`); líneas de los músculos grises más suaves
+    (mapas con `SWW=0.45`, p. ej. `maps_curl2f`) y estilo `style_mujer.env` (`EMIN=0.93 GBUMP=0.55 MAOP=0.12`).
+- Pendiente (de cerca): algunas zonas lisas del mapa de músculos del hombre (axila, clavícula) se ven como manchas
+  blancas de borde irregular en la mujer; contorno del pelo detrás de la oreja.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 

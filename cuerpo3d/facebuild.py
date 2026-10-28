@@ -66,6 +66,14 @@ def make(name,verts,faces):
     ob=bpy.data.objects.new(name,m); bpy.context.scene.collection.objects.link(ob)
     for p in m.polygons: p.use_smooth=True
     return ob
+if os.environ.get('HAIRSTYLE','')=='bun' and E('FEMFACE',1)>0:
+    # softer, more feminine features (smooth local edits of the source face): narrower, slightly smaller nose, softer jaw
+    ss0=lambda t: np.clip(t,0,1)**2*(3-2*np.clip(t,0,1))
+    X,Y,Z=hco[:,0],hco[:,1],hco[:,2]
+    wn=ss0((0.024-np.abs(X))/0.008)*ss0((Z-1.482)/0.006)*ss0((1.532-Z)/0.008)*ss0((-0.138-Y)/0.006)
+    hco[:,1]=Y+wn*(-0.142-Y)*(1-E('NOSEK',0.86)); hco[:,0]=X*(1-wn*(1-E('NOSEW',0.90)))
+    wj=ss0((np.abs(X)-0.018)/0.02)*ss0((Z-1.418)/0.012)*ss0((1.495-Z)/0.02)*ss0((Y+0.135)/0.02)*ss0((-0.005-Y)/0.03)
+    hco[:,0]=hco[:,0]*(1-E('JAWK',0.055)*wj)
 cab=make('Cabeza',hco,hfaces)
 # ---- hair (short, buzz cut) and eyebrows: darkness 'tint' for the renderer
 ss_=lambda t: np.clip(t,0,1)**2*(3-2*np.clip(t,0,1))
@@ -118,6 +126,20 @@ for sg in (1,-1):
 a_=cab.data.attributes.new('bmask','FLOAT','POINT'); a_.data.foreach_set('value',brow.astype(np.float32))
 a_=cab.data.attributes.new('bw','FLOAT','POINT'); a_.data.foreach_set('value',bw.astype(np.float32))
 tint=np.maximum(hair*E('HAIRT',0.51),brow*E('BROWT',0.95))
+if os.environ.get('HAIRSTYLE','')=='bun' and E('FEMFACE',1)>0:
+    ss1=lambda t: np.clip(t,0,1)**2*(3-2*np.clip(t,0,1))
+    # lips: a little darker (natural lip colour in a grey plate), upper lip thinner than the lower one
+    zc=E('LIPZ',1.466); dz=np.where(hco[:,2]>zc,(hco[:,2]-zc)/0.0105,(zc-hco[:,2])/0.0125)
+    lip=ss1((1-np.hypot(hco[:,0]/E('LIPW',0.0235),dz))/0.25)*(hn[:,1]<-0.3)*(hco[:,1]<-0.13)
+    # lash line: dark along the upper lid margin (thicker towards the outer corner), lighter below
+    lash=np.zeros(len(hco))
+    for L_,ec_,ef_ in eyes:
+        c_=ec_.mean(0); r_=np.linalg.norm(ec_-c_,axis=1).mean(); v_=hco-c_; d_=np.linalg.norm(v_,axis=1)
+        near=ss1((r_+E('LASHD',0.0032)-d_)/0.0012)*(v_[:,1]<0)
+        up=ss1(v_[:,2]/0.002); outer=0.75+0.25*ss1((np.sign(c_[0])*v_[:,0])/0.008)
+        lash=np.maximum(lash,near*(up*outer*E('LASHT',0.92)+(1-up)*E('LASHB',0.35)))
+    tint=np.maximum.reduce([tint,lip*E('LIPT',0.30),lash])
+    print('lips verts',int((lip>0.5).sum()),'lash verts',int((lash>0.5).sum()))
 # hair volume: pulled-back hair lies a few mm over the skull (fuller head, soft step at the hairline)
 if E('HVOL',0)>0:
     hv=E('HVOL',0)/1000.0*hair*(0.6+0.4*np.clip((hco[:,2]-hco[:,2].min())/(hco[:,2].max()-hco[:,2].min()),0,1))

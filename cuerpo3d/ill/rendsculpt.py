@@ -36,7 +36,9 @@ if E('SHORTZ',0)>0:
     _sh=np.zeros(nv,np.float32); me.attributes['shorts'].data.foreach_get('value',_sh)
     _ax=np.abs(_co[:,0])
     _zh=E('SHORTZ',0.74)+E('SHSL',0.25)*np.clip(_ax-E('SHX0',0.10),0,0.08)-E('SHBK',0.0)*np.clip(_co[:,1]/0.10,0,1)
-    _t=np.clip((_co[:,2]-_zh)/E('SHBAND',0.008)+0.5,0,1); _t=_t*_t*(3-2*_t)
+    _t=np.clip((_co[:,2]-_zh)/E('SHBAND',0.008)+0.5,0,1)
+    if E('SHLIN',1)>0: _t=np.clip((_co[:,2]-_zh)/E('SHBANDL',0.012)+0.5,0,1)   # linear ramp: the 0.5 cut is a clean line
+    else: _t=_t*_t*(3-2*_t)
     me.attributes['shorts'].data.foreach_set('value',(_sh*_t).astype(np.float32))
 sub=ob.modifiers.new('sub','SUBSURF'); sub.levels=int(E('SUBD',2)); sub.render_levels=int(E('SUBD',2)); sub.uv_smooth='PRESERVE_BOUNDARIES'
 m=bpy.data.materials.new('sculpt'); nt=m.node_tree; N=nt.nodes; L=nt.links
