@@ -216,6 +216,19 @@ El dueño ve las sombras de los músculos muy fuertes y quiere algo más natural
 (remo, face pull, peso muerto) siguen con el estilo y el cuerpo viejos hasta rehacerlos (posturas + render).
 Si se usan las otras bases (`NB_mc`, `NB_mc_hs`, `NB_s`), pasarles también `shrink.py` con el mismo `SHRINK`.
 
+## 5f. Músculos redondeados: estilo v11 (28-10-2026, pendiente del visto bueno)
+
+El dueño veía los músculos «en punta». Causa: el oscurecimiento del borde de cada músculo crecía en línea recta hasta
+el centro (perfil de tejado con arista en medio; muy visible en los rojos, que tenían el borde más oscuro y más
+abombado). `style_v11.env` = v10 + :
+- `EROUND=1` (nuevo en `rendsculpt.py`): perfil de cúpula `1-(1-e)²`: se aclara rápido junto al borde y deja un centro
+  amplio y suave; `EWF=1.0 EWFR=1.0 EGP=0.8`, rojo menos oscuro en el borde `ERMIN=0.4`;
+- abombado: `RBUMP=0.5` (nuevo: abombado de los músculos rojos, antes siempre 1) y `GBUMP=0.7` (grises algo más
+  redondos que en v10), perfil de cúpula más plano `DRP=0.45 PFLAT=0.6`; borde gris `EMIN=0.87`.
+Probadas (`ejemplos/redondeo_antes_despues_v11.jpg`): con `GBUMP=1.3 EMIN=0.8` los contornos vuelven a verse oscuros.
+`style_v11` es ya el estilo por defecto de `ill/render31.sh`, `ill/anim_dl.sh`, `ill/anim_fp.sh`. El dueño pidió no
+animar más hasta dar el visto bueno.
+
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
 - Lo que importa es cómo se ve **renderizado a distancia normal/lejana**, no de cerca.

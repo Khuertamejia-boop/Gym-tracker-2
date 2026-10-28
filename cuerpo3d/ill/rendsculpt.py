@@ -186,7 +186,7 @@ if os.environ.get('SHADE')=='matcap':
             hb=M('MULTIPLY',hb,M('SUBTRACT',1.0,M('MULTIPLY',tend,E('TBF',0.7))))
             hb=M('MULTIPLY',hb,M('SUBTRACT',1.0,SS(A('shorts').outputs['Fac'],0.3,0.6)))
             hb=M('MULTIPLY',hb,M('SUBTRACT',1.0,M('MULTIPLY',F('tfade'),E('TFB',0.75))))
-            hb=M('MULTIPLY',hb,M('ADD',E('GBUMP',1.0),M('MULTIPLY',red,1.0-E('GBUMP',1.0))))   # GBUMP<1: softer roundness on grey muscles
+            hb=M('MULTIPLY',hb,M('ADD',E('GBUMP',1.0),M('MULTIPLY',red,E('RBUMP',1.0)-E('GBUMP',1.0))))   # GBUMP / RBUMP: roundness of grey / red muscles
             L.new(hb,bp.inputs['Height'])
         elif os.path.exists(os.path.join(MAPS,'halfw.1001.png')) and os.environ.get('PROF','round')=='round':
             # round cross-section: each muscle bulges like a cylinder of its own local width
@@ -220,6 +220,10 @@ if os.environ.get('SHADE')=='matcap':
         ew=M('MAXIMUM',M('MULTIPLY',_tex16('halfw',64.0),M('ADD',E('EWF',0.75),M('MULTIPLY',red,E('EWFR',0.75)-E('EWF',0.75)))),E('EMM',5.0))
         eg=SS(M('MINIMUM',M('DIVIDE',M('ADD',_tex16('dh16',64.0),ladd),ew),1.0),0.0,1.0)
         eg=M('POWER',eg,E('EGP',0.8))
+        if E('EROUND',0)>0:
+            # rounded (dome) profile instead of a straight ramp: light quickly away from the border, broad soft middle,
+            # so a long muscle does not get a crest along its middle ("tent" look)
+            eg=MIX(E('EROUND',0),eg,M('SUBTRACT',1.0,M('POWER',M('SUBTRACT',1.0,eg),2.0)))
         egs=SS(M('MINIMUM',M('DIVIDE',_tex16('ds16',64.0),E('ESW',6.0)),1.0),0.0,1.0,E('ESOFT',0.7),1.0)
         eg=M('MULTIPLY',eg,egs)
         emin=M('ADD',E('EMIN',0.35),M('MULTIPLY',tend,E('ETMIN',0.75)-E('EMIN',0.35)))   # tendons: same gradient, softer
