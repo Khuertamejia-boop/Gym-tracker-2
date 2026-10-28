@@ -270,6 +270,11 @@ medidas) como objeto `Cabeza` (multires nivel 2, ~56 mil vértices, corte recto 
 - 28-10: el dueño veía «pelado encima de la oreja»: la oreja se quitaba del pelo con una caja que cogía todo el lado de la
   cabeza. Ahora la oreja sale de los *face sets* 4 y 5 de la malla original (`EARFS`) y el pelo baja hasta ~5 mm de
   ella, con la sien llena (`ejemplos/rostro_v2_pelo_lados.jpg`).
+- 28-10: cejas como la foto del dueño (gruesas, densas, casi rectas, arco suave en el último tercio, cola fina que baja,
+  inicio más claro y difuminado): forma en `facebuild.py` (`bmask`) y trazos de pelo en el render (`bw` = coordenada
+  a través de los pelos, hacia arriba al inicio y en diagonal hacia fuera; `BROWSTK`, `BRSW`, `BRJ`, `BRNB`).
+  `TINTV` es lineal: 0,05 = gris oscuro en pantalla (con 0,20 lo más oscuro era un gris medio); `HAIRT=0.51` mantiene el
+  tono del pelo. Ojos subdivididos (`EYESUB=3`) para un iris redondo (`ejemplos/rostro_v3_cejas.jpg`).
 - `rendsculpt.py` (con `FACE=1`, por defecto): hornea la piel de la cabeza, pega la franja baja (`snapw`, 1,2 cm) a la piel
   del cuello ya posada, y le copia a la cabeza el dibujo de la piel de debajo (UV por cara desde un solo triángulo del
   cuerpo + atributos): las líneas y fibras del cuello siguen sin corte. Subdivisión `FACESUB=1`.

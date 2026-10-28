@@ -280,7 +280,17 @@ if os.environ.get('SHADE')=='matcap':
         outc=MIX(M('MULTIPLY',red,M('SUBTRACT',1.0,M('MULTIPLY',sh,1.0-E('SHRED',0.0)))),outc,rsh)
     # face: hair, eyebrows, irises / pupils darker (attribute 'tint' 0..1 on the head objects; 0 on the body)
     _tn=A('tint').outputs['Fac']
-    outc=MIX(_tn,outc,MIX(1.0,G(E('TINTV',0.20)),shade,'MULTIPLY'))
+    if E('BROWSTK',0.55)>0:
+        # eyebrow hair strokes: thin stripes across 'bw' (mm), broken by noise; stronger at the brow's soft edges
+        _bm=A('bmask').outputs['Fac']; _nz=N.new('ShaderNodeTexNoise'); _nz.inputs['Scale'].default_value=E('BRNZ',260.0)
+        _ph=M('ADD',M('DIVIDE',A('bw').outputs['Fac'],E('BRSW',0.55)),M('MULTIPLY',_nz.outputs['Fac'],E('BRJ',0.9)))
+        _st=SS(M('SINE',M('MULTIPLY',_ph,2*math.pi)),-0.3,0.5)                  # 1 on a hair, 0 between hairs
+        _nb=N.new('ShaderNodeTexNoise'); _nb.inputs['Scale'].default_value=E('BRNB',1400.0)
+        _st=M('MULTIPLY',_st,SS(_nb.outputs['Fac'],0.32,0.55,0.35,1.0))         # hairs of different lengths
+        _edge=M('SUBTRACT',1.0,SS(_bm,0.55,0.95))                                 # sparse hairs at the edges
+        _k=M('MULTIPLY',E('BROWSTK',0.55),M('ADD',0.35,M('MULTIPLY',_edge,0.65)))
+        _tn=M('MULTIPLY',_tn,M('SUBTRACT',1.0,M('MULTIPLY',M('MULTIPLY',_k,M('SUBTRACT',1.0,_st)),SS(_bm,0.02,0.2))))
+    outc=MIX(_tn,outc,MIX(1.0,G(E('TINTV',0.05)),shade,'MULTIPLY'))   # TINTV is linear (0.05 ~ dark grey on screen)
     outc=MIX(1.0,outc,G(spec),'ADD')
     if os.environ.get('MDEBUG')=='n':
         mp=N.new('ShaderNodeVectorMath'); mp.operation='MULTIPLY_ADD'; L.new(vt.outputs['Vector'],mp.inputs[0]); mp.inputs[1].default_value=(0.5,0.5,0.5); mp.inputs[2].default_value=(0.5,0.5,0.5)

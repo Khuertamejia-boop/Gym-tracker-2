@@ -88,17 +88,26 @@ rec=E('HREC',0.009)*ss_((ax0-0.018)/0.032)*(hco[:,1]<-0.10)          # temples r
 sd=sdist(hco[:,1],hco[:,2]-rec,SKIN)
 hair=ss_((sd+E('HSOFT',0.0035))/(2*E('HSOFT',0.0035)))
 hair=hair*(1.0-np.clip(hear*1.5,0,1))     # never on the ear itself
-# eyebrows: arc over each eye (inner end thick, tail thin), only on the front surface
-brow=np.zeros(len(hco))
+# eyebrows (owner's reference photo, 28-10-2026): thick, dense, almost straight, soft arch at the outer third, tail
+# thinning and dropping a little; the head (next to the nose) lighter and fuzzy with hairs pointing up.
+# 'bw' = coordinate across the hairs (mm) for the renderer's hair strokes; 'bmask' = brow amount
+brow=np.zeros(len(hco)); bw=np.zeros(len(hco))
 for sg in (1,-1):
-    ax_=np.abs(hco[:,0]); xs=sg*hco[:,0]
-    u=(xs-E('BX0',0.012))/(E('BX1',0.060)-E('BX0',0.012))            # 0 inner -> 1 tail
-    zb=E('BZ0',1.590)+0.012*np.sin(np.clip(u,0,1)*math.pi*0.85)-0.004*np.clip(u,0,1)
-    half=E('BW',0.0036)*(1-0.55*np.clip(u,0,1))
-    inn=ss_(1-(np.abs(hco[:,2]-zb)-half)/E('BSOFT',0.0018))*ss_(u/0.08)*ss_((1-u)/0.12)
+    xs=sg*hco[:,0]
+    u=(xs-E('BX0',0.011))/(E('BX1',0.062)-E('BX0',0.011)); uc=np.clip(u,0,1)
+    bot=E('BZB',1.5885)+0.003*uc-0.005*ss_((uc-0.7)/0.3)
+    top=E('BZT',1.5965)+0.0025*ss_(uc/0.6)-0.0075*ss_((uc-0.6)/0.4)
+    mid=0.5*(bot+top); half=0.5*(top-bot)*(0.55+0.45*ss_((1-uc)/0.15))     # rounded thin end of the tail
+    inn=ss_((half-np.abs(hco[:,2]-mid))/E('BSOFT',0.0016)+0.5)
+    inn*=ss_(u/0.16+0.35)*ss_((1-u)/0.05+0.2)                                 # fuzzy start, thin tail
+    inn*=(0.72+0.28*ss_(uc/0.22))*(1-0.12*ss_((uc-0.8)/0.2))                 # lighter head, dense body
     inn*=(xs>0)*(hn[:,1]<-0.25)*(hco[:,1]<-0.09)
-    brow=np.maximum(brow,inn)
-tint=np.maximum(hair*E('HAIRT',0.62),brow*E('BROWT',0.60))
+    ang=np.radians(80-55*ss_(uc/0.3)-12*ss_((uc-0.5)/0.5))                   # hair direction: up at the head, outwards
+    w_=(-np.sin(ang)*(xs-0.035)+np.cos(ang)*(hco[:,2]-1.592))*1000.0      # small, continuous on each side (no jumps)
+    bw[xs>0]=w_[xs>0]; brow=np.maximum(brow,inn)
+a_=cab.data.attributes.new('bmask','FLOAT','POINT'); a_.data.foreach_set('value',brow.astype(np.float32))
+a_=cab.data.attributes.new('bw','FLOAT','POINT'); a_.data.foreach_set('value',bw.astype(np.float32))
+tint=np.maximum(hair*E('HAIRT',0.51),brow*E('BROWT',0.95))
 a=cab.data.attributes.new('tint','FLOAT','POINT'); a.data.foreach_set('value',tint.astype(np.float32))
 print('hair verts',int((hair>0.5).sum()),'brow verts',int((brow>0.5).sum()))
 # weights: nearest body vertex of the ORIGINAL surface (neck band) / head bone for the face
@@ -112,13 +121,17 @@ am=cab.modifiers.new('Armature','ARMATURE'); am.object=rig
 h=hco[:,2]-cutz(hco[:,1]); snapw=np.clip(1-h/E('SNAPH',0.012),0,1); snapw=snapw*snapw*(3-2*snapw)
 a=cab.data.attributes.new('snapw','FLOAT','POINT'); a.data.foreach_set('value',snapw.astype(np.float32))
 for L,ec,ef in eyes:
-    ob=make('Ojo.'+L,ec,ef); g=ob.vertex_groups.new(name='head'); g.add(list(range(len(ec))),1.0,'REPLACE')
+    ob=make('Ojo.'+L,ec,ef)
+    bpy.context.view_layer.objects.active=ob; sm=ob.modifiers.new('s','SUBSURF'); sm.levels=int(E('EYESUB',3))
+    bpy.ops.object.modifier_apply(modifier='s'); ec=np.array([v.co[:] for v in ob.data.vertices])
+    g=ob.vertex_groups.new(name='head'); g.add(list(range(len(ec))),1.0,'REPLACE')
     m2=ob.modifiers.new('Armature','ARMATURE'); m2.object=rig
     c=ec.mean(0); r=np.linalg.norm(ec-c,axis=1).mean(); fwd=np.array((0,-1.0,0))
     cosang=((ec-c)@fwd)/np.maximum(np.linalg.norm(ec-c,axis=1),1e-9)
     ang=np.degrees(np.arccos(np.clip(cosang,-1,1)))
     # iris (~11 mm wide on a 24 mm eye ~ 27 deg) and pupil (~10 deg): darkness for the renderer's 'tint'
-    t=np.where(ang<E('PUPA',10),0.85,np.where(ang<E('IRISA',27),0.42,0.0))
+    sm_=lambda a,b,x: np.clip((x-a)/(b-a),0,1)**2*(3-2*np.clip((x-a)/(b-a),0,1))
+    t=0.45*(1-sm_(E('IRISA',27)-1.5,E('IRISA',27)+1.0,ang))+0.42*(1-sm_(E('PUPA',10)-1.0,E('PUPA',10)+1.0,ang))
     a=ob.data.attributes.new('tint','FLOAT','POINT'); a.data.foreach_set('value',t.astype(np.float32))
     print('eye',L,'centre',np.round(c,3),'r %.4f'%r)
 # body cap pushed inside the new head: from 0.8 cm above the cut, up to CAPIN mm (smooth), only the head region
