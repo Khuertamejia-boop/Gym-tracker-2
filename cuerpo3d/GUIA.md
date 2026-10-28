@@ -265,8 +265,11 @@ original de la malla «Human Base Meshes» de Blender (CC0; nuestro cuerpo sali�
 medidas) como objeto `Cabeza` (multires nivel 2, ~56 mil vértices, corte recto inclinado bajo la mandíbula) + ojos
 `Ojo.L/R`, con los mismos pesos de la piel (se mueve con el cuello). La cabeza lisa de `Hi` se hunde 12 mm dentro
 (misma topología: el atlas y los mapas siguen valiendo) -> `w/NB_mc_row3.blend` (base por defecto).
-- Atributo `tint` (oscuro): pelo corto (contorno medido de perfil en `SKIN`: frente con entradas, patilla, alrededor de la
+- Atributo `tint` (oscuro): pelo corto (contorno medido de perfil en `SKIN`: frente con entradas, patilla, pegado a la
   oreja, nuca a la altura del lóbulo), cejas (arcos), iris y pupila. El render lo aplica con `TINTV`.
+- 28-10: el dueño veía «pelado encima de la oreja»: la oreja se quitaba del pelo con una caja que cogía todo el lado de la
+  cabeza. Ahora la oreja sale de los *face sets* 4 y 5 de la malla original (`EARFS`) y el pelo baja hasta ~5 mm de
+  ella, con la sien llena (`ejemplos/rostro_v2_pelo_lados.jpg`).
 - `rendsculpt.py` (con `FACE=1`, por defecto): hornea la piel de la cabeza, pega la franja baja (`snapw`, 1,2 cm) a la piel
   del cuello ya posada, y le copia a la cabeza el dibujo de la piel de debajo (UV por cara desde un solo triángulo del
   cuerpo + atributos): las líneas y fibras del cuello siguen sin corte. Subdivisión `FACESUB=1`.

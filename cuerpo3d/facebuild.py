@@ -17,16 +17,26 @@ o=bpy.data.objects['GEO-body_male_realistic']; o.modifiers[0].levels=int(E('LEVE
 dg=bpy.context.evaluated_depsgraph_get(); me=o.evaluated_get(dg).to_mesh()
 M=np.array(o.matrix_world); DX=-M[0,3]; print('source offset x %.5f'%DX)
 co=np.array([v.co[:] for v in me.vertices]); co=co@M[:3,:3].T+M[:3,3]; co[:,0]+=DX
+# ears: face sets of the source mesh (base level) -> per vertex mask, carried to the multires surface by nearest vertex
+bm0=o.data; fsv=np.zeros(len(bm0.polygons),int); bm0.attributes['.sculpt_face_set'].data.foreach_get('value',fsv)
+b0=np.array([v.co[:] for v in bm0.vertices])@M[:3,:3].T+M[:3,3]; b0[:,0]+=DX
+emask0=np.zeros(len(b0))
+for p_,f_ in zip(bm0.polygons,fsv):
+    if f_ in [int(x) for x in os.environ.get('EARFS','4,5').split(',')]: emask0[list(p_.vertices)]=1.0
+from scipy.spatial import cKDTree as _K
+earm=emask0[_K(b0).query(co)[1]]
 # clean straight cut (bisect along the tilted plane) instead of whole faces: no staircase edge
 import bmesh
 bm=bmesh.new(); bm.from_mesh(me)
 for v,c_ in zip(bm.verts,co): v.co=c_
+el_=bm.verts.layers.float.new('earm')
+for v,e_ in zip(bm.verts,earm): v[el_]=float(e_)
 far=[v for v in bm.verts if v.co.z<cutz(v.co.y)-0.06]; bmesh.ops.delete(bm,geom=far,context='VERTS')
 pn=Vector((0,-E('CUTSL',0.32),1.0)).normalized(); pc=Vector((0,-0.08,E('CUTZ',1.44)))
 geom=bm.verts[:]+bm.edges[:]+bm.faces[:]
 bmesh.ops.bisect_plane(bm,geom=geom,plane_co=pc,plane_no=pn,clear_inner=True)
 bm.verts.ensure_lookup_table()
-hco=np.array([v.co[:] for v in bm.verts]); idx={v:i for i,v in enumerate(bm.verts)}
+hco=np.array([v.co[:] for v in bm.verts]); idx={v:i for i,v in enumerate(bm.verts)}; hear=np.array([v[el_] for v in bm.verts])
 hfaces=[tuple(idx[v] for v in f.verts) for f in bm.faces]
 bm.free()
 eyes=[]
@@ -60,9 +70,10 @@ cab=make('Cabeza',hco,hfaces)
 ss_=lambda t: np.clip(t,0,1)**2*(3-2*np.clip(t,0,1))
 hn=np.zeros(len(hco)*3); cab.data.vertices.foreach_get('normal',hn); hn=hn.reshape(-1,3)
 # skin (no hair) region seen from the side, (y, z): forehead, temple, sideburn, around the ear, behind the ear, nape
-SKIN=np.array([(-0.30,1.30),(-0.30,1.646),(-0.112,1.646),(-0.100,1.630),(-0.090,1.610),(-0.083,1.592),(-0.080,1.576),
-               (-0.075,1.570),(-0.069,1.575),(-0.068,1.602),(-0.060,1.623),(-0.045,1.633),(-0.026,1.631),(-0.008,1.618),
-               (0.004,1.600),(0.009,1.572),(0.013,1.545),(0.020,1.522),(0.030,1.508),(0.20,1.504),(0.20,1.30)])   # measured on the head
+SKIN=np.array([(-0.30,1.30),(-0.30,1.646),(-0.112,1.646),(-0.104,1.632),(-0.096,1.612),(-0.088,1.595),(-0.082,1.578),
+               (-0.078,1.566),(-0.072,1.560),(-0.064,1.565),(-0.061,1.585),(-0.052,1.597),(-0.038,1.600),(-0.024,1.596),
+               (-0.015,1.585),(-0.010,1.565),(-0.006,1.545),(0.002,1.525),(0.012,1.512),(0.030,1.506),(0.20,1.504),(0.20,1.30)])
+# (measured on the head: ear y -0.058..-0.016, z 1.52..1.59; the hair comes down to ~5 mm from the ear)
 def sdist(px,py,poly):
     """signed distance of points to a closed polygon (negative inside)"""
     x0,y0=poly[:,0],poly[:,1]; x1,y1=np.roll(x0,-1),np.roll(y0,-1)
@@ -76,8 +87,7 @@ ax0=np.abs(hco[:,0])
 rec=E('HREC',0.009)*ss_((ax0-0.018)/0.032)*(hco[:,1]<-0.10)          # temples recede a little (soft M shape)
 sd=sdist(hco[:,1],hco[:,2]-rec,SKIN)
 hair=ss_((sd+E('HSOFT',0.0035))/(2*E('HSOFT',0.0035)))
-ear=(ax0>E('EARX',0.074))&(hco[:,1]>-0.075)&(hco[:,1]<0.0)&(hco[:,2]>1.52)&(hco[:,2]<1.645)
-hair[ear]=0.0
+hair=hair*(1.0-np.clip(hear*1.5,0,1))     # never on the ear itself
 # eyebrows: arc over each eye (inner end thick, tail thin), only on the front surface
 brow=np.zeros(len(hco))
 for sg in (1,-1):
