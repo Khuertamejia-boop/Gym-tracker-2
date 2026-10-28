@@ -196,6 +196,17 @@ Familias (por "motor" y máquina compartidos; de más barata a más cara):
 **Ahorros:** las variantes «· cuádriceps / · glúteos» (búlgara, prensa, Smith) usan las mismas posturas, solo cambia el
 rojo; «Dominadas lastradas» = dominadas + disco. Chats cortos (uno por familia), empezando con el mensaje de la sección 9.
 
+## 5e. Sombras más suaves (propuesta, 28-10-2026)
+
+El dueño ve las sombras de los músculos muy fuertes y quiere algo más natural. Tres propuestas sobre v8
+(`ejemplos/sombras_opciones_v9.jpg`; misma base + cambios al final de cada archivo):
+- `style_v9a.env` (A, −25 %): `BUMPK=1.05` (abombado de cada músculo), tonos oscuros más claros (`TONES` 0,48…), sombra en
+  surcos `MAOP=0.35`, contraste del rojo `REDCON=1.8`.
+- `style_v9b.env` (B, −45 %, recomendada): `BUMPK=0.8`, `TONES` 0,56…, `MAOP=0.25`, `GBUMP=0.5`, `REDCON=1.55`, contorno `MRC=0.38`.
+- `style_v9c.env` (C, −65 %): `BUMPK=0.55`, `TONES` 0,64…, `MAOP=0.18`, `GBUMP=0.45`, `REDCON=1.3`, `MRC=0.45` (la espalda
+  empieza a verse plana).
+Cuando el dueño elija: usarlo con `STYLE=style_v9x` en `ill/render31.sh` y rehacer los vídeos aprobados.
+
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
 - Lo que importa es cómo se ve **renderizado a distancia normal/lejana**, no de cerca.
