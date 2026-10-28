@@ -48,6 +48,24 @@ H=np.concatenate(H) if H else np.zeros((1,3))+9; HS=np.concatenate(HS) if HS els
 S=np.concatenate(S) if S else np.zeros((1,3))+9; SS=np.concatenate(SS) if SS else np.zeros((1,3)); Sid=np.concatenate(Sid) if Sid else np.zeros(1,int)
 HN=np.concatenate(HN) if HN else np.zeros((1,3)); SN=np.concatenate(SN) if SN else np.zeros((1,3))
 kdH=cKDTree(H); kdS=cKDTree(S)
+# REDSEL (worked-muscle list, as redmap.py): distance to the OUTER border of the red area (hard lines with red on one
+# side only) -> redd16.<tile>.png, used by the renderer to fade the red in softly from that border
+REDSEL=os.environ.get('REDSEL','')
+kdRB=None
+if REDSEL:
+    _base=[n.rsplit('.',1)[0] for n in names]; _groups=['none']+[str(g) for g in atl['groups']]
+    def _m(i,key):
+        if key[-2:] in ('.L','.R'):
+            k=key[:-2]; return names[i].endswith(key[-2:]) and (_base[i]==k or _groups[i]==k)
+        return _base[i]==key or _groups[i]==key
+    _red=np.zeros(len(names),bool)
+    for it in [x for x in REDSEL.split(',') if x.strip()]:
+        key=it.strip().rsplit(':',1)[0]
+        for i in range(1,len(names)):
+            if _m(i,key) and not tendon_id[i]: _red[i]=True
+    rb=np.array([_red[side_lab[k][0]]!=_red[side_lab[k][1]] for k in Hid]) if len(Hid) else np.zeros(0,bool)
+    if rb.any(): kdRB=cKDTree(H[rb])
+    print('red outer border points',int(rb.sum()))
 DOME=os.environ.get('DOME','')
 if DOME:
     dz=np.load(DOME); dome_v=dz['dome'].astype(float); damp_v=dz['damp'].astype(float); halfw_v=dz['halfw'].astype(float) if 'halfw' in dz.files else damp_v*0+10; draw_v=dz['domeraw'].astype(float) if 'domeraw' in dz.files else dome_v
@@ -152,7 +170,10 @@ for t in sorted(set(tile.tolist())):
         Image.fromarray(aimg[::-1].copy(),mode='I;16').save(os.path.join(out,'damp.%d.png'%(1001+t)))
         Image.fromarray(wimg[::-1].copy(),mode='I;16').save(os.path.join(out,'halfw.%d.png'%(1001+t)))
         Image.fromarray(rimg[::-1].copy(),mode='I;16').save(os.path.join(out,'domeraw.%d.png'%(1001+t)))
-    for nm_,val in (('dh16',dh_eff),('ds16',ds)):
+    fields=[('dh16',dh_eff),('ds16',ds)]
+    if kdRB is not None:
+        dr,_=kdRB.query(P,distance_upper_bound=0.064,workers=-1); fields.append(('redd16',np.where(np.isfinite(dr),dr,0.064)))
+    for nm_,val in fields:
         a16=np.zeros(R*R,np.uint16); a16[cov]=np.clip(val/0.064*65535,0,65535); a16=a16.reshape(R,R); fl=np.zeros(R*R,bool); fl[cov]=True; fl=fl.reshape(R,R)
         for _ in range(int(E('DIL',6))):
             ys,xs=np.nonzero(~fl)

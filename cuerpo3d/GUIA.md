@@ -1,6 +1,6 @@
 # Muñeco 3D de ejercicios: guía del proyecto
 
-Copia de seguridad del muñeco 3D (maniquí sin cara, piel gris clara, short oscuro) que hace los ejercicios de la
+Copia de seguridad del muñeco 3D (piel gris clara, short oscuro; con rostro desde el 28-10-2026) que hace los ejercicios de la
 app de iPhone en estilo «lámina de anatomía»: cuerpo casi blanco, cada músculo con su sombreado y los músculos que
 trabajan en rojo. Se guardó el 23-10-2026 desde un chat que se hizo demasiado largo. Esta rama **no toca la web**
 (GitHub Pages publica solo `main`).
@@ -252,6 +252,28 @@ YAW=135 PIT=20 TX=0 TY=0 TZ=0.68 OSC=3.0 ill/render31.sh BRh maps_row2 remo_barr
   (`TOUCHZ=1.05`; con 1.10 no hay choque pero los antebrazos se inclinan 43° en vez de ~35°).
 - Cuello neutro `NECKT=0` (en línea con la espalda). En `barrow.py`/`deadlift.py` NECKT positivo levanta la cabeza.
 
+## 5i. Borde del rojo suave y rostro (28-10-2026)
+
+**Borde exterior del rojo** (pedido del dueño: «que no se vea tan marcado»): `bakemaps.py` con `REDSEL` (lo pasa
+`mapas.sh`) guarda la distancia al borde exterior del rojo (`redd16.*.png`); `rendsculpt.py` con `RSOFT=8` hace que el
+rojo entre en 8 mm desde ese borde (`RSOFT0` = rojo en el mismo borde, 0,15). La línea entre rojo y gris es más suave:
+`mapas.sh` usa `SRW=0.6` (antes 1.0). `style_v13.env` = v12 + `RSOFT=8` (por defecto). Hay que rehacer los mapas de cada
+ejercicio (`maps_curl2`, `maps_row3` ya hechos). Con `RSOFT=14` el rojo se veía deslavado (`ejemplos/borde_rojo_suave.jpg`).
+
+**Rostro** (pedido del dueño con una foto de referencia: hombre, pelo muy corto): `facebuild.py` añade a la base la cabeza
+original de la malla «Human Base Meshes» de Blender (CC0; nuestro cuerpo salió de su `GEO-body_male_realistic`, mismas
+medidas) como objeto `Cabeza` (multires nivel 2, ~56 mil vértices, corte recto inclinado bajo la mandíbula) + ojos
+`Ojo.L/R`, con los mismos pesos de la piel (se mueve con el cuello). La cabeza lisa de `Hi` se hunde 12 mm dentro
+(misma topología: el atlas y los mapas siguen valiendo) -> `w/NB_mc_row3.blend` (base por defecto).
+- Atributo `tint` (oscuro): pelo corto (contorno medido de perfil en `SKIN`: frente con entradas, patilla, alrededor de la
+  oreja, nuca a la altura del lóbulo), cejas (arcos), iris y pupila. El render lo aplica con `TINTV`.
+- `rendsculpt.py` (con `FACE=1`, por defecto): hornea la piel de la cabeza, pega la franja baja (`snapw`, 1,2 cm) a la piel
+  del cuello ya posada, y le copia a la cabeza el dibujo de la piel de debajo (UV por cara desde un solo triángulo del
+  cuerpo + atributos): las líneas y fibras del cuello siguen sin corte. Subdivisión `FACESUB=1`.
+  Probado y descartado: transparencia en la franja (`FACEFADE=1`: la sombra de los surcos dibuja una línea oscura) y
+  corte por caras enteras (borde en dientes de sierra).
+- Cada ejercicio hay que volver a posarlo con la base nueva para que salga la cara.
+
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
 - Lo que importa es cómo se ve **renderizado a distancia normal/lejana**, no de cerca.
@@ -259,7 +281,7 @@ YAW=135 PIT=20 TX=0 TY=0 TZ=0.68 OSC=3.0 ill/render31.sh BRh maps_row2 remo_barr
   oscuros duros («robotizado» = mal). Centros no blancos puros. Cortes grises suaves (aclarados otra vez el 23-10).
 - Músculos más **redondeados** (por sombreado, no por tamaño). Espalda como grandes zonas, franja clara en la columna.
 - Rojo **con degradado, nunca naranja**; más profundo solo en la parte baja/sombra del músculo.
-- Short tan corto como en la referencia; cabeza sin cara; sin suelo ni sombra (fondo blanco/transparente).
+- Short tan corto como en la referencia; cabeza CON rostro y pelo corto desde el 28-10-2026 (antes sin cara); sin suelo ni sombra (fondo blanco/transparente).
 - Máquinas como en las referencias: estructura gris clara, pila de pesas y patas negras.
 - Remo: espalda plana y bisagra marcada. Face pull: pulgares junto a los topes de la cuerda, codos altos.
 

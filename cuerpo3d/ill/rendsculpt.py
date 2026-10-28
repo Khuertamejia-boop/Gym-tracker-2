@@ -7,7 +7,7 @@ bpy.ops.wm.open_mainfile(filepath=sys.argv[-2]); out=sys.argv[-1]
 E=lambda k,d: float(os.environ.get(k,d))
 C=lambda k,d: tuple(float(x) for x in os.environ.get(k,d).split(','))+(1.0,)
 for o in bpy.data.objects:
-    if o.type=='MESH' and o.name!='Hi' and not (os.environ.get('SHOWBAR','1')=='1' and o.name in ('Barra','Discos')) and not (o.name.startswith('Banco') and os.environ.get('HIDEBANCO','0')!='1'): o.hide_render=True
+    if o.type=='MESH' and o.name!='Hi' and not (os.environ.get('SHOWBAR','1')=='1' and o.name in ('Barra','Discos')) and not (o.name.startswith('Banco') and os.environ.get('HIDEBANCO','0')!='1') and not (os.environ.get('FACE','1')=='1' and (o.name=='Cabeza' or o.name.startswith('Ojo.'))): o.hide_render=True
 ob=bpy.data.objects['Hi']; me=ob.data; nv=len(me.vertices); have=set()
 for f in [x for x in os.environ.get('NPZ','').split(',') if x]:
     d=np.load(f)
@@ -84,6 +84,11 @@ else:
     lstr=1.0; ladd=0.0
 d=M('ADD',d,ladd)
 rt=udim('red'); rs=N.new('ShaderNodeSeparateColor'); L.new(rt.outputs['Color'],rs.inputs[0]); red=rs.outputs[0]
+if E('RSOFT',0)>0 and os.path.exists(os.path.join(MAPS,'redd16.1001.png')):
+    # soft outer border of the red: the red fades in over RSOFT mm from the border with the grey muscles
+    _rd=udim('redd16','Cubic'); _rds=N.new('ShaderNodeSeparateColor'); L.new(_rd.outputs['Color'],_rds.inputs[0])
+    _rmm=M('MULTIPLY',_rds.outputs[0],64.0)
+    red=M('MULTIPLY',red,SS(_rmm,0.0,E('RSOFT',0),E('RSOFT0',0.15),1.0))
 if E('SPINEW',0)>0 and 'restco' in have:
     # light strip along the spine (supraspinous ligament / erector edge) between the two worked sides, as in the plates
     _rc=N.new('ShaderNodeSeparateXYZ'); L.new(A('restco').outputs['Vector'],_rc.inputs[0])
@@ -273,6 +278,9 @@ if os.environ.get('SHADE')=='matcap':
         rsh=MIX(1.0,rsh,G(rimf),'MULTIPLY'); rsh=MIX(1.0,rsh,G(M('POWER',ao.outputs['AO'],E('MAOP',1.0))),'MULTIPLY')
         # SHRED>0: worked muscles under the shorts show through the fabric (e.g. glutes in a deadlift)
         outc=MIX(M('MULTIPLY',red,M('SUBTRACT',1.0,M('MULTIPLY',sh,1.0-E('SHRED',0.0)))),outc,rsh)
+    # face: hair, eyebrows, irises / pupils darker (attribute 'tint' 0..1 on the head objects; 0 on the body)
+    _tn=A('tint').outputs['Fac']
+    outc=MIX(_tn,outc,MIX(1.0,G(E('TINTV',0.20)),shade,'MULTIPLY'))
     outc=MIX(1.0,outc,G(spec),'ADD')
     if os.environ.get('MDEBUG')=='n':
         mp=N.new('ShaderNodeVectorMath'); mp.operation='MULTIPLY_ADD'; L.new(vt.outputs['Vector'],mp.inputs[0]); mp.inputs[1].default_value=(0.5,0.5,0.5); mp.inputs[2].default_value=(0.5,0.5,0.5)
@@ -318,4 +326,76 @@ cam.location=(T[0]+dist*math.sin(yaw)*math.cos(pit), T[1]-dist*math.cos(yaw)*mat
 cam.rotation_euler=(math.radians(90)-pit,0,yaw); cam.data.type='ORTHO'; cam.data.ortho_scale=E('OSC',2.0)
 sc.render.film_transparent=True; r_=int(E('RES',800)); sc.render.resolution_x=sc.render.resolution_y=r_
 if E('RX',0)>0: sc.render.resolution_x=int(E('RX',0)); sc.render.resolution_y=int(E('RY',0))   # e.g. 1920x1080 (OSC = view width)
+# ---- face (objects 'Cabeza', 'Ojo.L', 'Ojo.R' from facebuild.py): bake their skinning, glue the lowest band of the
+# head onto the posed neck of 'Hi' (no visible joint), same material with a constant UV taken from the crown of the
+# mannequin head (plain skin there: no muscle lines), optional subdivision
+_heads=[o for o in bpy.data.objects if o.type=='MESH' and (o.name=='Cabeza' or o.name.startswith('Ojo.')) and not o.hide_render]
+if _heads:
+    from mathutils.bvhtree import BVHTree
+    _dg=bpy.context.evaluated_depsgraph_get()
+    _bvh=BVHTree.FromObject(ob,_dg)
+    _vi=np.zeros(len(me.loops),int); me.loops.foreach_get('vertex_index',_vi)
+    _uv=np.zeros(len(me.loops)*2); me.uv_layers['UVMap'].data.foreach_get('uv',_uv); _uv=_uv.reshape(-1,2)
+    _top=int(np.argmax(np.where(np.array([str(x)=='head' for x in _rest['main']]),np.array(_rest['co'])[:,2],-9)))
+    _cuv=_uv[np.where(_vi==_top)[0][0]]
+    # Cabeza takes the drawing of the body skin underneath (UVs per face from ONE body triangle, so no jumps at UV seams,
+    # and the per-vertex body attributes): the neck lines, fibres and shading continue across the joint
+    _uvt=np.load(os.path.join(os.path.dirname(os.path.abspath(__file__)),'uvtri.npz')); _tv=_uvt['tv']; _tuv=_uvt['tuv']
+    from mathutils import Vector as _V
+    _rco=np.array(_rest['co'])
+    _tbvh=BVHTree.FromPolygons([tuple(p) for p in _rco],[tuple(int(i) for i in t) for t in _tv])
+    def _bary(P,t):
+        a,b,c=_rco[_tv[t]]; v0=b-a; v1=c-a; v2=P-a
+        d00=v0@v0; d01=v0@v1; d11=v1@v1; d20=v2@v0; d21=v2@v1; den=max(d00*d11-d01*d01,1e-18)
+        v=(d11*d20-d01*d21)/den; w=(d00*d21-d01*d20)/den; return np.array((1-v-w,v,w))
+    def _transfer(o):
+        hm=o.data; n_=len(hm.vertices); rc=np.zeros(n_*3); hm.vertices.foreach_get('co',rc); rc=rc.reshape(-1,3)
+        vt=np.zeros(n_,int); vb=np.zeros((n_,3))
+        for i in range(n_):
+            loc,nrm,t,_=_tbvh.find_nearest(_V(rc[i])); vt[i]=t; vb[i]=_bary(np.array(loc),t)
+        for k in list(have):
+            src=me.attributes.get(k)
+            if src is None or src.domain!='POINT': continue
+            if src.data_type=='FLOAT':
+                v=np.zeros(nv); src.data.foreach_get('value',v); val=(v[_tv[vt]]*vb).sum(1)
+                a_=hm.attributes.get(k) or hm.attributes.new(k,'FLOAT','POINT'); a_.data.foreach_set('value',val.astype(np.float32))
+            elif src.data_type=='FLOAT_VECTOR':
+                v=np.zeros(nv*3); src.data.foreach_get('vector',v); v=v.reshape(-1,3); val=(v[_tv[vt]]*vb[:,:,None]).sum(1)
+                a_=hm.attributes.get(k) or hm.attributes.new(k,'FLOAT_VECTOR','POINT'); a_.data.foreach_set('vector',val.astype(np.float32).ravel())
+        if not hm.uv_layers: hm.uv_layers.new(name='UVMap')
+        uvd=np.zeros((len(hm.loops),2)); lv=np.zeros(len(hm.loops),int); hm.loops.foreach_get('vertex_index',lv)
+        for p_ in hm.polygons:
+            ls=list(p_.loop_indices); cen=rc[lv[ls]].mean(0); _,_,t,_=_tbvh.find_nearest(_V(cen))
+            for li in ls: uvd[li]=_bary(rc[lv[li]],t)@_tuv[t]
+        hm.uv_layers[0].data.foreach_set('uv',uvd.ravel())
+    # the lowest band of the head fades out (transparent) over the identical neck skin underneath: no visible edge
+    _out=N['Material Output']; _lk=[l for l in nt.links if l.to_node==_out and l.to_socket.name=='Surface']
+    if _lk and E('FACEFADE',0)>0:
+        _srcs=_lk[0].from_socket; nt.links.remove(_lk[0])
+        _tr=N.new('ShaderNodeBsdfTransparent'); _mx=N.new('ShaderNodeMixShader')
+        _fa=SS(A('snapw').outputs['Fac'],E('FADE0',0.25),E('FADE1',0.85))
+        L.new(_fa,_mx.inputs[0]); L.new(_srcs,_mx.inputs[1]); L.new(_tr.outputs[0],_mx.inputs[2]); L.new(_mx.outputs[0],_out.inputs['Surface'])
+    for o in _heads:
+        if o.name=='Cabeza' and E('FACEUV',1)>0:
+            _transfer(o); o.data.update(); bpy.context.view_layer.update(); _dg=bpy.context.evaluated_depsgraph_get(); _dg.update()
+        oe=o.evaluated_get(_dg); nm=bpy.data.meshes.new_from_object(oe,preserve_all_data_layers=True,depsgraph=_dg)
+        o.modifiers.clear(); o.data=nm; o.matrix_world=o.matrix_world
+        n_=len(nm.vertices); hc=np.zeros(n_*3); nm.vertices.foreach_get('co',hc); hc=hc.reshape(-1,3)
+        if 'snapw' in nm.attributes:
+            w_=np.zeros(n_); nm.attributes['snapw'].data.foreach_get('value',w_)
+            for i in np.where(w_>1e-3)[0]:
+                loc,nrm,_,_=_bvh.find_nearest(hc[i])
+                if loc is None: continue
+                q=np.array(loc)+np.array(nrm)*(E('FACEOFF',0.0006)*(1-w_[i])+E('FACEOFF0',0.0)*w_[i]); hc[i]=hc[i]+(q-hc[i])*w_[i]
+            nm.vertices.foreach_set('co',hc.ravel()); nm.update()
+        if not (o.name=='Cabeza' and E('FACEUV',1)>0):
+            if not nm.uv_layers: nm.uv_layers.new(name='UVMap')
+            u_=np.tile(_cuv,(len(nm.loops),1)); nm.uv_layers[0].data.foreach_set('uv',u_.ravel())
+        nm.materials.clear(); nm.materials.append(m)
+        for p_ in nm.polygons: p_.use_smooth=True; p_.material_index=0
+        if os.environ.get('FACEDBG'):
+            _u=np.zeros(len(nm.loops)*2); nm.uv_layers[0].data.foreach_get('uv',_u)
+            print('FACEDBG',o.name,'attrs',[a.name for a in nm.attributes],'uv range',_u.min().round(3),_u.max().round(3),'have',sorted(have))
+        if o.name=='Cabeza' and E('FACESUB',1)>0:
+            s_=o.modifiers.new('sub','SUBSURF'); s_.levels=s_.render_levels=int(E('FACESUB',1))
 sc.render.filepath=out+'.png'; bpy.ops.render.render(write_still=True)
