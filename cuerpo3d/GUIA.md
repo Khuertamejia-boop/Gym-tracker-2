@@ -165,7 +165,7 @@ YAW=70 PIT=8 ill/render31.sh CUe maps_curl1 curl_un_brazo              # -> out/
 
 Lo que gasta no es el render (es cálculo de la máquina), sino lo que Claude lee y mira: imágenes, pruebas y chats largos.
 
-**Estándar congelado (no volver a discutirlo):** estilo v8; 1920×1080 (16:9); 31 posturas; ritmo del peso muerto
+**Estándar congelado (no volver a discutirlo):** estilo v10 (antes v8); cuerpo v2; 1920×1080 (16:9); 31 posturas; ritmo del peso muerto
 (subida ~1,2 s, pausa 0,4 s, bajada ~2,4 s, pausa 0,6 s; `ill/mkgif2.py` y `ill/mkmp4.py`; **aprobado por el dueño**);
 vídeo MP4 + GIF; rojo solo en los músculos principales (glúteos a través del short con `SHRED`); comprobación
 automática de que la barra/mancuernas no atraviesan el cuerpo (`barcheck.py`).
@@ -196,7 +196,7 @@ Familias (por "motor" y máquina compartidos; de más barata a más cara):
 **Ahorros:** las variantes «· cuádriceps / · glúteos» (búlgara, prensa, Smith) usan las mismas posturas, solo cambia el
 rojo; «Dominadas lastradas» = dominadas + disco. Chats cortos (uno por familia), empezando con el mensaje de la sección 9.
 
-## 5e. Sombras más suaves (propuesta, 28-10-2026)
+## 5e. Estilo v10 y cuerpo v2 (28-10-2026, elegido por el dueño)
 
 El dueño ve las sombras de los músculos muy fuertes y quiere algo más natural. Tres propuestas sobre v8
 (`ejemplos/sombras_opciones_v9.jpg`; misma base + cambios al final de cada archivo):
@@ -205,7 +205,16 @@ El dueño ve las sombras de los músculos muy fuertes y quiere algo más natural
 - `style_v9b.env` (B, −45 %, recomendada): `BUMPK=0.8`, `TONES` 0,56…, `MAOP=0.25`, `GBUMP=0.5`, `REDCON=1.55`, contorno `MRC=0.38`.
 - `style_v9c.env` (C, −65 %): `BUMPK=0.55`, `TONES` 0,64…, `MAOP=0.18`, `GBUMP=0.45`, `REDCON=1.3`, `MRC=0.45` (la espalda
   empieza a verse plana).
-Cuando el dueño elija: usarlo con `STYLE=style_v9x` en `ill/render31.sh` y rehacer los vídeos aprobados.
+**Elegida la C** y además, a petición del dueño:
+- rojo más suave: `style_v10.env` = C + `RCOLS` más claros y menos saturados (opción «Nuevo 1» de
+  `ejemplos/rojo_suave_opciones.jpg`; la «Nuevo 2», `style_v10b.env`, tiraba a rosa) + fibras y líneas del rojo más claras;
+- trapecio superior y pectorales algo más pequeños: `shrink.py` hunde la piel hacia dentro (trapecio 10 mm, pectorales
+  8 mm, transición suave ~2 cm) -> `w/NB_mc_row2.blend` (lo crea `restaurar.sh`; `ejemplos/trapecio_pectoral_antes_despues.jpg`).
+  Con 6-7 mm casi no se notaba.
+**Desde ahora** `style_v10` es el estilo por defecto (`ill/render31.sh`, `ill/anim_dl.sh`, `ill/anim_fp.sh`) y
+`NB_mc_row2.blend` la base por defecto (`anim_curl1.sh`, `anim_dl.sh`, `anim_fp.sh`, `anim_row.sh`). Los vídeos ya hechos
+(remo, face pull, peso muerto) siguen con el estilo y el cuerpo viejos hasta rehacerlos (posturas + render).
+Si se usan las otras bases (`NB_mc`, `NB_mc_hs`, `NB_s`), pasarles también `shrink.py` con el mismo `SHRINK`.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
