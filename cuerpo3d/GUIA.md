@@ -18,7 +18,7 @@ de esta guía y Claude seguirá desde aquí.
 | Remo con barra | aprobado (v6, estilo v7) | `ejemplos/remo_barra_v6.gif` |
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
-| Curl de bíceps a un brazo con mancuerna (de pie) | hecho (v1, 28-10-2026), falta el visto bueno del dueño | `ejemplos/curl_un_brazo_v1.mp4`, `.gif` |
+| Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
 | Mapa de músculos: pecho, abdomen, oblicuos, serrato, cuello por delante (`ill/spec/front.py`) | aprobado el 23-10-2026 | `ejemplos/facepull_frente_16x9_v2.jpg` (antes: `facepull_frente_16x9.jpg`) |
 
@@ -142,9 +142,9 @@ python3 ill/mkmp4.py out/pesomuerto.mp4 ill/r/dl_final/f*.png   # vídeo 16:9, m
 ```bash
 export GT3D=~/cuerpo3d-trabajo; cd $GT3D
 NONEFIX=1 ill/mapas.sh maps_curl1 "biceps_brachii.L:1,brachialis.L:1,brachioradialis.L:1"   # solo el brazo izquierdo
-export PFX=CUe; for g in $(seq 0 4 30); do for f in $(seq $g $((g+3))); do [ $f -le 30 ] && ./anim_curl1.sh $f 60 & done; wait; done
-cd w && ../venv/bin/python -I ../objcheck.py -- CUe*.blend; cd ..       # mancuernas: nunca dentro del cuerpo (mm > 0)
-YAW=70 PIT=8 ill/render31.sh CUe maps_curl1 curl_un_brazo              # -> out/curl_un_brazo.mp4 / .gif
+export PFX=CUf; for g in $(seq 0 4 30); do for f in $(seq $g $((g+3))); do [ $f -le 30 ] && ./anim_curl1.sh $f 60 & done; wait; done
+cd w && ../venv/bin/python -I ../objcheck.py -- CUf*.blend; cd ..       # mancuernas: nunca dentro del cuerpo (mm > 0)
+YAW=70 PIT=8 ill/render31.sh CUf maps_curl1 curl_un_brazo              # -> out/curl_un_brazo.mp4 / .gif
 ```
 - `curl1.py` (hecho con las piezas de `barrow.py`: cálculo anatómico del brazo, agarre aprobado, piel `cor` + `arap2`):
   trabaja el brazo **izquierdo** (supino, codo pegado al costado y quieto, solo avanza un poco arriba; flexión 14° → 140°,
