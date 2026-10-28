@@ -17,6 +17,7 @@ de esta guía y Claude seguirá desde aquí.
 | Estilo de dibujo **v8** (`ill/style_v8.env`) | aprobado: «bastante cerca» de la referencia; cortes grises aclarados el 23-10 | `ejemplos/espalda_cortes_antes_ahora_16x9.jpg` |
 | Remo con barra | v7 (28-10-2026): estilo v12, cuerpo v2, ritmo aprobado, cuello neutro, barra sin atravesar las piernas | `ejemplos/remo_barra_v7.mp4`, `.gif` |
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
+| **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v1 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v1_*.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
@@ -281,6 +282,29 @@ medidas) como objeto `Cabeza` (multires nivel 2, ~56 mil vértices, corte recto 
   Probado y descartado: transparencia en la franja (`FACEFADE=1`: la sombra de los surcos dibuja una línea oscura) y
   corte por caras enteras (borde en dientes de sierra).
 - Cada ejercicio hay que volver a posarlo con la base nueva para que salga la cara.
+
+## 5j. Versión mujer (28-10-2026, v1)
+
+Pedido del dueño: «lo mismo de la versión hombre en cuerpo de mujer, el diseño y estilo, con sus atributos».
+`./mujer.sh <bundle.blend>` crea `w/NBF_row3.blend` (base) + `ill/rest_f.npz` (datos de reposo):
+1. `femalebuild.py`: las mallas realistas hombre y mujer de «Human Base Meshes» tienen la MISMA topología, y nuestro
+   `Hi` conserva casi todos los vértices del hombre en orden. Cada vértice se lleva a su sitio en la mujer (exactos por
+   índice; el resto, proyectados sobre la superficie del hombre y llevados al mismo punto de la mujer, con `PHYK=0.5`
+   de la musculatura extra del muñeco) -> el atlas de músculos, las UV, TODOS los mapas, los pesos y atributos siguen
+   valiendo sin rehacer nada. El esqueleto se reajusta (cada articulación sigue a la piel de alrededor).
+   Probado y descartado: emparejar por el vértice más cercano (saltos de vértice -> rayitas blancas en la piel).
+   Las «caras giradas» en pies y dedos son de la propia malla de Blender (otra postura de los dedos), no errores.
+2. `facebuild.py` con `SRCBODY=GEO-body_female_realistic`, `ZOFF=-0.040` (cabeza 4 cm más baja), `HAIRSTYLE=bun`: rostro
+   femenino, cejas más finas y arqueadas, pelo recogido con volumen (`HVOL=4` mm), mechones hacia un **moño**
+   (objeto `Ojo.Mono`, en el hueso de la cabeza; se eligió moño y no coleta porque se ve bien en cualquier postura).
+   `CAPMIN`: la cabeza lisa de debajo queda siempre >= 3 mm dentro (asomaba un pico en la coronilla).
+3. `topbuild.py`: top deportivo con la misma tela que el short (atributo `shorts`): banda bajo el pecho, copas con
+   escote redondo, laterales, tirantes y espalda en Y.
+- Posar cualquier ejercicio con `BASEB=NBF_row3.blend` (mismos programas) y renderizar con `RESTNPZ=$GT3D/ill/rest_f.npz`
+  y `ill/style_mujer.env` (= v13 + mechones `HRSW=4 HRJ=0.8 HAIRSTK=0.5`). El curl funciona (agarre bien, sin choques).
+- `objcheck.py` confirma con rayos si un punto está dentro del cuerpo (las normales entre dedos cerrados engañaban).
+- Pendiente (de cerca): borde de los tirantes algo dentado (resolución de la malla), algo de ruido de líneas en cuello y
+  clavículas, contorno del pelo junto a la oreja todavía «corto».
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 

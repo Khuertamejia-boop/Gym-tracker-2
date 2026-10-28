@@ -20,7 +20,7 @@ for f in [x for x in os.environ.get('NPZ','').split(',') if x]:
             a=me.attributes.get(k) or me.attributes.new(k,'FLOAT','POINT'); a.data.foreach_set('value',v.astype(np.float32))
         have.add(k)
 for p in me.polygons: p.use_smooth=True
-_rest=np.load(os.path.join(os.path.dirname(os.path.abspath(__file__)),'rest.npz'),allow_pickle=True)
+_rest=np.load(os.environ.get('RESTNPZ',os.path.join(os.path.dirname(os.path.abspath(__file__)),'rest.npz')),allow_pickle=True)   # RESTNPZ: female body (rest_f.npz)
 _am=np.array([str(x) in ('upper_arm.L','forearm.L','fa_tw1.L','fa_tw2.L','fa_tw3.L') for x in _rest['main']],np.float32)
 a=me.attributes.get('armmask') or me.attributes.new('armmask','FLOAT','POINT'); a.data.foreach_set('value',_am); have.add('armmask')
 # lower forearm = tendons: less relief, softer lines (fade 0 above TF0 of the forearm length -> 1 at TF1)
@@ -290,6 +290,14 @@ if os.environ.get('SHADE')=='matcap':
         _edge=M('SUBTRACT',1.0,SS(_bm,0.55,0.95))                                 # sparse hairs at the edges
         _k=M('MULTIPLY',E('BROWSTK',0.55),M('ADD',0.35,M('MULTIPLY',_edge,0.65)))
         _tn=M('MULTIPLY',_tn,M('SUBTRACT',1.0,M('MULTIPLY',M('MULTIPLY',_k,M('SUBTRACT',1.0,_st)),SS(_bm,0.02,0.2))))
+    if E('HAIRSTK',0.45)>0:
+        # long hair pulled back: strands converging on the bun ('hw' across the strands, mm), broken by noise
+        _hm=A('hmask').outputs['Fac']; _nh=N.new('ShaderNodeTexNoise'); _nh.inputs['Scale'].default_value=E('HRNZ',180.0)
+        _hp=M('ADD',M('DIVIDE',A('hw').outputs['Fac'],E('HRSW',0.9)),M('MULTIPLY',_nh.outputs['Fac'],E('HRJ',1.2)))
+        _hs=SS(M('SINE',M('MULTIPLY',_hp,2*math.pi)),-0.4,0.7)
+        _nh2=N.new('ShaderNodeTexNoise'); _nh2.inputs['Scale'].default_value=E('HRNB',420.0)
+        _hs=M('MULTIPLY',_hs,SS(_nh2.outputs['Fac'],0.35,0.6,0.45,1.0))           # strands of uneven brightness
+        _tn=M('MULTIPLY',_tn,M('SUBTRACT',1.0,M('MULTIPLY',M('MULTIPLY',E('HAIRSTK',0.45),M('SUBTRACT',1.0,_hs)),SS(_hm,0.05,0.4))))
     outc=MIX(_tn,outc,MIX(1.0,G(E('TINTV',0.05)),shade,'MULTIPLY'))   # TINTV is linear (0.05 ~ dark grey on screen)
     outc=MIX(1.0,outc,G(spec),'ADD')
     if os.environ.get('MDEBUG')=='n':

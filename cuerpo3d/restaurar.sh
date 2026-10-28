@@ -15,6 +15,8 @@ fi
 HBM=$DST/hbm; mkdir -p $HBM
 [ -f $HBM/human_base_meshes_bundle.blend ] || (cd $HBM && curl -sSL https://mirror.blender.org/demo/asset-bundles/human-base-meshes/human-base-meshes-bundle-v1.4.1.zip -o hbm.zip && unzip -q -j -o hbm.zip '*/human_base_meshes_bundle.blend' && rm -f hbm.zip)
 (cd w && ../venv/bin/python -I ../facebuild.py $HBM/human_base_meshes_bundle.blend NB_mc_row2.blend NB_mc_row3.blend > /dev/null)
+# female mannequin (28-10-2026): w/NBF_row3.blend + ill/rest_f.npz (needs the same bundle)
+GT3D=$DST ./mujer.sh $HBM/human_base_meshes_bundle.blend > /dev/null
 # texture maps of the approved exercises (bent-over row, face pull, deadlift)
 ill/mapas.sh maps_v5 "trapezius:1,latissimus_dorsi:1,infraspinatus:1,teres_major:1,teres_minor:1,rhomboid_major:1,deltoid_posterior:1,deltoid_lateral:1"
 ill/mapas.sh maps_fp2 "deltoid_posterior:1,trapezius:1,rhomboid_major:1,infraspinatus:1,teres_minor:1"

@@ -13,7 +13,8 @@ DX=None                                           # the source body sits ~2.26 m
 cutz=lambda y: E('CUTZ',1.44)+E('CUTSL',0.32)*(y+0.08)   # tilted cut through the neck (same tilt as headcap.py, 1.5 cm lower)
 # ---------------- 1. source head (multires applied) + eyes, from the bundle
 bpy.ops.wm.open_mainfile(filepath=bun)
-o=bpy.data.objects['GEO-body_male_realistic']; o.modifiers[0].levels=int(E('LEVEL',2))
+SRCB=os.environ.get('SRCBODY','GEO-body_male_realistic')
+o=bpy.data.objects[SRCB]; o.modifiers[0].levels=int(E('LEVEL',2))
 dg=bpy.context.evaluated_depsgraph_get(); me=o.evaluated_get(dg).to_mesh()
 M=np.array(o.matrix_world); DX=-M[0,3]; print('source offset x %.5f'%DX)
 co=np.array([v.co[:] for v in me.vertices]); co=co@M[:3,:3].T+M[:3,3]; co[:,0]+=DX
@@ -40,7 +41,7 @@ hco=np.array([v.co[:] for v in bm.verts]); idx={v:i for i,v in enumerate(bm.vert
 hfaces=[tuple(idx[v] for v in f.verts) for f in bm.faces]
 bm.free()
 eyes=[]
-for n in ('GEO-body_male_realistic.eye.L','GEO-body_male_realistic.eye.R'):
+for n in (SRCB+'.eye.L',SRCB+'.eye.R'):
     e=bpy.data.objects[n]; em=e.evaluated_get(dg).to_mesh(); Me=np.array(e.matrix_world)
     ec=np.array([v.co[:] for v in em.vertices]); ec=ec@Me[:3,:3].T+Me[:3,3]; ec[:,0]+=DX
     eyes.append((n[-1],ec,[tuple(p.vertices) for p in em.polygons]))
@@ -57,7 +58,7 @@ def body_weights(idx):
         n=gname[g.group]
         if n in rig.data.bones and g.weight>1e-4: w[n]=g.weight
     return w
-R=np.load(os.path.join(os.environ.get('GT3D','.'),'ill','rest.npz'),allow_pickle=True); main=np.array([str(m) for m in R['main']])
+R=np.load(os.environ.get('RESTNPZ',os.path.join(os.environ.get('GT3D','.'),'ill','rest.npz')),allow_pickle=True); main=np.array([str(m) for m in R['main']])
 upper=np.isin(main,['head','neck','chest','clavicle.L','clavicle.R'])
 kd=cKDTree(bco[upper]); upid=np.where(upper)[0]
 def make(name,verts,faces):
@@ -85,7 +86,12 @@ def sdist(px,py,poly):
     return np.where(inside,-dmin,dmin)
 ax0=np.abs(hco[:,0])
 rec=E('HREC',0.009)*ss_((ax0-0.018)/0.032)*(hco[:,1]<-0.10)          # temples recede a little (soft M shape)
-sd=sdist(hco[:,1],hco[:,2]-rec,SKIN)
+ZO=E('ZOFF',0.0)
+if os.environ.get('HAIRSTYLE','')=='bun':
+    SKIN=np.array([(-0.30,1.30),(-0.30,1.641),(-0.114,1.641),(-0.106,1.630),(-0.097,1.613),(-0.089,1.596),(-0.082,1.582),
+                   (-0.074,1.574),(-0.066,1.582),(-0.062,1.598),(-0.052,1.606),(-0.036,1.608),(-0.022,1.602),(-0.012,1.588),
+                   (-0.006,1.565),(0.000,1.540),(0.010,1.520),(0.030,1.508),(0.20,1.504),(0.20,1.30)])
+sd=sdist(hco[:,1],hco[:,2]-ZO-rec,SKIN)
 hair=ss_((sd+E('HSOFT',0.0035))/(2*E('HSOFT',0.0035)))
 hair=hair*(1.0-np.clip(hear*1.5,0,1))     # never on the ear itself
 # eyebrows (owner's reference photo, 28-10-2026): thick, dense, almost straight, soft arch at the outer third, tail
@@ -95,19 +101,50 @@ brow=np.zeros(len(hco)); bw=np.zeros(len(hco))
 for sg in (1,-1):
     xs=sg*hco[:,0]
     u=(xs-E('BX0',0.011))/(E('BX1',0.062)-E('BX0',0.011)); uc=np.clip(u,0,1)
-    bot=E('BZB',1.5885)+0.003*uc-0.005*ss_((uc-0.7)/0.3)
-    top=E('BZT',1.5965)+0.0025*ss_(uc/0.6)-0.0075*ss_((uc-0.6)/0.4)
+    if os.environ.get('HAIRSTYLE','')=='bun':      # female: thinner, more arched
+        bot=E('BZB',1.5885)+ZO+0.0045*ss_(uc/0.62)-0.008*ss_((uc-0.62)/0.38)
+        top=bot+E('BTH',0.0050)*(1-0.55*uc)+0.001*ss_(uc/0.5)
+    else:
+        bot=E('BZB',1.5885)+ZO+0.003*uc-0.005*ss_((uc-0.7)/0.3)
+        top=E('BZT',1.5965)+ZO+0.0025*ss_(uc/0.6)-0.0075*ss_((uc-0.6)/0.4)
     mid=0.5*(bot+top); half=0.5*(top-bot)*(0.55+0.45*ss_((1-uc)/0.15))     # rounded thin end of the tail
     inn=ss_((half-np.abs(hco[:,2]-mid))/E('BSOFT',0.0016)+0.5)
     inn*=ss_(u/0.16+0.35)*ss_((1-u)/0.05+0.2)                                 # fuzzy start, thin tail
     inn*=(0.72+0.28*ss_(uc/0.22))*(1-0.12*ss_((uc-0.8)/0.2))                 # lighter head, dense body
     inn*=(xs>0)*(hn[:,1]<-0.25)*(hco[:,1]<-0.09)
     ang=np.radians(80-55*ss_(uc/0.3)-12*ss_((uc-0.5)/0.5))                   # hair direction: up at the head, outwards
-    w_=(-np.sin(ang)*(xs-0.035)+np.cos(ang)*(hco[:,2]-1.592))*1000.0      # small, continuous on each side (no jumps)
+    w_=(-np.sin(ang)*(xs-0.035)+np.cos(ang)*(hco[:,2]-1.592-ZO))*1000.0      # small, continuous on each side (no jumps)
     bw[xs>0]=w_[xs>0]; brow=np.maximum(brow,inn)
 a_=cab.data.attributes.new('bmask','FLOAT','POINT'); a_.data.foreach_set('value',brow.astype(np.float32))
 a_=cab.data.attributes.new('bw','FLOAT','POINT'); a_.data.foreach_set('value',bw.astype(np.float32))
 tint=np.maximum(hair*E('HAIRT',0.51),brow*E('BROWT',0.95))
+# hair volume: pulled-back hair lies a few mm over the skull (fuller head, soft step at the hairline)
+if E('HVOL',0)>0:
+    hv=E('HVOL',0)/1000.0*hair*(0.6+0.4*np.clip((hco[:,2]-hco[:,2].min())/(hco[:,2].max()-hco[:,2].min()),0,1))
+    hco=hco+hn*hv[:,None]; cab.data.vertices.foreach_set('co',hco.astype(np.float32).ravel()); cab.data.update()
+# hair strands: across-strand coordinate 'hw' (mm) = angle around the axis head centre -> bun (strands run to the bun)
+if os.environ.get('HAIRSTYLE','')=='bun':
+    BC=np.array((0.0,E('BUNY',0.018),E('BUNZ',1.612)))         # bun centre (female head)
+    HC=np.array((0.0,-0.045,1.53))
+    ax=(BC-HC)/np.linalg.norm(BC-HC); e1=np.cross(ax,(1.0,0,0)); e1/=np.linalg.norm(e1); e2=np.cross(ax,e1)
+    rv=hco-HC; phi=np.arctan2(rv@e2,rv@e1)
+    hw=phi*90.0
+    a_=cab.data.attributes.new('hmask','FLOAT','POINT'); a_.data.foreach_set('value',hair.astype(np.float32))
+    a_=cab.data.attributes.new('hw','FLOAT','POINT'); a_.data.foreach_set('value',hw.astype(np.float32))
+    # the bun: a slightly flattened ball of hair, twisted strands ('hw' around its own axis), on the head bone
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=64,ring_count=32,radius=E('BUNR',0.034),location=tuple(BC))
+    bun=bpy.context.active_object; bun.name='Ojo.Mono'
+    bc=np.array([v.co[:] for v in bun.data.vertices]); M_=np.array(bun.matrix_world); bc=bc@M_[:3,:3].T+M_[:3,3]
+    rel=bc-BC; rel=rel-np.outer(rel@ax,ax)*(1-E('BUNFLAT',0.72))          # flattened along the axis
+    bc=BC+rel; bun.matrix_world.identity()
+    bun.data.vertices.foreach_set('co',bc.astype(np.float32).ravel()); bun.data.update()
+    for p_ in bun.data.polygons: p_.use_smooth=True
+    rv=bc-BC; ang_=np.arctan2(rv@e2,rv@e1); tw=(rv@ax)/E('BUNR',0.034)
+    a_=bun.data.attributes.new('tint','FLOAT','POINT'); a_.data.foreach_set('value',np.full(len(bc),E('HAIRT',0.51),np.float32))
+    a_=bun.data.attributes.new('hmask','FLOAT','POINT'); a_.data.foreach_set('value',np.ones(len(bc),np.float32))
+    a_=bun.data.attributes.new('hw','FLOAT','POINT'); a_.data.foreach_set('value',((ang_+1.2*tw)*40.0).astype(np.float32))
+    g=bun.vertex_groups.new(name='head'); g.add(list(range(len(bc))),1.0,'REPLACE')
+    mb=bun.modifiers.new('Armature','ARMATURE'); mb.object=rig
 a=cab.data.attributes.new('tint','FLOAT','POINT'); a.data.foreach_set('value',tint.astype(np.float32))
 print('hair verts',int((hair>0.5).sum()),'brow verts',int((brow>0.5).sum()))
 # weights: nearest body vertex of the ORIGINAL surface (neck band) / head bone for the face
@@ -139,6 +176,16 @@ hb=np.isin(main,['head','neck'])
 hh=bco[:,2]-cutz(bco[:,1])
 push=np.clip((hh-E('CAP0',0.008))/(E('CAP1',0.03)-E('CAP0',0.008)),0,1); push=push*push*(3-2*push)*hb
 bco=bco-bno*(push[:,None]*E('CAPIN',12)/1000.0)
+# guarantee: no vertex of the old cap pokes through the new head (keep it >= CAPMIN mm inside)
+from mathutils.bvhtree import BVHTree
+_bv=BVHTree.FromPolygons([tuple(v) for v in hco],[tuple(f) for f in hfaces])
+moved_=0
+for i in np.where(hb&(hh>E('CAP0',0.008)))[0]:
+    loc,nrm,_,dist=_bv.find_nearest(Vector(bco[i]))
+    if loc is None: continue
+    sdist_=(bco[i]-np.array(loc))@np.array(nrm)
+    if sdist_>-E('CAPMIN',3)/1000.0: bco[i]=np.array(loc)-np.array(nrm)*E('CAPMIN',3)/1000.0; moved_+=1
+print('cap verts clamped inside',moved_)
 bme.vertices.foreach_set('co',bco.ravel()); bme.update()
 print('cap verts pushed',int((push>0.01).sum()))
 bpy.ops.wm.save_as_mainfile(filepath=out)
