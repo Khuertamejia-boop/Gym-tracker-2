@@ -343,7 +343,11 @@ lo aprobado. Mandar imágenes en 16:9. Chats cortos: uno por tarea grande (los l
 ## 9. Mensaje para empezar un chat nuevo
 
 > Vamos a seguir con el muñeco 3D de ejercicios. Trae la rama `claude/youthful-maxwell-ns8lt5` de mi repositorio
-> Gym-tracker-2, lee `cuerpo3d/GUIA.md` y restaura el proyecto con `cuerpo3d/restaurar.sh`. Luego haz el mapa de
-> músculos del pecho y el abdomen (sección 5) y enséñame el face pull de frente con los brazos extendidos, en 16:9.
->
-> (Ya hecho el 23-10-2026: para el siguiente chat, cambiar la última frase por la tarea nueva.)
+> Gym-tracker-2, lee `cuerpo3d/GUIA.md` y restaura el proyecto con `cuerpo3d/restaurar.sh` (crea también la versión
+> mujer). Luego: <TAREA NUEVA>.
+
+Estado al 28-10-2026: hombre con estilo v13 (sombras suaves, músculos redondeados, fibras visibles de lejos, borde del
+rojo suave), cuerpo v3 (rostro, pelo corto, cejas gruesas; trapecio y pectorales reducidos) y mujer v2 (sección 5j;
+pendiente del visto bueno). Vídeos hechos con el estilo actual: curl a un brazo y remo con barra (los de antes de la
+cara: hay que volver a posarlos con `NB_mc_row3.blend` / `NBF_row3.blend` para que salga el rostro).
+Ritmo, formato 16:9 y plan por familias: sección 5c.
