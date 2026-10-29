@@ -18,6 +18,7 @@ de esta guía y Claude seguirá desde aquí.
 | Remo con barra | v7 (28-10-2026): estilo v12, cuerpo v2, ritmo aprobado, cuello neutro, barra sin atravesar las piernas | `ejemplos/remo_barra_v7.mp4`, `.gif` |
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
 | Jalón en polea con agarre cerrado (rojo en dos intensidades) | v3 (29-10-2026): brazos sin atravesar el cuerpo, tono suave 30 %, rojo v14 | `ejemplos/jalon_cerrado_v3.mp4`, `.gif` |
+| Extensión de tríceps tras nuca en polea | v1 (29-10-2026), falta el visto bueno | `ejemplos/triceps_tras_nuca_v1.mp4`, `.gif` |
 | **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v3 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v3_*.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
@@ -383,6 +384,26 @@ a rosa (`style_v14b`), **C rojo intenso** (`style_v14c` = `style_v14`, elegida p
 tonos y un poco más saturado). Si se cambia `REDC` hay que poner `REDINV` = 1/`REDC` (el patrón de fibras se divide por él).
 `style_v14` es ya el estilo por defecto (`ill/render31.sh`, `ill/anim_dl.sh`, `ill/anim_fp.sh`) y `style_mujer.env`
 lleva los mismos colores. El degradado de dos intensidades (principales 1, secundarios 0,30) no cambia.
+
+## 5m. Extensión de tríceps tras nuca en polea (29-10-2026, v1)
+
+```bash
+export GT3D=~/cuerpo3d-trabajo; cd $GT3D
+NONEFIX=1 ill/mapas.sh maps_tri "triceps:1,anconeus:0.30"
+export PFX=TOf; for g in $(seq 0 3 30); do for f in $(seq $g $((g+2))); do [ $f -le 30 ] && ./anim_tri.sh $f 60 & done; wait; done
+cd w && ../venv/bin/python -I ../headcheck.py -- TOf*.blend && ../venv/bin/python -I ../armcheck.py -- TOf*.blend; cd ..
+YAW=65 PIT=10 TX=0 TY=0.30 TZ=1.12 OSC=4.4 ill/render31.sh TOf maps_tri triceps_tras_nuca
+```
+- `tricepsoh.py`: de espaldas a una polea alta, con cuerda. Pie izquierdo delante (apoyado) y derecho detrás sobre la
+  punta (`FFWD`, `FBK`, `HEELUP`; piernas por cinemática de dos huesos hasta los pies, la más larga casi estirada
+  `REARK`), torso inclinado adelante 24° (`TOLEAN`), cabeza en línea y algo arriba (`HEADUP`), escápulas arriba (`TOCLV`).
+  Brazos quietos junto a la cabeza (`UDX`, `UDY`: arriba y algo adelante); solo se mueve el codo, bisagra pura de 140°
+  (manos tras la nuca) a 8° (`FLEX0/1`); agarre neutro. El codo va donde se pide (`WPA=6`).
+- OJO: `agarre_final.env` ya usa `LEAN`, `CLV` y `CLR` (dominadas): aquí `TOLEAN`, `TOCLV`, `TOCLR`.
+- `headcheck.py` (nuevo): distancia de brazo, antebrazo y mano a la cabeza (negativo = dentro). Con las manos muy juntas
+  tras la nuca (`FIN0=0.30`) los antebrazos entraban 1 cm en la cabeza; con `FIN0=0.15` y `UDY=0.30` quedan a ~1 cm.
+- `tricepsoh_geo.py`: la torre y la cuerda del face pull, detrás del atleta (polea alta `PULY`, `PULZ`); las pesas suben.
+- Rojo: tríceps (las tres cabezas) a 1, ancóneo a 0,30.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
