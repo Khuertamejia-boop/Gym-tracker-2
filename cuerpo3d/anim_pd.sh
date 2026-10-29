@@ -1,0 +1,11 @@
+#!/bin/bash
+# close-grip lat pulldown frame F of N (P=0 arms extended overhead -> P=1 handle at the upper chest):
+# pulldown.py + arap2.py (shoulder skin) -> w/<PFX><F>.blend      base: BASEB (NB_mc_row3.blend = man with face)
+S=${GT3D:?set GT3D}; cd $S/w
+set -a; . $S/agarre_final.env; set +a
+export SHW=${SHW:-0.15} SKIN=cor CMASK=0 SPH=1 SR0=0.08 SR1=0.15
+F=$1; N=$2; T=$(printf "%02d" $F); PF=${PFX:-PD}; B=${BASEB:-NB_mc_row3.blend}
+P=${PP:-$(python3 -c "import math;print(round(0.5-0.5*math.cos(2*math.pi*$F/$N),4))")}
+P=$P $S/venv/bin/python -I $S/pulldown.py $B ${PF}_s$T.blend > r/log_${PF}$T.txt 2>&1
+RESTBLEND=$B IT=1 RAD=0.22 RIN=0.12 $S/venv/bin/python -I $S/arap2.py ${PF}_s$T.blend $PF$T.blend >> r/log_${PF}$T.txt 2>&1
+rm -f ${PF}_s$T.blend; echo done $T P=$P

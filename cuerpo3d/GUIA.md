@@ -17,6 +17,7 @@ de esta guía y Claude seguirá desde aquí.
 | Estilo de dibujo **v8** (`ill/style_v8.env`) | aprobado: «bastante cerca» de la referencia; cortes grises aclarados el 23-10 | `ejemplos/espalda_cortes_antes_ahora_16x9.jpg` |
 | Remo con barra | v7 (28-10-2026): estilo v12, cuerpo v2, ritmo aprobado, cuello neutro, barra sin atravesar las piernas | `ejemplos/remo_barra_v7.mp4`, `.gif` |
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
+| Jalón en polea con agarre cerrado (rojo en dos intensidades) | v1 (29-10-2026), falta el visto bueno | `ejemplos/jalon_cerrado_v1.mp4`, `.gif` |
 | **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v3 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v3_*.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
@@ -335,6 +336,33 @@ Pedido del dueño: «lo mismo de la versión hombre en cuerpo de mujer, el dise�
     delante, bajo la axila y detrás. Los lados de la copa suben algo más (`TZS=1.235`) y tapan la mancha blanca de la axila.
 - Pendiente (de cerca): algunas zonas lisas del mapa de músculos del hombre (clavícula, cuello) se ven como manchas
   blancas de borde irregular en la mujer; contorno del pelo detrás de la oreja.
+
+## 5k. Jalón en polea con agarre cerrado (29-10-2026, v1) y rojo en dos intensidades
+
+Pedido del dueño con una lámina de referencia (`referencias/ce0f1b38-jalon.jpg`): mismo ejercicio, y «un color más intenso
+los músculos que trabajan más y un color más tenue los que menos».
+```bash
+export GT3D=~/cuerpo3d-trabajo; cd $GT3D
+NONEFIX=1 ill/mapas.sh maps_pd2 "latissimus_dorsi:1,teres_major:1,rhomboid_major:0.35,trap_middle:0.35,trap_lower:0.35,deltoid_posterior:0.35,biceps_brachii:0.35,brachialis:0.35,brachioradialis:0.35"
+export PFX=PDf; for g in $(seq 0 3 30); do for f in $(seq $g $((g+2))); do [ $f -le 30 ] && ./anim_pd.sh $f 60 & done; wait; done
+grep handle-to-head w/r/log_PDf*.txt          # el agarre nunca toca la cara (mínimo ~3,5 cm a mitad de recorrido)
+YAW=208 PIT=10 TX=0 TY=0 TZ=1.15 OSC=4.3 ill/render31.sh PDf maps_pd2 jalon_cerrado
+```
+- **Dos intensidades de rojo**: `mapas.sh` ya acepta `músculo:intensidad`. Principales a 1 (dorsal ancho, redondo mayor),
+  secundarios a **0,35** (romboides, trapecio medio e inferior, deltoides posterior, bíceps, braquial, braquiorradial).
+  Probado (`ejemplos/jalon_rojo_intensidades.jpg`): con 0,5 el secundario se ve casi igual de rojo que el principal
+  (el sombreado del rojo satura pronto); con 0,2 casi desaparece.
+- `pulldown.py` (piezas de `facepull.py`: brazo anatómico, agarre aprobado, piel `cor` + `arap2`): sentado en banco
+  plano, muslos bajo el rodillo, pies en el suelo; torso inclinado atrás 8° arriba -> 17° abajo con el pecho arriba
+  (`LEAN0/1`, `SPX1`); escápulas arriba en el estiramiento y abajo y juntas al final (`CLV0/1`, `CLR0/1`); agarre neutro
+  (palmas enfrentadas, pulgares hacia atrás) en un triángulo; codos de fuera-arriba a abajo-atrás pegados al costado.
+  El agarre baja en línea recta por el cable desde arriba (brazos casi estirados, `FLEX0`, `REACHK`) hasta la parte alta
+  del pecho (`GY1` 17 cm delante y `GZ1` 7 cm bajo los hombros).
+- `pulldown_geo.py`: banco bajo los glúteos (la piel se hunde 6 mm), rodillo sobre los muslos junto a las rodillas,
+  torre con pila de pesas (suben con el recorrido), columna y brazo con la polea alta EN la línea del cable, cable a la
+  polea de arriba y a las pesas, triángulo con dos agarres dentro de los puños. Marco casi blanco como en la lámina
+  (`0.97`; con `0.74` salía gris oscuro).
+- Cámara: de espaldas en diagonal desde la derecha (la máquina queda a la derecha, como en la lámina).
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
