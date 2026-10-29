@@ -337,7 +337,7 @@ Pedido del dueño: «lo mismo de la versión hombre en cuerpo de mujer, el dise�
 - Pendiente (de cerca): algunas zonas lisas del mapa de músculos del hombre (clavícula, cuello) se ven como manchas
   blancas de borde irregular en la mujer; contorno del pelo detrás de la oreja.
 
-## 5k. Jalón en polea con agarre cerrado (29-10-2026, v2) y rojo en dos intensidades
+## 5k. Jalón en polea con agarre cerrado (29-10-2026, v3) y rojo en dos intensidades
 
 Pedido del dueño con una lámina de referencia (`referencias/ce0f1b38-jalon.jpg`): mismo ejercicio, y «un color más intenso
 los músculos que trabajan más y un color más tenue los que menos».
