@@ -17,7 +17,7 @@ de esta guía y Claude seguirá desde aquí.
 | Estilo de dibujo **v8** (`ill/style_v8.env`) | aprobado: «bastante cerca» de la referencia; cortes grises aclarados el 23-10 | `ejemplos/espalda_cortes_antes_ahora_16x9.jpg` |
 | Remo con barra | v7 (28-10-2026): estilo v12, cuerpo v2, ritmo aprobado, cuello neutro, barra sin atravesar las piernas | `ejemplos/remo_barra_v7.mp4`, `.gif` |
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
-| Jalón en polea con agarre cerrado (rojo en dos intensidades) | v2 (29-10-2026): brazos sin atravesar el cuerpo, tono suave 30 % | `ejemplos/jalon_cerrado_v2.mp4`, `.gif` |
+| Jalón en polea con agarre cerrado (rojo en dos intensidades) | v3 (29-10-2026): brazos sin atravesar el cuerpo, tono suave 30 %, rojo v14 | `ejemplos/jalon_cerrado_v3.mp4`, `.gif` |
 | **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v3 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v3_*.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
@@ -167,7 +167,7 @@ YAW=70 PIT=8 ill/render31.sh CUf maps_curl1 curl_un_brazo              # -> out/
 
 Lo que gasta no es el render (es cálculo de la máquina), sino lo que Claude lee y mira: imágenes, pruebas y chats largos.
 
-**Estándar congelado (no volver a discutirlo):** estilo v10 (antes v8); cuerpo v2; 1920×1080 (16:9); 31 posturas; ritmo del peso muerto
+**Estándar congelado (no volver a discutirlo):** estilo v14 desde el 29-10 (antes v10, v8); cuerpo v2; 1920×1080 (16:9); 31 posturas; ritmo del peso muerto
 (subida ~1,2 s, pausa 0,4 s, bajada ~2,4 s, pausa 0,6 s; `ill/mkgif2.py` y `ill/mkmp4.py`; **aprobado por el dueño**);
 vídeo MP4 + GIF; rojo solo en los músculos principales (glúteos a través del short con `SHRED`); comprobación
 automática de que la barra/mancuernas no atraviesan el cuerpo (`barcheck.py`).
@@ -374,6 +374,16 @@ YAW=208 PIT=10 TX=0 TY=0 TZ=1.15 OSC=4.3 ill/render31.sh PDf maps_pd3 jalon_cerr
   adelante, con peso fuerte al final (`WPA1=8`), y el agarre queda más delante del pecho (`GY1`=24 cm, `GZ1`=8 cm).
   Resultado: ~10 puntos (pliegue de la axila al apretar), hueco ~4 mm. Probado: `EOX` 7 cm -> 265 puntos, 10 cm -> 80.
 
+## 5l. Rojo más rojo: estilo v14 (29-10-2026)
+
+Dueño: «me gusta el degradado pero está como que naranja, dame un color más rojizo». El rojo del v10-v13 era salmón:
+sus 9 tonos (`RCOLS`) y los colores de fibras y surcos (`REDC`, `REDG`, `REDL`, `FIBRC`, `LINERC`) llevaban más verde que
+azul. Tres opciones con la misma claridad (`ejemplos/jalon_rojo_tonos.jpg`): A rojo suave (`style_v14a`), B carmesí, tira
+a rosa (`style_v14b`), **C rojo intenso** (`style_v14c` = `style_v14`, elegida por defecto: verde = azul en todos los
+tonos y un poco más saturado). Si se cambia `REDC` hay que poner `REDINV` = 1/`REDC` (el patrón de fibras se divide por él).
+`style_v14` es ya el estilo por defecto (`ill/render31.sh`, `ill/anim_dl.sh`, `ill/anim_fp.sh`) y `style_mujer.env`
+lleva los mismos colores. El degradado de dos intensidades (principales 1, secundarios 0,30) no cambia.
+
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
 - Lo que importa es cómo se ve **renderizado a distancia normal/lejana**, no de cerca.
@@ -403,7 +413,7 @@ lo aprobado. Mandar imágenes en 16:9. Chats cortos: uno por tarea grande (los l
 > Gym-tracker-2, lee `cuerpo3d/GUIA.md` y restaura el proyecto con `cuerpo3d/restaurar.sh` (crea también la versión
 > mujer). Luego: <TAREA NUEVA>.
 
-Estado al 28-10-2026: hombre con estilo v13 (sombras suaves, músculos redondeados, fibras visibles de lejos, borde del
+Estado al 29-10-2026: estilo v14 (rojo más rojo, sección 5l; jalón cerrado hecho, 5k); hombre con estilo v13 (sombras suaves, músculos redondeados, fibras visibles de lejos, borde del
 rojo suave), cuerpo v3 (rostro, pelo corto, cejas gruesas; trapecio y pectorales reducidos) y mujer v3 (sección 5j;
 pendiente del visto bueno). Vídeos hechos con el estilo actual: curl a un brazo y remo con barra (los de antes de la
 cara: hay que volver a posarlos con `NB_mc_row3.blend` / `NBF_row3.blend` para que salga el rostro).
