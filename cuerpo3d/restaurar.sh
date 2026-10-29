@@ -23,5 +23,5 @@ ill/mapas.sh maps_fp2 "deltoid_posterior:1,trapezius:1,rhomboid_major:1,infraspi
 NONEFIX=1 ill/mapas.sh maps_row3 "trapezius:1,latissimus_dorsi:1,infraspinatus:1,teres_major:1,teres_minor:1,rhomboid_major:1,deltoid_posterior:1,deltoid_lateral:1"
 ill/mapas.sh maps_dl "gluteus_maximus:1,biceps_femoris:1,semitendinosus:1,semimembranosus:1,erector_spinae:1"
 NONEFIX=1 ill/mapas.sh maps_curl2 "biceps_brachii.L:1,brachialis.L:1,brachioradialis.L:1"
-NONEFIX=1 ill/mapas.sh maps_pd2 "latissimus_dorsi:1,teres_major:1,rhomboid_major:0.35,trap_middle:0.35,trap_lower:0.35,deltoid_posterior:0.35,biceps_brachii:0.35,brachialis:0.35,brachioradialis:0.35"
+NONEFIX=1 ill/mapas.sh maps_pd3 "latissimus_dorsi:1,teres_major:1,rhomboid_major:0.30,trap_middle:0.30,trap_lower:0.30,deltoid_posterior:0.30,biceps_brachii:0.30,brachialis:0.30,brachioradialis:0.30"
 echo "Listo. En cada terminal nueva:  export GT3D=$DST"

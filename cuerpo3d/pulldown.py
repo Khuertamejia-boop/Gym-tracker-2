@@ -99,7 +99,7 @@ def ref_handles():
             hz=Sm.z+math.sqrt(max(d_ext**2-dx*dx-(hy-Sm.y)**2,0.0))+E('DGRIP',0.075)
             out.append(Vector((0,hy,hz)))
         else:
-            out.append(Sm+Rq@Vector((0,-E('GY1',0.17),-E('GZ1',0.07))))
+            out.append(Sm+Rq@Vector((0,-E('GY1',0.24),-E('GZ1',0.08))))
     return out
 HT,HB=ref_handles()
 lean,Rp=pose_body(loc,q); upd()
@@ -130,7 +130,7 @@ def arm_candidates(L,s,S,W,Mh,Mcl,pref,fdir):
         tf=twist_deg((r['fa_h']).transposed()@Mfa.transposed()@Mh)
         pa=math.degrees(npole.angle(pref))
         fv=math.degrees(y2.angle(fdir)); bentw=min(1.0,math.degrees(th)/60.0)
-        cost=(tu/E('WTU',100))**2+(tf/E('WTF',45))**2+(pa/E('WPA',50))**2+bentw*(fv/E('WFV',25))**2
+        cost=(tu/E('WTU',100))**2+(tf/E('WTF',45))**2+(pa/WPA_)**2+bentw*(fv/E('WFV',25))**2
         out.append((cost,ph,El,Mua,Mfa,tu,tf,pa,math.degrees(th),fv))
     return min(out,key=lambda t:t[0])
 res={}
@@ -139,7 +139,11 @@ for s,Ls in ((1,'L'),(-1,'R')):
     G=Hc+Vector((s*E('GX',0.055),0,0))
     hd=vlerp((-s*0.12,0.05,1.0),(-s*0.18,-0.12,1.0),q).normalized()         # fingers up, a little inwards
     want=Vector((0,1,0))                                                     # pinky->index backwards: thumbs back (neutral grip)
-    pref=vlerp((s*1.0,-0.35,0.15),(s*0.45,0.45,-1.0),q).normalized()        # elbow: out -> down, back, by the ribs
+    # elbow: out at the top -> at the bottom by the sides of the body, EOX out from the shoulder and EOY forward (torso
+    # frame): the upper arm clears the lats and the forearms rise in front of the ribs to the hands (no arm inside the torso)
+    Et=Sx+Rp@Vector((s*E('EOX',0.13),-E('EOY',0.06),-0.25))
+    pref=vlerp((s*1.0,-0.35,0.15),(Et-Sx).normalized(),q).normalized()
+    WPA_=lerp(E('WPA',50),E('WPA1',8),q)
     fdir=vlerp((-s*0.1,0.0,1.0),(0.0,-0.05,1.0),q).normalized()             # forearm: up -> vertical under the hand
     Mh=hand_matrix(Ls,s,hd,want); reset_fingers(Ls); set_rot('hand.'+Ls,Mh)
     c=Vector(handrig.bar_from_hand(rig,Ls,rB)); doff=c-Vector(pb['hand.'+Ls].head)
