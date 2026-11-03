@@ -405,6 +405,26 @@ YAW=65 PIT=10 TX=0 TY=0.30 TZ=1.12 OSC=4.4 ill/render31.sh TOf maps_tri triceps_
 - `tricepsoh_geo.py`: la torre y la cuerda del face pull, detrás del atleta (polea alta `PULY`, `PULZ`); las pesas suben.
 - Rojo: tríceps (las tres cabezas) a 1, ancóneo a 0,30.
 
+## 5n. Imagen fija para la app: «Hoy: Pull» de espaldas (03-11-2026)
+
+Pedido del dueño con una captura de su pantalla «Mi plan» (`referencias/c7eb47ab-app-pull.jpg`): el muñeco en la misma
+postura (de pie, de espaldas, brazos algo separados). La postura de reposo de la base ya es esa (brazos a ~25°), así que
+se renderiza la base tal cual (sin deformar nada): vertical 1200×1600, fondo transparente.
+```bash
+export GT3D=~/cuerpo3d-trabajo; cd $GT3D
+NONEFIX=1 ill/mapas.sh maps_pull "latissimus_dorsi:1,trapezius:1,rhomboid_major:1,teres_major:1,infraspinatus:1,teres_minor:1,deltoid_posterior:0.30,biceps_brachii:0.30,brachialis:0.30,brachioradialis:0.30"
+cd w && env $(cat ../ill/style_v14.env) FIBR=0.40 FIBL=0.35 FSTR=0.28 ERMIN=0.12 EWFR=1.4 SHOWBAR=0 HIDEBANCO=1 MAPS=../ill/maps_pull \
+  NPZ=../ill/pv/bla_row2.npz YAW=180 PIT=4 TX=0 TY=0 TZ=0.875 OSC=1.95 RX=1200 RY=1600 SMP=32 \
+  ../venv/bin/python -I ../ill/rendsculpt.py NB_mc_row3.blend ../ill/r/pull_espalda
+```
+- En vertical, `OSC` es la ALTURA visible (Blender usa el lado mayor). `SHOWBAR=0`: la base trae una barra.
+- De espaldas y con casi toda la espalda en rojo se veían dos defectos que en los vídeos (en diagonal) no: las fibras del
+  rojo hacen escalones donde cambian de dirección (trapecio-dorsal, escápula) y el infraespinoso a 0,30 parecía una
+  placa blanquecina. Arreglo para esta imagen: infraespinoso y redondo menor a 1 (toda la espalda alta, como en la
+  captura) y fibras más suaves con bordes rojos algo más marcados (`FIBR=0.40 FIBL=0.35 FSTR=0.28 ERMIN=0.12 EWFR=1.4`).
+  Sin fibras no hay escalones pero los músculos rojos se funden en una mancha. Pendiente: arreglar el campo de fibras.
+- Resultado: `ejemplos/pull_espalda.png` (transparente, recortado) y `ejemplos/pull_en_la_app.jpg` (antes / ahora).
+
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
 - Lo que importa es cómo se ve **renderizado a distancia normal/lejana**, no de cerca.
