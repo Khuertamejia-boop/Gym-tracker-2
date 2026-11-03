@@ -413,7 +413,7 @@ se renderiza la base tal cual (sin deformar nada): vertical 1200×1600, fondo tr
 ```bash
 export GT3D=~/cuerpo3d-trabajo; cd $GT3D
 NONEFIX=1 ill/mapas.sh maps_pull "latissimus_dorsi:1,trapezius:1,rhomboid_major:1,teres_major:1,infraspinatus:1,teres_minor:1,deltoid_posterior:0.30,biceps_brachii:0.30,brachialis:0.30,brachioradialis:0.30"
-cd w && env $(cat ../ill/style_v14.env) FIBR=0.40 FIBL=0.35 FSTR=0.28 ERMIN=0.12 EWFR=1.4 SHOWBAR=0 HIDEBANCO=1 MAPS=../ill/maps_pull \
+cd w && env $(cat ../ill/style_app.env) SHOWBAR=0 HIDEBANCO=1 MAPS=../ill/maps_pull \
   NPZ=../ill/pv/bla_row2.npz YAW=180 PIT=4 TX=0 TY=0 TZ=0.875 OSC=1.95 RX=1200 RY=1600 SMP=32 \
   ../venv/bin/python -I ../ill/rendsculpt.py NB_mc_row3.blend ../ill/r/pull_espalda
 ```
@@ -424,6 +424,13 @@ cd w && env $(cat ../ill/style_v14.env) FIBR=0.40 FIBL=0.35 FSTR=0.28 ERMIN=0.12
   captura) y fibras más suaves con bordes rojos algo más marcados (`FIBR=0.40 FIBL=0.35 FSTR=0.28 ERMIN=0.12 EWFR=1.4`).
   Sin fibras no hay escalones pero los músculos rojos se funden en una mancha. Pendiente: arreglar el campo de fibras.
 - Resultado: `ejemplos/pull_espalda.png` (transparente, recortado) y `ejemplos/pull_en_la_app.jpg` (antes / ahora).
+- 03-11, dueño: «esa es la distancia a la que se verá en mi app; necesita un poco más de sombras para que los músculos
+  se visualicen mejor». A ese tamaño (~590 px de alto) el estilo de los vídeos se ve plano. Opciones comparadas a tamaño
+  real de la pantalla (`ejemplos/pull_sombras_opciones.jpg`, `ill/style_app_a..e.env`): A y B poco cambio; C bien; D la más
+  marcada pero el rojo saca manchas oscuras (relieve del rojo demasiado fuerte). **E = `ill/style_app.env`** (recomendada):
+  sombras de los grises como D (`TONES` 0,30…, `BUMPK=1.8`, `GBUMP=1.1`, `EMIN=0.52`, `MAOP=0.5`, `CAVK=0.12`) y el
+  relieve del rojo como C (`RBUMP=0.4`, `REDCON=2.0`), con las fibras suaves de la imagen fija. Solo para imágenes de la
+  app; los vídeos siguen con `style_v14`.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
