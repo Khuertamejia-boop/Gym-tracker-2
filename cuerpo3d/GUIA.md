@@ -431,6 +431,11 @@ cd w && env $(cat ../ill/style_app.env) SHOWBAR=0 HIDEBANCO=1 MAPS=../ill/maps_p
   sombras de los grises como D (`TONES` 0,30…, `BUMPK=1.8`, `GBUMP=1.1`, `EMIN=0.52`, `MAOP=0.5`, `CAVK=0.12`) y el
   relieve del rojo como C (`RBUMP=0.4`, `REDCON=2.0`), con las fibras suaves de la imagen fija. Solo para imágenes de la
   app; los vídeos siguen con `style_v14`.
+- 03-11, dueño: «me gusta la opción C; el rojo está rosado, hazlo más oscuro, que se asemeje a la otra ilustración
+  aunque no tan guinda; encuentra un equilibrio». Medido (mediana del rojo de la espalda): su ilustración (145, 62, 57),
+  la C (230, 155, 157). Objetivo intermedio ~(185, 90, 85): **`ill/style_app.env` = C + `RCOLS` más oscuros en la parte
+  iluminada (`style_app_c_r2.env`)**, mediana (190, 88, 84). `r1` algo más claro (198, 103, 99). Comparación:
+  `ejemplos/pull_rojo_opciones.jpg`.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
