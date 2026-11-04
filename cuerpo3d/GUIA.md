@@ -19,6 +19,7 @@ de esta guía y Claude seguirá desde aquí.
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
 | Jalón en polea con agarre cerrado (rojo en dos intensidades) | v3 (29-10-2026): brazos sin atravesar el cuerpo, tono suave 30 %, rojo v14 | `ejemplos/jalon_cerrado_v3.mp4`, `.gif` |
 | Extensión de tríceps tras nuca en polea | v1 (29-10-2026), falta el visto bueno | `ejemplos/triceps_tras_nuca_v1.mp4`, `.gif` |
+| Animación de fondo de la app: doble bíceps de espaldas (rojo Push) | v1 (04-11-2026), falta el visto bueno | `ejemplos/doble_biceps_en_la_app.mp4`, `app/doble_biceps/` |
 | **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v3 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v3_*.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
@@ -437,6 +438,39 @@ cd w && env $(cat ../ill/style_app.env) SHOWBAR=0 HIDEBANCO=1 MAPS=../ill/maps_p
   iluminada (`style_app_c_r2.env`)**, mediana (190, 88, 84). `r1` algo más claro (198, 103, 99). Comparación:
   `ejemplos/pull_rojo_opciones.jpg`.
 
+## 5o. Animación de fondo para la app: doble bíceps de espaldas, día «Push» (04-11-2026, v1)
+
+Pedido del dueño: el muñeco aparece en reposo (manos junto al cuerpo, igual que la imagen fija de 5n), hace de forma
+fluida el doble bíceps de espaldas, lo mantiene y vuelve a la posición inicial; rojo de los músculos de un día Push. Es
+para ponerlo de fondo en la pantalla «Mi plan», como la imagen fija.
+```bash
+export GT3D=~/cuerpo3d-trabajo; cd $GT3D
+NONEFIX=1 ill/mapas.sh maps_push "pec_clavicular:1,pec_sternal:1,deltoid_anterior:1,deltoid_lateral:1,triceps:1,anconeus:0.30"
+export PFX=DBf; for g in $(seq 0 4 30); do for f in $(seq $g $((g+3))); do [ $f -le 30 ] && ./anim_db.sh $f 30 & done; wait; done
+cd w && ../venv/bin/python -I ../headcheck.py -- DBf*.blend && ../venv/bin/python -I ../armcheck.py -- DBf*.blend; cd ..
+ill/render_app.sh DBf maps_push doble_biceps          # 31 fotogramas 1200x1600 transparentes, ~1 min cada uno
+python3 ill/app_video.py ill/r/app_doble_biceps out/doble_biceps   # vídeos + fotogramas recortados + maqueta
+```
+- `dblbiceps.py`: P=0 es exactamente la base en reposo (para que el vídeo empiece igual que la imagen fija). Hacia P=1:
+  brazos de lado un poco por encima de los hombros (`DBUX/DBUY/DBUZ`), codos a ~104° con los antebrazos hacia arriba y
+  algo hacia dentro (`DBFX`), puños cerrados a la altura de la cabeza con la muñeca doblada hacia ella (`DBWF=28`), pecho
+  arriba (`DBSPX=4`), hombros algo arriba (`DBCLV=14`). Cada parte se mezcla desde el reposo: giro del brazo, rotación del
+  húmero (~110°) y flexión del codo; la mano sigue al antebrazo. Los dedos se cierran en puño alrededor de un núcleo
+  fino invisible (`handrig.wrap2`, `DBFR=7 mm`) entre P 0,15 y 0,85. Las piernas no se mueven.
+- Ritmo: con el codo a la vez que el brazo, a mitad de camino quedaba en cruz con los brazos estirados (poco natural);
+  el codo se adelanta (`DBLAG=-0.2`, se dobla del todo al 80 % de la subida). `P = F/30` lineal (el guion lo suaviza).
+- Comprobado: brazos y puños a más de 8 cm de la cabeza; brazo-torso igual que en reposo (pliegue de la axila).
+- Rojo Push: pectoral, deltoides anterior y lateral y tríceps a 1, ancóneo a 0,30. De espaldas solo se ven tríceps y
+  hombros (el pecho queda delante).
+- `ill/render_app.sh`: como `render31.sh` pero con `style_app.env`, vertical 1200×1600 y la cámara de la imagen fija.
+- `ill/app_video.py`: un recorte igual para todos los fotogramas (la figura no salta); secuencia reposo 0,3 s → subida
+  31 fotogramas → pose 1,2 s → bajada → reposo 0,5 s, a 25 fps (`HOLDB`, `HOLDT`, `HOLDE`, `FPS`). Saca:
+  `_transparente.mov` (ProRes 4444 con transparencia: en el Mac, clic derecho → «Codificar archivos de vídeo
+  seleccionados» → HEVC y marcar «Conservar transparencia» da un .mov ligero que el iPhone reproduce con fondo
+  transparente), `_frames/` (los 31 fotogramas PNG transparentes recortados, 900 px de alto), `.mp4` (sobre el gris de
+  la app) y `_en_la_app.mp4` (maqueta sobre la captura del dueño con «Push · Pecho · Hombros · Tríceps»; el halo claro
+  del fondo se reconstruye con un modelo radial para borrar la figura vieja sin marcas).
+
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
 - Lo que importa es cómo se ve **renderizado a distancia normal/lejana**, no de cerca.
@@ -468,7 +502,8 @@ lo aprobado. Mandar imágenes en 16:9. Chats cortos: uno por tarea grande (los l
 
 Estado al 04-11-2026: rojo de los vídeos = estilo v14 (5l); degradado de dos intensidades (principales 1, secundarios
 0,30). Hechos con cara y estilo actual: jalón cerrado v3 (5k), extensión de tríceps tras nuca v1 (5m). Imagen fija de la
-app «Hoy: Pull» de espaldas (5n) con `ill/style_app.env` (sombra C + rojo más oscuro, elegidos por el dueño). Mujer v3 (5j).
+app «Hoy: Pull» de espaldas (5n) con `ill/style_app.env` (sombra C + rojo más oscuro, elegidos por el dueño).
+Animación de fondo de la app: doble bíceps de espaldas con rojo Push (5o). Mujer v3 (5j).
 Comprobaciones de choques: `armcheck.py` (brazo-torso), `headcheck.py` (brazo-cabeza), `fistcheck.py`, `objcheck.py`.
 Siguiente posible: imágenes de la app para los otros días (Legs, Push…) con `style_app.env`; rehacer los vídeos viejos.
 Ritmo, formato 16:9 y plan por familias: sección 5c.
