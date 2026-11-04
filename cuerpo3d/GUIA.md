@@ -19,7 +19,7 @@ de esta guía y Claude seguirá desde aquí.
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
 | Jalón en polea con agarre cerrado (rojo en dos intensidades) | v3 (29-10-2026): brazos sin atravesar el cuerpo, tono suave 30 %, rojo v14 | `ejemplos/jalon_cerrado_v3.mp4`, `.gif` |
 | Extensión de tríceps tras nuca en polea | v1 (29-10-2026), falta el visto bueno | `ejemplos/triceps_tras_nuca_v1.mp4`, `.gif` |
-| Animación de fondo de la app: doble bíceps de espaldas (rojo Push) | v1 (04-11-2026), falta el visto bueno | `ejemplos/doble_biceps_en_la_app.mp4`, `app/doble_biceps/` |
+| Animación de fondo de la app: doble bíceps de espaldas (rojo Push) | v1 (04-11-2026), falta el visto bueno | `ejemplos/doble_biceps_en_la_app.mp4`, `.jpg`; para Xcode: `app/doble_biceps_transparente.mov`, `app/doble_biceps/` |
 | **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v3 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v3_*.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
@@ -470,6 +470,9 @@ python3 ill/app_video.py ill/r/app_doble_biceps out/doble_biceps   # vídeos + f
   transparente), `_frames/` (los 31 fotogramas PNG transparentes recortados, 900 px de alto), `.mp4` (sobre el gris de
   la app) y `_en_la_app.mp4` (maqueta sobre la captura del dueño con «Push · Pecho · Hombros · Tríceps»; el halo claro
   del fondo se reconstruye con un modelo radial para borrar la figura vieja sin marcas).
+- Entregado (04-11): `app/doble_biceps_transparente.mov` (666×900, 4,4 s, 16 MB, transparente), `app/doble_biceps/f00..f30.png`
+  (los 31 fotogramas transparentes, 0 = reposo, 30 = pose; para animarlos en SwiftUI: reposo 8 fotogramas, 1→30 uno por
+  fotograma a 25 fps, pose 30, 29→1, reposo 12), `ejemplos/doble_biceps_en_la_app.mp4` y `.jpg` (maqueta), `ejemplos/doble_biceps.mp4`.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
