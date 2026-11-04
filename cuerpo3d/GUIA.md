@@ -466,8 +466,9 @@ lo aprobado. Mandar imágenes en 16:9. Chats cortos: uno por tarea grande (los l
 > Gym-tracker-2, lee `cuerpo3d/GUIA.md` y restaura el proyecto con `cuerpo3d/restaurar.sh` (crea también la versión
 > mujer). Luego: <TAREA NUEVA>.
 
-Estado al 29-10-2026: estilo v14 (rojo más rojo, sección 5l; jalón cerrado hecho, 5k); hombre con estilo v13 (sombras suaves, músculos redondeados, fibras visibles de lejos, borde del
-rojo suave), cuerpo v3 (rostro, pelo corto, cejas gruesas; trapecio y pectorales reducidos) y mujer v3 (sección 5j;
-pendiente del visto bueno). Vídeos hechos con el estilo actual: curl a un brazo y remo con barra (los de antes de la
-cara: hay que volver a posarlos con `NB_mc_row3.blend` / `NBF_row3.blend` para que salga el rostro).
+Estado al 04-11-2026: rojo de los vídeos = estilo v14 (5l); degradado de dos intensidades (principales 1, secundarios
+0,30). Hechos con cara y estilo actual: jalón cerrado v3 (5k), extensión de tríceps tras nuca v1 (5m). Imagen fija de la
+app «Hoy: Pull» de espaldas (5n) con `ill/style_app.env` (sombra C + rojo más oscuro, elegidos por el dueño). Mujer v3 (5j).
+Comprobaciones de choques: `armcheck.py` (brazo-torso), `headcheck.py` (brazo-cabeza), `fistcheck.py`, `objcheck.py`.
+Siguiente posible: imágenes de la app para los otros días (Legs, Push…) con `style_app.env`; rehacer los vídeos viejos.
 Ritmo, formato 16:9 y plan por familias: sección 5c.
