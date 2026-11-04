@@ -6,7 +6,8 @@
 #   env: DBUX/DBUY/DBUZ upper-arm direction at the top (x out, y back, z up), DBFX/DBFY forearm tilt (in / back),
 #        DBWF wrist flexion towards the head (deg), DBGR fist roll about the hand axis (deg), DBCLV/DBCLR shoulder
 #        girdle up / back (deg), DBSPX chest up (deg), DBLAG elbow bend starts a little after the lift (0..0.5),
-#        DBFR fist radius (m), DBFS/DBFE fist closes between these P values
+#        DBFR fist core radius (m, 0.003), DBDN core distance from the knuckles (0.008; back versions v2: 0.007 / 0.0165),
+#        DBFS/DBFE fist closes between these P values
 import bpy,sys,math,os
 import numpy as np
 from mathutils import Vector,Matrix,Quaternion
@@ -63,7 +64,8 @@ FINGB=[f'{f}{k}' for f in ('thumb','index','middle','ring','pinky') for k in (1,
 # ---------------- fists: closed around a thin (invisible) core, computed once at rest; then blended in with P
 fistq={}
 for L in 'LR':
-    M_,kn,n_,eh=handrig.palm_frame(rig,L); rF=E('DBFR',0.007); c=Vector(handrig.bar_from_hand(rig,L,rF))
+    os.environ['DN']=str(E('DBDN',0.008))                    # core close to the palm: a closed fist, no hole
+    M_,kn,n_,eh=handrig.palm_frame(rig,L); rF=E('DBFR',0.003); c=Vector(handrig.bar_from_hand(rig,L,rF))
     handrig.wrap2(rig,L,c,kn,rF); handrig.thumb_over(rig,L,c,kn,rF)
     fistq[L]={b:Quaternion(pb[b+'.'+L].rotation_quaternion) for b in FINGB}
     handrig.reset_fingers(rig,L)

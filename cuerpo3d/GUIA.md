@@ -484,6 +484,23 @@ python3 ill/app_video.py ill/r/app_doble_biceps out/doble_biceps   # vídeos + f
   original de la captura (`KEEPTEXT=1`):
   `ill/render_app.sh DBf maps_pull doble_biceps_pull` y
   `KEEPTEXT=1 python3 ill/app_video.py ill/r/app_doble_biceps_pull out/doble_biceps_pull`.
+- 04-11, dueño: «ahora la misma animación de frente, mirando hacia adelante con el doble bíceps». Misma pose y cámara
+  de frente (`YAW=0`), rojo Push (de frente sí se ve el pecho). Dos arreglos que de frente se notaban:
+  - **Giro del hombro** (`untwist.py`, nuevo, `UT=0.4` en `anim_db.sh`): el húmero gira ~100° hacia fuera y la piel del
+    brazo giraba entera con él, así que el deltoides (que nace en la clavícula y la escápula) se iba hacia atrás: de
+    espaldas era la banda plana y de frente quedaba un hueco gris entre el pecho y el brazo. Cerca del hombro la piel
+    vuelve a girar `UT·(1−a(s))` del giro del húmero sobre el eje del brazo (a(s) pasa de 0 a 1 entre `UTS0=-0.10` y
+    `UTS1=0.55` del largo del brazo; máscara suave de la piel del brazo). Con `UT=0.7` sale un pico en el hombro.
+    Con el giro corregido el abultamiento baja a `DBBULGE=0.020`.
+  - **Puños cerrados** (`DBFR=0.003`, `DBDN=0.008`): antes el núcleo invisible quedaba a 16,5 mm de los nudillos y el
+    puño parecía un gancho con un agujero; con `DN=0` los dedos se cruzan.
+  ```bash
+  export PFX=DFf UT=0.4 DBBULGE=0.020; for g in $(seq 0 4 30); do for f in $(seq $g $((g+3))); do [ $f -le 30 ] && ./anim_db.sh $f 30 & done; wait; done
+  YAW=0 ill/render_app.sh DFf maps_push doble_biceps_frente
+  python3 ill/app_video.py ill/r/app_doble_biceps_frente out/doble_biceps_frente
+  ```
+  Las versiones de espaldas v2 (ya entregadas) se hicieron sin `untwist.py` y con el puño antiguo (`DBFR=0.007
+  DBDN=0.0165`, `DBBULGE=0.032`).
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
