@@ -473,6 +473,17 @@ python3 ill/app_video.py ill/r/app_doble_biceps out/doble_biceps   # vídeos + f
 - Entregado (04-11): `app/doble_biceps_transparente.mov` (666×900, 4,4 s, 16 MB, transparente), `app/doble_biceps/f00..f30.png`
   (los 31 fotogramas transparentes, 0 = reposo, 30 = pose; para animarlos en SwiftUI: reposo 8 fotogramas, 1→30 uno por
   fotograma a 25 fps, pose 30, 29→1, reposo 12), `ejemplos/doble_biceps_en_la_app.mp4` y `.jpg` (maqueta), `ejemplos/doble_biceps.mp4`.
+- 04-11, dueño: «en esa posición el hombro debería verse más redondo y no tan plano» (con el brazo arriba el deltoides
+  quedaba como una banda estirada, recta desde el trapecio). Arreglo: `deltbulge.py` después de `arap2.py` (ya en
+  `anim_db.sh`): abulta la piel por encima de la punta del hombro en la pose (gaussiana centrada `DBA=4,5 cm` a lo largo
+  del brazo desde la articulación, `DBY=2 cm` atrás y `DBZ=3,5 cm` arriba, `DBSIG=5 cm`), a lo largo de la normal y
+  suavizado sobre la superficie (`DBSM`), proporcional a la subida (0 en reposo: el primer fotograma no cambia).
+  `DBBULGE=0.032` (≈19 mm reales): probados 12, 20, 30 y 40 (40 ya parece un bulto). Abultar solo la zona del atlas del
+  deltoides (`DBMODE=dome`) o su centro en reposo (`DBMODE=rest`) dejaba bordes irregulares o abultaba la parte baja.
+- 04-11, dueño: «ahora realiza un pull»: la misma animación con `maps_pull` (la de la imagen fija 5n) y el texto
+  original de la captura (`KEEPTEXT=1`):
+  `ill/render_app.sh DBf maps_pull doble_biceps_pull` y
+  `KEEPTEXT=1 python3 ill/app_video.py ill/r/app_doble_biceps_pull out/doble_biceps_pull`.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 

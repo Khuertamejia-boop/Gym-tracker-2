@@ -69,11 +69,12 @@ base = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
 d = ImageDraw.Draw(base)
 TITLE = os.environ.get('TITLE', 'Push'); SUB = os.environ.get('SUB', 'Pecho · Hombros · Tríceps')
 FD = '/usr/share/fonts/opentype/inter/'
-d.rectangle((300, 1340, 740, 1480), fill=bgc); d.rectangle((180, 1505, 860, 1570), fill=bgc)
-ft = ImageFont.truetype(FD + 'InterDisplay-ExtraBold.otf', 150); fsb = ImageFont.truetype(FD + 'Inter-Regular.otf', 39)
-cxs = 518
-bb = d.textbbox((0, 0), TITLE, font=ft); d.text((cxs - (bb[0] + bb[2]) / 2, 1465 - bb[3]), TITLE, font=ft, fill=(12, 12, 12))
-bb = d.textbbox((0, 0), SUB, font=fsb); d.text((cxs - (bb[0] + bb[2]) / 2, 1553 - bb[3]), SUB, font=fsb, fill=(98, 98, 98))
+if os.environ.get('KEEPTEXT', '0') != '1':      # KEEPTEXT=1: keep the screenshot's own title (Pull)
+    d.rectangle((300, 1340, 740, 1480), fill=bgc); d.rectangle((180, 1505, 860, 1570), fill=bgc)
+    ft = ImageFont.truetype(FD + 'InterDisplay-ExtraBold.otf', 150); fsb = ImageFont.truetype(FD + 'Inter-Regular.otf', 39)
+    cxs = 518
+    bb = d.textbbox((0, 0), TITLE, font=ft); d.text((cxs - (bb[0] + bb[2]) / 2, 1465 - bb[3]), TITLE, font=ft, fill=(12, 12, 12))
+    bb = d.textbbox((0, 0), SUB, font=fsb); d.text((cxs - (bb[0] + bb[2]) / 2, 1553 - bb[3]), SUB, font=fsb, fill=(98, 98, 98))
 # figure: same size and place as the still (rest pose: 535 high, top at 568, centred at 470, in 944-wide units)
 b0 = bbs[0]; s = 535 * k / (b0[3] - b0[1])
 fw, fh = int(crops[0].width * s), int(crops[0].height * s)
