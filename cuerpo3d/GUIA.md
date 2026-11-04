@@ -20,6 +20,7 @@ de esta guía y Claude seguirá desde aquí.
 | Jalón en polea con agarre cerrado (rojo en dos intensidades) | v3 (29-10-2026): brazos sin atravesar el cuerpo, tono suave 30 %, rojo v14 | `ejemplos/jalon_cerrado_v3.mp4`, `.gif` |
 | Extensión de tríceps tras nuca en polea | v1 (29-10-2026), falta el visto bueno | `ejemplos/triceps_tras_nuca_v1.mp4`, `.gif` |
 | Animación de fondo de la app: doble bíceps de espaldas (rojo Push y rojo Pull) | Push v2 (04-11-2026): gustó la v1, «el hombro más redondo» → v2 con `deltbulge.py` (`ejemplos/doble_biceps_hombro_antes_ahora.jpg`); Pull v1 hecha, falta el visto bueno: `ejemplos/doble_biceps_pull_en_la_app.mp4`, `app/doble_biceps_pull_transparente.mov`, `app/doble_biceps_pull/` | `ejemplos/doble_biceps_en_la_app.mp4`, `.jpg`; para Xcode: `app/doble_biceps_transparente.mov`, `app/doble_biceps/` |
+| Animación de fondo de la app: doble bíceps **de frente** (rojo Push) | v1 (04-11-2026), falta el visto bueno | `ejemplos/doble_biceps_frente_en_la_app.mp4`, `.jpg`, `_cerca.jpg`; para Xcode: `app/doble_biceps_frente_transparente.mov`, `app/doble_biceps_frente/` |
 | **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v3 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v3_*.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
