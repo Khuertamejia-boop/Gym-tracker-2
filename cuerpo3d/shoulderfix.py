@@ -37,6 +37,7 @@ for L, s in (('L', 1), ('R', -1)):
     c = h + u * E('DA', 0.030) + lat * E('DL', 0.012) + up * E('DUP', 0.0)
     ra, rb = E('RA', 0.070), E('RB', 0.058)
     idx = np.where(w > 1e-3)[0]
+    if len(idx) == 0: print('%s: no shoulder verts to move (P=0?)' % L); continue
     q = co[idx] - c
     e = np.stack([q @ u / ra, q @ lat / rb, q @ up / rb], 1); f = np.linalg.norm(e, axis=1)
     inside = f < 1.0
