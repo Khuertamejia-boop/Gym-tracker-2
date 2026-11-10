@@ -75,6 +75,17 @@ if FEM:
     # the face edits fade out before the band that is glued to the neck (1.2 cm): no crease at the joint
     hco,eyes=femface.deform(hco,hfaces,eyes,prot=ss_f((hco[:,2]-cutz(hco[:,1])-E('SNAPH',0.012))/0.02))
     hco=femface.neck_scale(hco,femface.neck_mask(hco))
+if E('SMILE',0)>0:
+    # slight smile (owner 10-11-2026): the mouth corners rise SMILE m (and go a little back / out), with a smooth
+    # gaussian falloff (SMX x SMZ) in the front plane; the cheek just above the corner lifts a little too (SMCH)
+    zm_=E('LIPZ',1.5073); xc_=E('LIPW',0.0235)*0.95; ss_s=lambda t: np.clip(t,0,1)**2*(3-2*np.clip(t,0,1))
+    front_=ss_s((-0.10-hco[:,1])/0.03)
+    for sg_ in (1,-1):
+        g_=np.exp(-((hco[:,0]-sg_*xc_)/E('SMX',0.010))**2-((hco[:,2]-zm_)/E('SMZ',0.008))**2)*front_
+        hco=hco+np.stack([sg_*E('SMILE',0)*0.35*g_, E('SMILE',0)*0.5*g_, E('SMILE',0)*g_],1)
+        gc_=np.exp(-((hco[:,0]-sg_*(xc_+0.008))/0.014)**2-((hco[:,2]-zm_-0.016)/0.012)**2)*front_
+        hco=hco+np.stack([0*gc_, -E('SMCH',0.0012)*gc_, 0.4*E('SMCH',0.0012)*gc_],1)
+    print('smile: corners up %.1f mm'%(E('SMILE',0)*1000))
 cab=make('Cabeza',hco,hfaces)
 # ---- hair (short, buzz cut) and eyebrows: darkness 'tint' for the renderer
 ss_=lambda t: np.clip(t,0,1)**2*(3-2*np.clip(t,0,1))

@@ -534,7 +534,16 @@ horneado (`ill/bakemaps.py`), el render (`ill/rendsculpt.py`) y el atlas (`ill/s
   más arriba que la de la mujer). B = `MANFACE=1 LIPZ=1.5073 LIPT=0.16 MLINE=0.45 LASHT=0.65 LASHB=0.20`;
   C = B + `LIPDN=-0.0006 BROWT=0.80 BZB=1.5897 BZT=1.5977` (comisuras un poco arriba, cejas más claras y 1 mm más
   altas). Se construyen con `venv/bin/python -I facebuild.py <bundle> w/NB_mc_row2.blend w/face_X.blend` desde la raíz
-  del proyecto. Si el dueño elige B o C, esa pasa a ser `w/NB_mc_row3.blend` y hay que volver a posar y renderizar.
+  del proyecto.
+- 10-11, dueño: «C, gesto más amable pero con una ligera sonrisa». `facebuild.py` tiene ahora `SMILE` (m): las comisuras
+  suben (y van un poco atrás y afuera) con caída gaussiana `SMX`×`SMZ`, y la mejilla justo encima se levanta un poco
+  (`SMCH`); la línea de la boca sigue a las comisuras con `LIPDN` negativo. Probadas 2, 4,5 y 6 mm
+  (`ejemplos/rostro_sonrisa_opciones.jpg`): **4,5 mm** (6 ya frunce). **Base nueva del hombre = C + sonrisa**:
+  ```bash
+  MANFACE=1 LIPZ=1.5073 LIPT=0.16 MLINE=0.45 LASHT=0.65 LASHB=0.20 BROWT=0.80 BZB=1.5897 BZT=1.5977 \
+    SMILE=0.0045 SMX=0.013 SMZ=0.010 SMCH=0.002 LIPDN=-0.0030 venv/bin/python -I facebuild.py <bundle> w/NB_mc_row2.blend w/NB_mc_row3.blend
+  ```
+  (la cara anterior queda en `w/NB_mc_row3_v1.blend`). Todas las poses se rehacen con esta base.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
