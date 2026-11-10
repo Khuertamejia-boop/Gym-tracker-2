@@ -545,6 +545,29 @@ horneado (`ill/bakemaps.py`), el render (`ill/rendsculpt.py`) y el atlas (`ill/s
   ```
   (la cara anterior queda en `w/NB_mc_row3_v1.blend`). Todas las poses se rehacen con esta base.
 
+## 5q. Hombros, axilas y codos naturales en el doble bíceps (10-11-2026, v4)
+
+Dueño: «los hombros se ven en punta, antinatural; las axilas y la sangradura no se ven naturales; parece un plástico
+mal doblado», con dos fotos de referencia (doble bíceps de espaldas y de frente). Cuatro causas, cuatro arreglos, en
+este orden dentro de `anim_db.sh` (todos escalan con la pose: en el fotograma 0 no cambian nada):
+1. **Pesos del brazo** (`armweights.py`, aplicado una vez a la base `w/NB_mc_row3.blend`; copia previa
+   `NB_mc_row3_pre_aw.blend`): la piel de la cara trasera/interna del brazo, a 5-9 cm del hombro, tenía un 20-30 % de
+   peso en el tórax (chest/spine). Con el brazo arriba y girado esa piel se quedaba atrás y hacía un pliegue agudo a lo
+   largo del brazo (la «punta»). Ese peso pasa al húmero entre `S0=3,5` y `S1=8,5` cm del hombro.
+2. **Reparto del giro del húmero** (`TW=1 TW0=0.3 TB=0.6`, opción que ya existía en `skinstack.py` y no se usaba): el
+   hombro toma solo el 30 % del giro de ~100° y el resto se reparte hasta el 60 % del brazo, como los huesos de giro
+   de los rigs de videojuego. Sustituye a `untwist.py` (`UT=0`). Quita el aspecto de brazo retorcido.
+3. **Bola del hombro** (`shoulderfix.py`): esfera de 64 mm en la cabeza del húmero (2,5 cm a lo largo del brazo); la
+   piel del hombro que cae dentro se empuja a la superficie y se suaviza (`K=0.8`, `LOWK=0.2` en el lado de la axila).
+4. **Axila hueca** (`armpitfix.py`): la piel bajo la articulación, entre el brazo y el tórax (máscara en la pose, sin
+   tocar los pliegues del pectoral y del dorsal), se recoge hacia una esfera de 45 mm en la articulación. Antes era
+   una lona tensa; ahora es un hueco entre los dos pliegues, como en la foto.
+5. **Codo** (`elbowfix.py`): el bíceps y el braquial se abultan con la flexión (`BAMP=16 mm` × flexión, perfil de
+   cúpula del atlas) y la piel de la cara interna del codo (65 mm alrededor, lado de la bisectriz) se relaja (20
+   iteraciones) y se mantiene fuera de una esfera de 45 mm: la sangradura pasa de V a valle redondeado.
+Comparaciones: `ejemplos/hombro_v4_antes_ahora.jpg` (paso 1-3). `deltbulge.py` queda sin uso (`DBBULGE=0`).
+Pendiente de revisar con el dueño: la unión deltoides-pectoral de frente aún hace una muesca.
+
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
 - Lo que importa es cómo se ve **renderizado a distancia normal/lejana**, no de cerca.
