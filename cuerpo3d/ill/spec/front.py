@@ -79,7 +79,7 @@ pec_div = chain('fr_pec_div', 'fr_pd', 'F', [('fr_pd_m', (0.011, 1.345)), (None,
 
 # ------------------------------------------------------------------ serratus anterior / external oblique (zig-zag)
 # from the lats border (lat_mid) up and forwards to the pectoral's lower border: tips point forwards-down
-zig = ['lat_mid', 'fr_sz_t1', 'fr_sz_n1', 'fr_sz_t2', 'fr_sz_n2', 'fr_sz_t3', 'fr_pl_sa']
+zig = ['lat_mid~', 'fr_sz_t1~', 'fr_sz_n1~', 'fr_sz_t2~', 'fr_sz_n2~', 'fr_sz_t3~', 'fr_pl_sa']   # soft (09-11): the hard zigzag read as cracks
 LM.update({'fr_sz_t1': ('MX', 0.0, -0.052, 1.110), 'fr_sz_n1': ('MX', 0.0, -0.012, 1.136),
            'fr_sz_t2': ('MX', 0.0, -0.074, 1.143), 'fr_sz_n2': ('MX', 0.0, -0.036, 1.167),
            'fr_sz_t3': ('MX', 0.0, -0.092, 1.173)})

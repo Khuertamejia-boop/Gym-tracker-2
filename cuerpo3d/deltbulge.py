@@ -14,7 +14,7 @@ bpy.ops.wm.open_mainfile(filepath=src)
 hi = bpy.data.objects['Hi']; me = hi.data; nv = len(me.vertices)
 A = np.load(os.path.join(here, 'ill', 'pv', 'bla.npz'), allow_pickle=True)
 D = np.load(os.path.join(here, 'ill', 'pv', 'bla_dome.npz'), allow_pickle=True)
-names = ['none'] + [str(x) for x in A['names']]; mid = A['mid'].astype(int)
+names = [str(x) for x in A['names']]; mid = A['mid'].astype(int)        # names[0] is already 'none'
 assert len(mid) == nv, (len(mid), nv)
 sel = np.isin(mid, [i for i, n in enumerate(names) if n.startswith('deltoid')])
 R = np.load(os.path.join(here, 'ill', 'rest.npz'), allow_pickle=True); co0 = R['co']

@@ -109,16 +109,22 @@ nz=N.new('ShaderNodeTexNoise'); L.new(tc,nz.inputs['Vector']); nz.inputs['Scale'
 noise=nz.outputs['Fac']
 nz2=N.new('ShaderNodeTexNoise'); L.new(tc,nz2.inputs['Vector']); nz2.inputs['Scale'].default_value=E('NZS2',120.0); nz2.inputs['Detail'].default_value=2.0
 fine=nz2.outputs['Fac']
-ph=M('ADD',M('MULTIPLY',F('fph'),E('FSC',0.7)),M('MULTIPLY',noise,E('FJIT',0.8)))
+if os.path.exists(os.path.join(MAPS,'fph16.1001.png')) and E('FPHTEX',1)>0:
+    # fibre phase baked per texel and blurred inside each muscle (bakemaps.py): smooth stripes, no triangle kinks
+    _ft=udim('fph16','Cubic'); _fs=N.new('ShaderNodeSeparateColor'); L.new(_ft.outputs['Color'],_fs.inputs[0]); fph_src=M('MULTIPLY',_fs.outputs[0],128.0)
+    _mt=udim('fmask16','Cubic'); _ms=N.new('ShaderNodeSeparateColor'); L.new(_mt.outputs['Color'],_ms.inputs[0]); fmask_src=_ms.outputs[0]
+else:
+    fph_src=F('fph'); fmask_src=F('fmask')
+ph=M('ADD',M('MULTIPLY',fph_src,E('FSC',0.7)),M('MULTIPLY',noise,E('FJIT',0.8)))
 if os.environ.get('FMODE','streak')=='streak':
     # painterly streaks: random brightness per thin band across the fibres (1D noise of the fibre phase)
     n1=N.new('ShaderNodeTexNoise'); n1.noise_dimensions='1D'; n1.inputs['Scale'].default_value=E('FSTS',1.0); n1.inputs['Detail'].default_value=E('FSTD',2.0)
-    L.new(M('ADD',M('MULTIPLY',F('fph'),E('FSTR',3.0)),M('MULTIPLY',noise,E('FSTJ',0.6))),n1.inputs['W'])
+    L.new(M('ADD',M('MULTIPLY',fph_src,E('FSTR',3.0)),M('MULTIPLY',noise,E('FSTJ',0.6))),n1.inputs['W'])
     wave=SS(n1.outputs['Fac'],E('FS0',0.35),E('FS1',0.70))
 else:
     wave=M('MULTIPLY',M('ADD',M('SINE',M('MULTIPLY',ph,2*math.pi)),1.0),0.5)          # 0..1 across each fibre bundle
 bund=SS(noise,E('FB0',0.30),E('FB1',0.70),E('FBMIN',0.2),1.0)                    # some bundles stronger than others
-fib=M('MULTIPLY',M('MULTIPLY',wave,bund),M('MULTIPLY',F('fmask'),SS(d,0.5,4.0)))   # 0 on grooves / tendons
+fib=M('MULTIPLY',M('MULTIPLY',wave,bund),M('MULTIPLY',fmask_src,SS(d,0.5,4.0)))   # 0 on grooves / tendons
 # ---- height (mm). With 'dome' (bulge.py): each muscle a smooth round bulge (amplitude damp) cut by a crisp crease
 # along its hard borders and a faint one along soft borders; otherwise the distance-only pillow.
 if os.path.exists(os.path.join(MAPS,'dome.1001.png')):
@@ -152,7 +158,7 @@ white=MIX(M('MULTIPLY',wst,E('FIBW',0.06)),white,G(E('FIBWC',0.45)))
 rc=C('REDC','0.86,0.26,0.15'); rg=C('REDG','0.42,0.06,0.03'); rl=C('REDL','1.0,0.62,0.48')
 redb=MIX(M('MULTIPLY',M('SUBTRACT',1.0,gh),E('CAVR',0.75)),rc,rg)
 redb=MIX(M('MULTIPLY',fib,E('FIBR',0.45)),redb,C('FIBRC','0.55,0.08,0.04'))
-redb=MIX(M('MULTIPLY',M('MULTIPLY',M('SUBTRACT',1.0,wave),bund),M('MULTIPLY',F('fmask'),E('FIBL',0.25))),redb,rl)
+redb=MIX(M('MULTIPLY',M('MULTIPLY',M('SUBTRACT',1.0,wave),bund),M('MULTIPLY',fmask_src,E('FIBL',0.25))),redb,rl)
 core=M('MULTIPLY',M('MULTIPLY',SS(d,E('LW0',0.3),E('LW1',1.4),1.0,0.0),E('LINEK',0.45)),M('SUBTRACT',1.0,M('MULTIPLY',F('tfade'),E('TFL',0.5))))      # thin dark core at the bottom of each groove
 white=MIX(core,white,G(E('LINEC',0.30)))
 redb=MIX(core,redb,C('LINERC','0.30,0.04,0.02'))

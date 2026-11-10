@@ -503,6 +503,32 @@ python3 ill/app_video.py ill/r/app_doble_biceps out/doble_biceps   # vídeos + f
   Las versiones de espaldas v2 (ya entregadas) se hicieron sin `untwist.py` y con el puño antiguo (`DBFR=0.007
   DBDN=0.0165`, `DBBULGE=0.032`).
 
+## 5p. Mapas v2: fibras suaves, sin rebabas, sin grietas (10-11-2026)
+
+Revisión del muñeco con el modelo nuevo (`ejemplos/estado_09-11_*.jpg`). Tres defectos de los mapas, arreglados en el
+horneado (`ill/bakemaps.py`), el render (`ill/rendsculpt.py`) y el atlas (`ill/spec/front.py`); comparación en
+`ejemplos/mapas_v2_antes_ahora.jpg`, `mapas_v2_fibras.jpg`, `mapas_v2_clavicula.jpg`.
+- **Fibras con escalones**: la fase de las rayas era un valor por vértice y se interpolaba triángulo a triángulo, así
+  que las rayas se quebraban en cada arista (zigzag en el dorsal y el trapecio vistos de frente). Ahora `bakemaps.py`
+  hornea la fase por texel (`fph16.<tile>.png`, `fmask16`) desenfocada DENTRO de cada músculo (`FBLURPX=3`), y
+  `rendsculpt.py` la usa si existe (`FPHTEX=0` vuelve a la de vértices). Las rayas salen curvas y continuas.
+- **Rebabas rojas** (tiras junto a la clavícula y el esternón, trocitos en la axila): en los bordes músculo|piel el
+  horneado adivinaba por votos qué músculo había a cada lado de la línea y a veces elegía otro vecino (p. ej. pectoral
+  en el lado de piel de la línea del esternocleidomastoideo) y pintaba una tira de ese músculo pegada a la línea.
+  Ahora usa los dos lados que ya conoce el atlas aunque uno sea piel. Además un filtro de mayoría 5×5 (`LMAJ`) limpia
+  los texels sueltos de las etiquetas.
+- **Grietas en la cintura**: eran las dentelladas del serrato con el oblicuo, dibujadas como dos zetas duras y
+  profundas. Ahora ese zigzag es borde suave (`~` en `spec/front.py`): queda una insinuación, no una grieta.
+- Hace falta reconstruir el atlas (`ill/atlas_rebuild.sh`, 2 min) y volver a hornear cada carpeta de mapas con
+  `ill/mapas.sh` (los `maps_*` viejos del disco no tienen `fph16`: el render sigue funcionando con ellos, pero con las
+  fibras antiguas). `restaurar.sh` ya lo hace todo. Copias de los mapas viejos: `maps_push_v1`, `maps_pull_v1`.
+- OJO para quien escriba comprobaciones: en `pv/bla.npz`, `names[0]` ya es `'none'` (no hay que anteponerlo);
+  `deltbulge.py` lo tenía mal (solo afectaba a los modos `dome`/`rest`, no al usado).
+- Con estos mapas se rehacen las tres animaciones del doble bíceps (espaldas Push/Pull y frente), ahora las tres con
+  los puños cerrados y el giro del hombro corregido (`DFf`, sección 5o): `YAW=180 ill/render_app.sh DFf maps_push
+  doble_biceps`, `YAW=180 ill/render_app.sh DFf maps_pull doble_biceps_pull`, `YAW=0 ill/render_app.sh DFf maps_push
+  doble_biceps_frente`.
+
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
 - Lo que importa es cómo se ve **renderizado a distancia normal/lejana**, no de cerca.

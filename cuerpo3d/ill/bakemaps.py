@@ -34,8 +34,10 @@ for k in range(int(cid.max())+1 if len(cid) else 0):
     for o_ in (0.003,0.006,0.009,0.013,0.018):
         for lab_ in mid[kdv.query(c+o_*sv)[1]]: votes_p[int(lab_)]+=1.0/o_
         for lab_ in mid[kdv.query(c-o_*sv)[1]]: votes_m[int(lab_)]+=1.0/o_
-    if m1 and m2 and m1!=m2:
-        # the atlas knows the two muscles of this border: only decide which one is on the + side
+    if (m1 or m2) and m1!=m2:
+        # the atlas knows the two sides of this border (one may be plain skin = 0): only decide which is on the + side.
+        # (Before, a muscle|skin border fell back to the votes, which often picked a wrong neighbouring muscle for the
+        # skin side and painted strips of it next to the line: the red burrs along the clavicle and the sternum.)
         sc=(votes_p[m1]-votes_m[m1])-(votes_p[m2]-votes_m[m2])
         vp,vm=(m1,m2) if sc>=0 else (m2,m1)
     else:
@@ -135,6 +137,42 @@ for t in sorted(set(tile.tolist())):
             uni=(L3[nb]==L3[nb][:,:1]).all(1)
             ok_&=~(uni&(cand==0)&(L3[nb][:,0]!=0))
         lab[nb[ok_]]=cand[ok_]
+    # majority filter of the labels (LMAJ x LMAJ texels): removes the specks and ragged edges of the nearest-vertex
+    # labels (they showed as red burrs along the clavicle / armpit and as stray texels in the red masks)
+    LMAJ=int(E('LMAJ',5))
+    if LMAJ>1:
+        from scipy.ndimage import uniform_filter
+        lab2=np.full(R*R,-1,int); lab2[cov]=lab; lab2=lab2.reshape(R,R)
+        best=np.zeros((R,R)); win=np.full((R,R),-1,int)
+        for l_ in np.unique(lab):
+            c_=uniform_filter((lab2==l_).astype(np.float32),LMAJ,mode='constant')
+            sel_=c_>best; best[sel_]=c_[sel_]; win[sel_]=l_
+        lab=win.ravel()[cov]
+    # fibre phase per texel (label-consistent, then blurred INSIDE each muscle): smooth stripes instead of the
+    # triangle-by-triangle kinks of the per-vertex phase
+    fphv=atl['fph']; fmv=atl['fmask']; tv_c=tv[tri_of[cov]]; bw=bary[cov]
+    lm_=(mid[tv_c]==lab[:,None]); w_=bw*lm_; ws_=w_.sum(1)
+    fv_=np.where(ws_>0,(w_*fphv[tv_c]).sum(1)/np.maximum(ws_,1e-9),fphv[tv_c[np.arange(len(cov)),np.argmax(bw,1)]])
+    fm_=np.where(ws_>0,(w_*fmv[tv_c]).sum(1)/np.maximum(ws_,1e-9),fmv[tv_c[np.arange(len(cov)),np.argmax(bw,1)]])
+    from scipy.ndimage import gaussian_filter
+    f2=np.zeros(R*R); f2[cov]=fv_; f2=f2.reshape(R,R); lab2=np.full(R*R,-1,int); lab2[cov]=lab; lab2=lab2.reshape(R,R)
+    fo=f2.copy(); sp_=E('FBLURPX',3.0)
+    for l_ in np.unique(lab):
+        if l_<=0: continue
+        msk=(lab2==l_).astype(np.float32)
+        if msk.sum()<9: continue
+        num=gaussian_filter(f2*msk,sp_,mode='nearest'); den=gaussian_filter(msk,sp_,mode='nearest')
+        sel_=msk>0; fo[sel_]=num[sel_]/np.maximum(den[sel_],1e-6)
+    fimg=np.zeros(R*R,np.uint16); fimg[cov]=np.clip(fo.ravel()[cov]/128.0*65535,0,65535); fimg=fimg.reshape(R,R)
+    mimg=np.zeros(R*R,np.uint16); mimg[cov]=np.clip(fm_*65535,0,65535); mimg=mimg.reshape(R,R)
+    fl=np.zeros(R*R,bool); fl[cov]=True; fl=fl.reshape(R,R)
+    for _ in range(int(E('DIL',6))):
+        ys,xs=np.nonzero(~fl)
+        for dy,dx in ((0,1),(0,-1),(1,0),(-1,0)):
+            yy=np.clip(ys+dy,0,R-1); xx=np.clip(xs+dx,0,R-1); ok2=fl[yy,xx]&~fl[ys,xs]
+            fimg[ys[ok2],xs[ok2]]=fimg[yy[ok2],xx[ok2]]; mimg[ys[ok2],xs[ok2]]=mimg[yy[ok2],xx[ok2]]; fl[ys[ok2],xs[ok2]]=True
+    Image.fromarray(fimg[::-1].copy(),mode='I;16').save(os.path.join(out,'fph16.%d.png'%(1001+t)))
+    Image.fromarray(mimg[::-1].copy(),mode='I;16').save(os.path.join(out,'fmask16.%d.png'%(1001+t)))
     img=np.zeros((R*R,3),np.uint8); li=np.zeros(R*R,np.uint8)
     img[cov,0]=np.clip(np.round(dh_eff*10000),0,255); img[cov,1]=np.clip(np.round(ds*10000),0,255); img[cov,2]=np.where(tendon_id[lab],255,0)
     li[cov]=np.clip(lab,0,255)
@@ -150,7 +188,6 @@ for t in sorted(set(tile.tolist())):
         # exact (barycentric) interpolation per texel, then a normalised Gaussian blur in texture space: smooth, no
         # ripples between sparse vertex rows and no k-nearest truncation artefacts
         from scipy.ndimage import gaussian_filter
-        tv_c=tv[tri_of[cov]]; bw=bary[cov]
         def bake_field(vals):
             img_=np.zeros(R*R); img_[cov]=(bw*vals[tv_c]).sum(1); msk=np.zeros(R*R); msk[cov]=1
             sp=E('TBLURPX',10.0)
