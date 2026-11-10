@@ -127,7 +127,7 @@ for sg in (1,-1):
 a_=cab.data.attributes.new('bmask','FLOAT','POINT'); a_.data.foreach_set('value',brow.astype(np.float32))
 a_=cab.data.attributes.new('bw','FLOAT','POINT'); a_.data.foreach_set('value',bw.astype(np.float32))
 tint=np.maximum(hair*E('HAIRT',0.51),brow*E('BROWT',0.95))
-if os.environ.get('HAIRSTYLE','')=='bun' and E('FEMFACE',1)>0:
+if (os.environ.get('HAIRSTYLE','')=='bun' and E('FEMFACE',1)>0) or E('MANFACE',0)>0:   # MANFACE=1: lips / mouth line / lashes on the man too
     ss1=lambda t: np.clip(t,0,1)**2*(3-2*np.clip(t,0,1))
     # lips: a little darker (natural lip colour in a grey plate), upper lip thinner than the lower one
     # (28-10 v3) real lip shape: mouth line measured on the head (corners a little lower), upper lip with the cupid's bow

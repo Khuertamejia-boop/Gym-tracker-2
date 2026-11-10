@@ -529,6 +529,13 @@ horneado (`ill/bakemaps.py`), el render (`ill/rendsculpt.py`) y el atlas (`ill/s
   doble_biceps`, `YAW=180 ill/render_app.sh DFf maps_pull doble_biceps_pull`, `YAW=0 ill/render_app.sh DFf maps_push
   doble_biceps_frente`.
 
+- Paso 3 (opcional, 10-11): opciones de rostro del hombre en `ejemplos/rostro_opciones_10-11.jpg`. `facebuild.py` admite
+  `MANFACE=1` (labios, línea de la boca y pestañas también en el hombre; la boca del hombre está en `LIPZ=1.5073`, 4 cm
+  más arriba que la de la mujer). B = `MANFACE=1 LIPZ=1.5073 LIPT=0.16 MLINE=0.45 LASHT=0.65 LASHB=0.20`;
+  C = B + `LIPDN=-0.0006 BROWT=0.80 BZB=1.5897 BZT=1.5977` (comisuras un poco arriba, cejas más claras y 1 mm más
+  altas). Se construyen con `venv/bin/python -I facebuild.py <bundle> w/NB_mc_row2.blend w/face_X.blend` desde la raíz
+  del proyecto. Si el dueño elige B o C, esa pasa a ser `w/NB_mc_row3.blend` y hay que volver a posar y renderizar.
+
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
 - Lo que importa es cómo se ve **renderizado a distancia normal/lejana**, no de cerca.
