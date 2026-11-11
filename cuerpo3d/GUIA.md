@@ -659,7 +659,7 @@ de frente y de espaldas hasta que apruebe la forma.**
   (`LTH`, ancho `LSG=35°`); se desvanece a lo largo del brazo (`LS1=0.45`, `LSW=0.38`); solo con el brazo levantado
   (`A0=35°`…`A1=85°`), así que el cuerpo en reposo y los demás ejercicios no cambian. Medido (semiancho a
   z=1.26/1.22/1.18 m): 234/215/194 → 251/233/209 mm; cintura igual (148).
-  Imágenes: `ejemplos/doble_biceps_v9_espalda.png` (Pull) y
+  Imagen:
   `doble_biceps_v9_dorsales_antes_despues.jpg` (arriba antes, abajo después). Las v8 de cuerpo entero se quitaron.
 - **v10 (11-11-2026), dueño: «ahora trabaja en el pectoral»**. Nuevo `pecfix.py` (último paso de `anim_db.sh`;
   `PAMP=0` lo apaga). Causa: con el brazo arriba el borde externo del pectoral se quedaba en el pecho (bloque
@@ -671,7 +671,20 @@ de frente y de espaldas hasta que apruebe la forma.**
   surco); A: 0 bajo `Z0`, 1 en `Z1`, 0 en `ZT` (todo en metros desde la articulación del hombro). Solo con el brazo
   levantado; no toca la espalda. `PCOR` (apagado) subiría además la esquina inferior externa.
   Imágenes: `ejemplos/doble_biceps_v10_frente.png` (Push) y `doble_biceps_v10_pectoral_antes_despues.jpg`
-  (izquierda antes, derecha después). La de espalda sigue siendo `doble_biceps_v9_espalda.png` (no cambia).
+  (izquierda antes, derecha después).
+- **v11 (11-11-2026), dueño: «trabaja en la espalda»**. Nuevo `backfix.py` (último paso de `anim_db.sh`; `BKFX=0`
+  lo apaga), solo con el brazo levantado. Medido en la pose: la parte trasera del hombro (deltoides posterior)
+  quedaba ~30 mm por delante del omóplato (infraespinoso / redondos) justo debajo, de ahí el aspecto de «bola»
+  sobre un escalón. Cuatro pasos: 1) deltoides posterior hacia atrás, radial al eje del brazo (`RAMP=22 mm`);
+  2) crestas junto a la columna (`MAMP=10 mm`, centro `MX0=38 mm`, ancho `MXS=18 mm`); 3) el pliegue entre el
+  hombro y el omóplato se relaja (`CSM=30` pasadas de suavizado en una caja bajo el hombro); 4) omóplatos
+  juntos: la piel del centro de la espalda se desliza hacia la columna sobre la superficie, mismo método que
+  `pecfix.py` visto desde atrás (`SAMP=9 mm`, máximo a `SX0=18 mm` de la línea media, cero en `SXJ=140 mm`): la
+  franja blanca de la columna queda a la mitad de ancho. OJO (lección): en este estilo los cambios de
+  profundidad casi no se ven de espaldas (el relieve de las zonas rojas viene de los mapas); lo que se nota es
+  lo que mueve bordes de color o la silueta, por eso el paso 4.
+  Imágenes: `ejemplos/doble_biceps_v11_espalda.png` (Pull) y `doble_biceps_v11_espalda_antes_despues.jpg`
+  (izquierda antes, derecha después). De frente sigue valiendo `doble_biceps_v10_frente.png`.
 - PENDIENTE hasta el visto bueno: regenerar las 31 poses (`PFX=DG`) y los tres vídeos; los de `app/` y
   `ejemplos/doble_biceps*_en_la_app.mp4` siguen siendo la v4.
 

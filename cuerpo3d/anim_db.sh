@@ -20,4 +20,5 @@ BAMP=${BAMP:-0.016} BS0=${BS0:-0.55} BSA=${BSA:-0.24} BSB=${BSB:-0.15} BPW=${BPW
 [ "${DAMP:-0.010}" != 0 ] && DAMP=${DAMP:-0.010} $PY $S/deltfix.py $PF$T.blend $PF$T.blend >> r/log_${PF}$T.txt 2>&1   # round deltoid dome (DAMP=0: off)
 [ "${LAMP:-0.028}" != 0 ] && LAMP=${LAMP:-0.028} $PY $S/latfix.py $PF$T.blend $PF$T.blend >> r/log_${PF}$T.txt 2>&1   # lat spread / V shape (LAMP=0: off)
 [ "${PAMP:-0.045}" != 0 ] && PAMP=${PAMP:-0.045} $PY $S/pecfix.py $PF$T.blend $PF$T.blend >> r/log_${PF}$T.txt 2>&1   # pec slides up to the arm (PAMP=0: off)
+[ "${BKFX:-1}" != 0 ] && $PY $S/backfix.py $PF$T.blend $PF$T.blend >> r/log_${PF}$T.txt 2>&1   # back: rear deltoid, ridges beside the spine, narrower spine strip (BKFX=0: off)
 rm -f ${PF}_s$T.blend ${PF}_a$T.blend; echo done $T P=$P
