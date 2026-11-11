@@ -697,8 +697,20 @@ de frente y de espaldas hasta que apruebe la forma.**
   cresta). Uso: `env $(cat ill/style_app.env) $(cat ill/style_app_grad.env) ... rendsculpt.py`. De paso la espalda
   gana el relieve que no se conseguía con geometría. Aún NO es el estilo por defecto: los demás ejercicios y
   `render_app.sh` siguen con el estilo anterior hasta el visto bueno.
-  Imágenes: `ejemplos/doble_biceps_v12_frente.png`, `doble_biceps_v12_espalda.png` y
-  `doble_biceps_v12_textura_antes_despues.jpg` (arriba antes, abajo después).
+  Imagen: `ejemplos/doble_biceps_v12_textura_antes_despues.jpg` (arriba antes, abajo después).
+- **v13 (11-11-2026), dueño: «bájale un poco al tamaño de bíceps y hombros, diría que un 15 %; bájale un poco a
+  la intensidad del rojo; y déjalo como estilo para todo»**.
+  - Tamaño: nuevo `slimfix.py` (último paso de `anim_db.sh`; `SLIM=0` lo apaga): la mitad de arriba / delante /
+    detrás del brazo y de la tapa del hombro se acerca al eje del brazo un 15 % de su propia distancia (`SLIM=0.15`,
+    hasta ~11 mm). Es un escalado, así que las formas redondas de `elbowfix.py` / `deltfix.py` se conservan, solo
+    más pequeñas; no toca el tríceps ni pasa del codo; solo con el brazo levantado.
+  - Rojo: la rampa `RCOLS` se desaturó un 16 % y se aclaró un 7 % (mismo tono rojizo, menos intenso).
+  - **Estilo por defecto**: el degradado ya va dentro de `ill/style_app.env` (última línea = los valores que
+    estaban en `style_app_grad.env`, que desaparece). El estilo anterior queda en `ill/style_app_v7.env` y el
+    sombreador anterior en `ill/rendsculpt_v7style.py`. Todo lo que use `style_app.env` (p. ej. `render_app.sh`)
+    sale ya con degradado; los vídeos y GIF ya hechos NO se han vuelto a renderizar.
+  Imágenes: `ejemplos/doble_biceps_v13_frente.png`, `doble_biceps_v13_espalda.png` y
+  `doble_biceps_v13_antes_despues.jpg` (arriba v12, abajo v13). Las v10–v12 de cuerpo entero se quitaron.
 - PENDIENTE hasta el visto bueno: regenerar las 31 poses (`PFX=DG`) y los tres vídeos; los de `app/` y
   `ejemplos/doble_biceps*_en_la_app.mp4` siguen siendo la v4.
 
