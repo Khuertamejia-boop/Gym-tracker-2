@@ -634,7 +634,21 @@ de frente y de espaldas hasta que apruebe la forma.**
   aplanada (`BPW=2.6`, exponente nuevo del perfil a lo largo del brazo; 2 = gaussiana), lóbulo más ancho
   (`BCP=0.7`) y más suavizado (`BSM=12`). Son los valores por defecto de `anim_db.sh`. `KEEPPRE=1` guarda la pose
   antes de `elbowfix.py` (`w/<PFX>_p<F>.blend`) para probar tamaños sin rehacer toda la cadena.
-  Imágenes: `ejemplos/doble_biceps_v7_frente.png` (Push) y `doble_biceps_v7_espalda.png` (Pull).
+  (Sus imágenes se sustituyeron por las de la v8.)
+- **v8 (11-11-2026), dueño: «el tamaño [del bíceps] es el correcto; ahora dale ese tipo de redondez al hombro»**.
+  Nuevo `deltfix.py` (último paso de `anim_db.sh`; `DAMP=0` lo apaga): misma receta que el bíceps, una loma sobre
+  la cabeza del húmero. La piel se aleja radialmente del eje del brazo `DAMP=10 mm`, centrada en `DS0=0.06` del
+  brazo, anchos `DSA=0.17` (hacia el cuello) / `DSB=0.22` (hacia el codo), cima aplanada `DPW=2.6`, lóbulo ancho
+  centrado arriba que cubre también delante y detrás (`DCP=0.7`, `DCF=0.35`), solo con el brazo levantado
+  (`A0=35°`…`A1=85°`), y un suavizado ligero de la zona (`DSMP=4`). Antes el hombro era una rampa recta del
+  trapecio al bíceps (cima a 45–50 mm del centro de la articulación, igual o más baja que el bíceps).
+  Imágenes: `ejemplos/doble_biceps_v8_frente.png` (Push), `doble_biceps_v8_espalda.png` (Pull) y
+  `doble_biceps_v8_hombro_antes_despues.jpg` (arriba antes, abajo después).
+  Lo que falta frente a las fotos de referencia (análisis del 11-11, por orden de efecto): 1) dorsales más anchos
+  bajo la axila («alas»); 2) pectoral que suba hacia el brazo en vez de bloque cuadrado, y limpiar las tiras
+  blancas de la axila; 3) tríceps colgando en curva por debajo del brazo; 4) antebrazo más grueso cerca del codo;
+  5) de espaldas, omóplatos juntos con relieve en el centro y deltoides posterior menos «bola»; 6) puño girado
+  hacia la cabeza.
 - PENDIENTE hasta el visto bueno: regenerar las 31 poses (`PFX=DG`) y los tres vídeos; los de `app/` y
   `ejemplos/doble_biceps*_en_la_app.mp4` siguen siendo la v4.
 
