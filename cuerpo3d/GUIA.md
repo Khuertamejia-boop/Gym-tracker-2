@@ -19,8 +19,8 @@ de esta guía y Claude seguirá desde aquí.
 | Face pull en polea | hecho (v1), con torre de polea y pesas que suben | `ejemplos/facepull_v1.gif`, `ejemplos/facepull_*_16x9.jpg` |
 | Jalón en polea con agarre cerrado (rojo en dos intensidades) | v3 (29-10-2026): brazos sin atravesar el cuerpo, tono suave 30 %, rojo v14 | `ejemplos/jalon_cerrado_v3.mp4`, `.gif` |
 | Extensión de tríceps tras nuca en polea | v1 (29-10-2026), falta el visto bueno | `ejemplos/triceps_tras_nuca_v1.mp4`, `.gif` |
-| Animación de fondo de la app: doble bíceps de espaldas (rojo Push y rojo Pull) | v4 (11-11-2026): hombros, axilas y codos naturales (sección 5q; `ejemplos/doble_biceps_v4_pose.jpg`); antes v3 (mapas v2, puños cerrados, cara con sonrisa, `ejemplos/doble_biceps_v3_cerca.jpg`); antes v2 (hombro redondo, `ejemplos/doble_biceps_hombro_antes_ahora.jpg`); falta el visto bueno: `ejemplos/doble_biceps_pull_en_la_app.mp4`, `app/doble_biceps_pull_transparente.mov`, `app/doble_biceps_pull/` | `ejemplos/doble_biceps_en_la_app.mp4`, `.jpg`; para Xcode: `app/doble_biceps_transparente.mov`, `app/doble_biceps/` |
-| Animación de fondo de la app: doble bíceps **de frente** (rojo Push) | v4 (11-11-2026: hombros, axilas y codos naturales, sección 5q), falta el visto bueno | `ejemplos/doble_biceps_frente_en_la_app.mp4`, `.jpg`, `_cerca.jpg`; para Xcode: `app/doble_biceps_frente_transparente.mov`, `app/doble_biceps_frente/` |
+| Animación de fondo de la app: doble bíceps de espaldas (rojo Push y rojo Pull) | v5 (11-11-2026): hombro con bola, bíceps con pico, axila limpia (sección 5r; `ejemplos/v5_espalda_antes_ahora.jpg`); antes v4 (sección 5q); antes v3 (mapas v2, puños cerrados, cara con sonrisa, `ejemplos/doble_biceps_v3_cerca.jpg`); antes v2 (hombro redondo, `ejemplos/doble_biceps_hombro_antes_ahora.jpg`); falta el visto bueno: `ejemplos/doble_biceps_pull_en_la_app.mp4`, `app/doble_biceps_pull_transparente.mov`, `app/doble_biceps_pull/` | `ejemplos/doble_biceps_en_la_app.mp4`, `.jpg`; para Xcode: `app/doble_biceps_transparente.mov`, `app/doble_biceps/` |
+| Animación de fondo de la app: doble bíceps **de frente** (rojo Push) | v5 (11-11-2026: hombro con bola, bíceps con pico, axila limpia, sección 5r; `ejemplos/v5_frente_antes_ahora.jpg`), falta el visto bueno | `ejemplos/doble_biceps_frente_en_la_app.mp4`, `.jpg`, `_cerca.jpg`; para Xcode: `app/doble_biceps_frente_transparente.mov`, `app/doble_biceps_frente/` |
 | **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v3 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v3_*.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
@@ -566,7 +566,52 @@ este orden dentro de `anim_db.sh` (todos escalan con la pose: en el fotograma 0 
    cúpula del atlas) y la piel de la cara interna del codo (65 mm alrededor, lado de la bisectriz) se relaja (20
    iteraciones) y se mantiene fuera de una esfera de 45 mm: la sangradura pasa de V a valle redondeado.
 Comparaciones: `ejemplos/hombro_v4_antes_ahora.jpg` (paso 1-3). `deltbulge.py` queda sin uso (`DBBULGE=0`).
-Pendiente de revisar con el dueño: la unión deltoides-pectoral de frente aún hace una muesca.
+Superado por la v5 (sección 5r): los pasos 1, 3 y 4 se sustituyeron.
+
+## 5r. Hombro con bola, bíceps con pico y axila limpia: doble bíceps v5 (11-11-2026)
+
+Dueño, tras ver la v4: «revisa el bíceps, se ve antinatural» (con la foto de frente como objetivo). Al mirar cortes del
+brazo (perpendiculares al húmero, `ejemplos/hombro_v5_cortes_diagnostico.png`: fila 1 = solo skinning, fila 2 = tras
+`arap2.py`, fila 3 = tras `shoulderfix.py`, fila 4 = tras `armpitfix.py`) salieron las causas de fondo. La v4 las
+tapaba con parches; la v5 las quita:
+1. **El hombro se hundía por `arap2.py`.** El skinning (CoR) deja una buena cúpula de deltoides, 3 cm por encima del
+   hueso. La relajación ARAP limpia la axila pero aplasta la parte de arriba: la piel quedaba 2 cm POR DEBAJO del eje
+   del húmero (hombro plano, brazo fino en la raíz, bíceps como un globo aparte). `shoulderfix.py` lo empeoraba
+   (empujaba hacia abajo la piel que ya estaba bajo el centro de la esfera). Arreglo: **`capkeep.py`** mezcla las dos
+   mallas por la altura sobre el eje del brazo en la pose: arriba la del skinning (cúpula), abajo la relajada (axila),
+   transición entre −35 y +10 mm (`Y0`/`Y1`). `shoulderfix.py` y `armpitfix.py` quedan apagados (`SFK`, `AXK` = 0).
+   Ojo: los demás ejercicios con el brazo arriba (dominadas, jalón, tríceps tras nuca) usan `arap2.py` sin
+   `capkeep.py`; al rehacerlos conviene añadirlo.
+2. **Pesos de la axila** (**`armpitweights.py`**, sustituye a `armweights.py`; se aplica una vez a la base:
+   `NB_mc_row3_pre_aw.blend` → `NB_mc_row3.blend`; la versión anterior queda en `NB_mc_row3_aw1.blend`). En reposo el
+   brazo descansa contra el costado (se tocan entre z = 1,15 y 1,22) y los pesos originales se «contagiaban» por
+   cercanía: el serrato y el dorsal, 10-20 cm bajo el hombro, tenían 50-80 % de brazo (el costado subía con el brazo:
+   lona delante de la axila) y `armweights.py` además mandó parte del costado al 94 % (un pico que atravesaba el
+   tríceps). Para distinguir brazo de costado donde se tocan se usa una coordenada armónica SOBRE la superficie
+   (1 del codo en adelante, 0 en el tronco): en la zona de contacto el costado vale 0,14-0,20 y la cara interna del
+   brazo 0,46-0,59. Brazo (> 0,42) = peso 1; costillas (etiquetas de serrato, oblicuo, etc. con < 0,25; pectoral a más
+   de 15 cm; dorsal a más de 20 cm) = 0; la parte alta del hombro conserva sus pesos; el resto (axila, borde del
+   pectoral, dorsal alto) se resuelve armónico entre ambos.
+3. **Giro del húmero**: `TW0=0 TB=0.7` (antes 0,3 / 0,6): el hombro no gira con el húmero y el deltoides anterior
+   queda mirando al frente, como en la foto.
+4. **Bíceps con pico** (`elbowfix.py`, `BMODE=peak`, por defecto): antes se inflaba toda la etiqueta del bíceps a lo
+   largo de sus normales (globo largo y plano). Ahora la piel del brazo se desplaza hacia el lado del antebrazo con una
+   gaussiana a lo largo del brazo (centro `BS0=0.56`, anchos `BSA=0.13` hacia el hombro y `BSB=0.10` hacia el codo, en
+   fracción del brazo), lóbulo alrededor (`BCP=2`) y `BAMP=34 mm` × flexión; el tríceps cuelga 6 mm (`TAMP`) y el
+   antebrazo gana 7 mm cerca del codo (`FAMP`, centro `FS0=0.24`). Cambios de pocos mm se notan mucho en este estilo.
+5. **Hoyito del tríceps y motas** (`ill/bakemaps.py`, copia previa `bakemaps_v2.py`): la línea dorsal|serrato pasa a
+   3 mm de la cara interna del brazo en reposo y se «imprimía» en el tríceps. Ahora una línea solo cuenta para un
+   téxel si mira hacia el mismo lado Y es borde de uno de los músculos de su triángulo (`SURFK=96`, `SURFDOT=0`); si
+   no, se toma la siguiente línea válida. `ill/atlas.py` (copia `atlas_v2.py`) además reetiqueta islas sueltas de
+   menos de 40 vértices (había 10 en el brazo derecho con etiqueta de dorsal/serrato). Atlas y mapas rehechos
+   (`maps_push`, `maps_pull`; los anteriores en `maps_push_v2`, `maps_pull_v2`; atlas anterior en `pv/*_v2.npz`).
+   Los mapas de los otros ejercicios siguen con el horneado viejo hasta que se rehagan con `ill/mapas.sh`.
+
+Cadena actual de `anim_db.sh` (la v4 queda en `anim_db_v4.sh`): `dblbiceps.py` → `arap2.py` → `capkeep.py` →
+`elbowfix.py`. Poses `w/DG00..30.blend` (`PFX=DG ./anim_db.sh F 30`, 4 en paralelo: 1,5 min las 31). El fotograma 0
+difiere de la base menos de 1 mm. Comparaciones: `ejemplos/v5_frente_antes_ahora.jpg`, `v5_espalda_antes_ahora.jpg`.
+Herramientas de diagnóstico que sirvieron (no están en el repo, son cortas): cortes del brazo perpendiculares al eje
+coloreados por músculo, y perfil superior/inferior del brazo por tramos de x. No fiarse del ojo en montajes pequeños.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 

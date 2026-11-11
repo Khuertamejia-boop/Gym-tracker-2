@@ -14,7 +14,11 @@ fi
 # body v3 (28-10-2026): face. The original head of the Blender "Human Base Meshes" realistic male (CC0) -> w/NB_mc_row3.blend
 HBM=$DST/hbm; mkdir -p $HBM
 [ -f $HBM/human_base_meshes_bundle.blend ] || (cd $HBM && curl -sSL https://mirror.blender.org/demo/asset-bundles/human-base-meshes/human-base-meshes-bundle-v1.4.1.zip -o hbm.zip && unzip -q -j -o hbm.zip '*/human_base_meshes_bundle.blend' && rm -f hbm.zip)
-(cd w && ../venv/bin/python -I ../facebuild.py $HBM/human_base_meshes_bundle.blend NB_mc_row2.blend NB_mc_row3.blend > /dev/null)
+# face C with a slight smile (10-11-2026, chosen by the owner); facebuild.py must run from the project root
+MANFACE=1 LIPZ=1.5073 LIPT=0.16 MLINE=0.45 LASHT=0.65 LASHB=0.20 BROWT=0.80 BZB=1.5897 BZT=1.5977 \
+  SMILE=0.0045 SMX=0.013 SMZ=0.010 SMCH=0.002 LIPDN=-0.0030 venv/bin/python -I facebuild.py $HBM/human_base_meshes_bundle.blend w/NB_mc_row2.blend w/NB_mc_row3_pre_aw.blend > /dev/null
+# armpit skin weights (11-11-2026): the flank no longer follows the arm, the inner arm no longer follows the torso
+venv/bin/python -I armpitweights.py w/NB_mc_row3_pre_aw.blend w/NB_mc_row3.blend > /dev/null
 # female mannequin (28-10-2026): w/NBF_row3.blend + ill/rest_f.npz (needs the same bundle)
 GT3D=$DST ./mujer.sh $HBM/human_base_meshes_bundle.blend > /dev/null
 # texture maps of the approved exercises (bent-over row, face pull, deadlift)

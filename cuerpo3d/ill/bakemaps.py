@@ -102,6 +102,36 @@ for t in sorted(set(tile.tolist())):
     PN=(bary[cov][:,:,None]*no[tv[tri_of[cov]]]).sum(1); PN/=np.maximum(np.linalg.norm(PN,axis=1,keepdims=True),1e-9)
     dh,ih=kdH.query(P,distance_upper_bound=0.064,workers=-1); dh=np.where(np.isfinite(dh),dh,0.064)
     ds,is_=kdS.query(P,distance_upper_bound=0.064,workers=-1); ds=np.where(np.isfinite(ds),ds,0.064)
+    # same-surface test (11-11): a border line of ANOTHER surface that happens to lie a few mm away in the rest pose
+    # (the lat | serratus line next to the inner arm, which rests against the flank) must not print on this one
+    # (it made a dark dot in the triceps). Where the nearest line faces the other way, take the nearest line that
+    # faces like the texel (among the SURFK nearest points), or none.
+    L3=mid[tv[tri_of[cov]]]                                   # labels of the texel's own triangle (never across a fold)
+    _slab=np.full((max(side_lab.keys())+1,2),-1,int)
+    for k_,v_ in side_lab.items(): _slab[k_]=v_
+    def _samesurf(kd_,CN_,ID_,d_,i_):
+        # a line counts for a texel when it faces the same way AND is a border of one of the muscles of the texel's triangle
+        def ok(ix,rows):
+            fac=(PN[rows][...,None,:]*CN_[ix]).sum(-1)>E('SURFDOT',0.0) if ix.ndim==2 else (PN[rows]*CN_[ix]).sum(1)>E('SURFDOT',0.0)
+            sl=_slab[ID_[ix]]                                   # (..., 2) the two muscles of the line
+            l3=L3[rows]
+            if ix.ndim==2: mem=(sl[:,:,:,None]==l3[:,None,None,:]).any((2,3))
+            else: mem=(sl[:,:,None]==l3[:,None,:]).any((1,2))
+            return fac&mem
+        near=np.where(np.isfinite(d_)&(d_<0.05))[0]
+        i0=np.clip(i_[near],0,len(CN_)-1)
+        bad=near[~ok(i0,near)]
+        if not len(bad): return d_,i_,0
+        dd_,ii_=kd_.query(P[bad],k=int(E('SURFK',96)),distance_upper_bound=0.064,workers=-1)
+        okk=np.isfinite(dd_); ii2=np.where(okk,ii_,0)
+        good=okk&ok(ii2,bad)
+        first=np.argmax(good,1); has=good.any(1); ar=np.arange(len(bad))
+        d_=d_.copy(); i_=i_.copy()
+        d_[bad]=np.where(has,dd_[ar,first],0.064); i_[bad]=np.where(has,ii2[ar,first],ii2[:,0])
+        return d_,i_,len(bad)
+    if E('SURFK',96)>0:
+        dh,ih,nb1=_samesurf(kdH,HN,Hid,dh,ih); ds,is_,nb2=_samesurf(kdS,SN,Sid,ds,is_)
+        if nb1+nb2: print('  same-surface test: %d + %d texels took another line'%(nb1,nb2))
     # label: nearest vertex, corrected next to a border by the side of the border line the texel lies on
     LUTF=os.environ.get('LSTR','')
     if LUTF:
@@ -110,6 +140,10 @@ for t in sorted(set(tile.tolist())):
         slut=np.load(LUTF); LDW=E('LDW',25.0)/1000.0
         dd_,ii_=kdH.query(P,k=int(E('LK_',24)),distance_upper_bound=0.064,workers=-1)
         okk=np.isfinite(dd_); ii_=np.where(okk,ii_,0)
+        okk&=(PN[:,None,:]*HN[ii_]).sum(2)>E('SURFDOT',0.0)          # same-surface test (11-11)
+        _sl=_slab[Hid[ii_]]; _mem=np.zeros(ii_.shape,bool)
+        for j3 in range(3): _mem|=(_sl[:,:,0]==L3[:,j3:j3+1])|(_sl[:,:,1]==L3[:,j3:j3+1])
+        okk&=_mem; del _sl,_mem
         off=(1.0-slut[np.clip(Hid[ii_],0,len(slut)-1)])*LDW
         eff=np.where(okk,dd_+off,0.064).min(1)
         dh_eff=np.minimum(eff,0.064)
@@ -209,7 +243,9 @@ for t in sorted(set(tile.tolist())):
         Image.fromarray(rimg[::-1].copy(),mode='I;16').save(os.path.join(out,'domeraw.%d.png'%(1001+t)))
     fields=[('dh16',dh_eff),('ds16',ds)]
     if kdRB is not None:
-        dr,_=kdRB.query(P,distance_upper_bound=0.064,workers=-1); fields.append(('redd16',np.where(np.isfinite(dr),dr,0.064)))
+        dr,ir_=kdRB.query(P,distance_upper_bound=0.064,workers=-1); dr=np.where(np.isfinite(dr),dr,0.064)
+        if E('SURFK',96)>0: dr,ir_,_=_samesurf(kdRB,HN[rb],Hid[rb],dr,ir_)
+        fields.append(('redd16',dr))
     for nm_,val in fields:
         a16=np.zeros(R*R,np.uint16); a16[cov]=np.clip(val/0.064*65535,0,65535); a16=a16.reshape(R,R); fl=np.zeros(R*R,bool); fl[cov]=True; fl=fl.reshape(R,R)
         for _ in range(int(E('DIL',6))):

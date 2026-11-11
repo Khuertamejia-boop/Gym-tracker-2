@@ -433,6 +433,25 @@ def compile_atlas(files,out=None,verbose=True):
         side=k_[0].split('@')[1]; kl=tuple(sorted((k_[0].replace('@R','@L'),k_[1].replace('@R','@L'))))
         ms=seg_mus.get(kl,[])
         return nidx.get(ms[j]+'.'+side,0) if len(ms)>j else 0
+    # stray islands (11-11): a few vertices of a muscle label cut off from the body of that muscle (the arm skin
+    # that rests against the flank took 'serratus' / 'latissimus' on the right side): they take the label around them
+    import scipy.sparse.csgraph as _cg
+    _r=np.repeat(np.arange(B.nv),np.diff(B.adj.indptr)); _c=B.adj.indices; _k=(mid[_r]==mid[_c])
+    _nc,_comp=_cg.connected_components(sp.coo_matrix((np.ones(int(_k.sum())),(_r[_k],_c[_k])),shape=(B.nv,B.nv)).tocsr(),directed=False)
+    _size=np.bincount(_comp); _big={}
+    _lab_of=np.zeros(_nc,int); _lab_of[_comp]=mid
+    for c_ in range(_nc): _big[_lab_of[c_]]=max(_big.get(_lab_of[c_],0),_size[c_])
+    _n=0
+    for c_ in range(_nc):
+        if _lab_of[c_]==0 or _size[c_]>=min(_big[_lab_of[c_]],int(os.environ.get('ISLMAX',40))): continue
+        vs_=np.where(_comp==c_)[0]
+        for _ in range(8):
+            left=[v for v in vs_ if _comp[v]==c_ and mid[v]==_lab_of[c_]]
+            if not left: break
+            for v in left:
+                nb=B.adj.indices[B.adj.indptr[v]:B.adj.indptr[v+1]]; nb=nb[mid[nb]!=_lab_of[c_]]
+                if len(nb): mid[v]=np.bincount(mid[nb]).argmax(); _n+=1
+    if verbose and _n: print('stray label islands relabelled:',_n,'vertices')
     res=dict(mid=mid,names=np.array(names),bd=bd.astype(np.float32),bds=bds.astype(np.float32),sd=sd.astype(np.float32),sds=sds.astype(np.float32),fph=fib.astype(np.float32),fmask=fmask,
              lm_names=np.array(list(P.keys())),lm_pos=np.array(list(P.values())),
              curve_pts=np.concatenate([c for _,_,c in curves]) if curves else np.zeros((0,3)),
