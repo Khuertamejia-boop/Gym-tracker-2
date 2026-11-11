@@ -628,6 +628,13 @@ de frente y de espaldas hasta que apruebe la forma.**
 - Pose: antebrazos más cerrados hacia la cabeza (`DBFX=0.65`, ~33°; codo a 66°), como en las fotos.
 - Resultado (pose final `w/DH30.blend`, cadena por defecto de `anim_db.sh`): `ejemplos/doble_biceps_v6_cerca.jpg`,
   `doble_biceps_v6_cuerpo.jpg`, y los PNG transparentes `doble_biceps_v6_frente.png` (Push) / `_espalda.png` (Pull).
+- **v7 (11-11-2026), dueño: «sigo viendo muy exagerado y en punta el bíceps… de lejos se ve enorme y no va con el
+  tamaño muscular del muñeco»**. El bulto pasa de bola a loma baja y larga: `BAMP=16 mm` (antes 34; medido en la
+  silueta de frente sube ~12 mm sobre el brazo sin bulto, antes ~26), más largo (`BSA=0.24` / `BSB=0.15`), cima
+  aplanada (`BPW=2.6`, exponente nuevo del perfil a lo largo del brazo; 2 = gaussiana), lóbulo más ancho
+  (`BCP=0.7`) y más suavizado (`BSM=12`). Son los valores por defecto de `anim_db.sh`. `KEEPPRE=1` guarda la pose
+  antes de `elbowfix.py` (`w/<PFX>_p<F>.blend`) para probar tamaños sin rehacer toda la cadena.
+  Imágenes: `ejemplos/doble_biceps_v7_frente.png` (Push) y `doble_biceps_v7_espalda.png` (Pull).
 - PENDIENTE hasta el visto bueno: regenerar las 31 poses (`PFX=DG`) y los tres vídeos; los de `app/` y
   `ejemplos/doble_biceps*_en_la_app.mp4` siguen siendo la v4.
 

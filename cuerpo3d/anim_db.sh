@@ -15,5 +15,6 @@ RESTBLEND=$B IT=1 RAD=0.22 RIN=0.12 $PY $S/arap2.py ${PF}_s$T.blend ${PF}_a$T.bl
 $PY $S/capkeep.py ${PF}_s$T.blend ${PF}_a$T.blend $PF$T.blend >> r/log_${PF}$T.txt 2>&1
 [ "${SFK:-0}" != 0 ] && P=$P K=$SFK DA=0.025 DL=0 RA=0.064 RB=0.064 LOWK=0.2 $PY $S/shoulderfix.py $PF$T.blend $PF$T.blend >> r/log_${PF}$T.txt 2>&1
 [ "${AXK:-0}" != 0 ] && P=$P K=$AXK RAX=${AXR:-0.045} SM=6 $PY $S/armpitfix.py $PF$T.blend $PF$T.blend >> r/log_${PF}$T.txt 2>&1
-BAMP=${BAMP:-0.034} BS0=${BS0:-0.55} BSA=${BSA:-0.15} BSB=${BSB:-0.12} BCP=${BCP:-1} BMED=${BMED:-0.9} FAMP=${FAMP:-0.011} ESM=20 ER=0.065 EJR=0.045 $PY $S/elbowfix.py $PF$T.blend $PF$T.blend >> r/log_${PF}$T.txt 2>&1
+[ "${KEEPPRE:-0}" != 0 ] && cp $PF$T.blend ${PF}_p$T.blend   # KEEPPRE=1: keep the pose before elbowfix (to tune the biceps)
+BAMP=${BAMP:-0.016} BS0=${BS0:-0.55} BSA=${BSA:-0.24} BSB=${BSB:-0.15} BPW=${BPW:-2.6} BCP=${BCP:-0.7} BSM=${BSM:-12} BMED=${BMED:-0.9} FAMP=${FAMP:-0.011} ESM=20 ER=0.065 EJR=0.045 $PY $S/elbowfix.py $PF$T.blend $PF$T.blend >> r/log_${PF}$T.txt 2>&1
 rm -f ${PF}_s$T.blend ${PF}_a$T.blend; echo done $T P=$P

@@ -46,7 +46,7 @@ for L in 'LR':
         qa = co - h; sa = (qa @ a) / La; rad = qa - np.outer(qa @ a, a); rr = np.linalg.norm(rad, axis=1)
         cb = (rad @ b) / np.maximum(rr, 1e-6)
         arm = (main == 'upper_arm.' + L) & (rr < 0.11) & (sa > -0.1) & (sa < 1.15)
-        ds = sa - E('BS0', 0.60); g = np.exp(-0.5 * (ds / np.where(ds < 0, E('BSA', 0.17), E('BSB', 0.13))) ** 2)
+        ds = sa - E('BS0', 0.60); g = np.exp(-0.5 * np.abs(ds / np.where(ds < 0, E('BSA', 0.17), E('BSB', 0.13))) ** E('BPW', 2.0))   # BPW > 2: flatter top (mound, not a peak)
         dt = sa - E('TS0', 0.45); gt = np.exp(-0.5 * (dt / 0.20) ** 2)
         ampt = E('TAMP', 0.006) * flex * gt * np.clip(-cb, 0, 1) ** 1.5 * arm
         if E('BRAD', 1) > 0:
