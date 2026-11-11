@@ -47,10 +47,20 @@ for L in 'LR':
         cb = (rad @ b) / np.maximum(rr, 1e-6)
         arm = (main == 'upper_arm.' + L) & (rr < 0.11) & (sa > -0.1) & (sa < 1.15)
         ds = sa - E('BS0', 0.60); g = np.exp(-0.5 * (ds / np.where(ds < 0, E('BSA', 0.17), E('BSB', 0.13))) ** 2)
-        amp = E('BAMP', 0.014) * flex * g * np.clip(cb, 0, 1) ** E('BCP', 1.5) * arm
         dt = sa - E('TS0', 0.45); gt = np.exp(-0.5 * (dt / 0.20) ** 2)
         ampt = E('TAMP', 0.006) * flex * gt * np.clip(-cb, 0, 1) ** 1.5 * arm
-        Vp = b[None, :] * (amp - ampt)[:, None]
+        if E('BRAD', 1) > 0:
+            # round ball (11-11, owner: «se ve en punta, debe ser redondeado»): the skin moves RADIALLY (away from the
+            # arm axis), most in the direction between the forearm side (b) and the medial side of the arm (the side
+            # that faces the camera in a front double biceps), BMED = how far towards the medial side; cosine lobe ^BCP
+            sgn = 1.0 if L == 'L' else -1.0
+            med = sgn * np.cross(a, b); cdir = b + E('BMED', 0.5) * med; cdir /= np.linalg.norm(cdir)
+            cc = (rad @ cdir) / np.maximum(rr, 1e-6)
+            amp = E('BAMP', 0.014) * flex * g * np.clip(cc, 0, 1) ** E('BCP', 1.0) * arm
+            Vp = rad / np.maximum(rr, 1e-6)[:, None] * amp[:, None] - b[None, :] * ampt[:, None]
+        else:
+            amp = E('BAMP', 0.014) * flex * g * np.clip(cb, 0, 1) ** E('BCP', 1.5) * arm
+            Vp = b[None, :] * (amp - ampt)[:, None]
         # forearm (11-11): with the fist closed and the elbow bent the flexor / brachioradialis mass near the elbow
         # fills out: the forearm skin moves away from its axis by FAMP * flex * gauss(along the forearm, centre FS0)
         if E('FAMP', 0.0) > 0:

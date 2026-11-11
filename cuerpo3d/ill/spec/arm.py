@@ -19,7 +19,7 @@ LM = {
     'ar_tlm1': ('P', 0.190, 0.072, 1.222), 'ar_tlm2': U(0.58, -142), 'ar_tlm3': U(0.67, -148), 'ar_tt_m': U(0.71, -165),
     'ar_tmh_low': U(0.90, -160), 'ar_med_epi': U(0.98, -100), 'ar_tmh_f': U(0.80, -118), 'ar_olec': U(1.00, 180),
     # medial upper arm: coracobrachialis and the medial part of the brachialis
-    'ar_ax_mid': ('P', 0.172, -0.034, 1.228), 'ar_cb_ins': U(0.56, -92), 'ar_bml': U(0.90, -62), 'ar_bmb': U(0.74, -98),
+    'ar_ax_mid': ('P', 0.172, -0.034, 1.228), 'ar_cb_ins': U(0.56, -92), 'ar_bml': U(0.90, -62), 'ar_bmb': U(0.74, -98), 'ar_bmk': U(0.79, -62),
     # ---- forearm: brachioradialis front border (with the cubital fossa / pronator / flexors) and back border (with ECR)
     'ar_brf1': Fa(0.08, 28), 'ar_brf2': Fa(0.25, 8), 'ar_brf3': Fa(0.45, -4), 'ar_brf4': Fa(0.65, 0), 'ar_brf5': Fa(0.82, 6),
     'ar_br_tip': Fa(0.95, 18),
@@ -49,12 +49,16 @@ DB2 = ['bk_dl_b_1', 'bk_dl_b_2', 'bk_dl_b_3', 'bk_dl_b_4', 'bk_dl_b_5', 'bk_dl_b
 LH = ['bk_dl_b3', 'bk_dl_b_7', 'bk_dl_tri', 'bk_lh_0', 'bk_tt', 'bk_lh_1', 'ax_back']
 
 MUSCLES = {
-    'biceps_brachii': dict(loop=DF + ['ar_bl2', 'ar_bl3', 'ar_bl4', 'ar_btip', 'ar_bm4', 'ar_bm3', 'ar_bm2', 'ax_front'],
+    # 11-11-2026: the biceps reaches the medial groove (its medial border is the front border of the triceps medial
+    # head, ar_cb_ins -> ar_bmb, about -95 deg), as in a real arm; before it stopped at -45 / -52 deg (ar_bm3, ar_bm2)
+    # and the medial brachialis filled the whole inner arm: in the front double biceps the visible «biceps» was split
+    # by a line. The medial brachialis is now only the small triangle above the elbow (ar_bmb, ar_bmk, ar_bm4, ar_bml).
+    'biceps_brachii': dict(loop=DF + ['ar_bl2', 'ar_bl3', 'ar_bl4', 'ar_btip', 'ar_bm4', 'ar_bmk', 'ar_bmb', 'ar_cb_ins', 'ar_bm2', 'ax_front'],
                            seed=U(0.6, 0), origin=('ax_front', 'bk_dl_f_5'), insertion=('ar_btip', 'ar_btip'), sp=6),
     'brachialis': dict(loop=DF2 + DB + ['ar_tlf1', 'ar_tlf2', 'ar_brt', 'ar_brf', 'ar_bl4', 'ar_bl3', 'ar_bl2'],
                        seed=U(0.62, 75), origin=('bk_dl_f_5', 'bk_dl_b_1'), insertion=('ar_brf', 'ar_bl4'), sp=6),
-    'brachialis_medial': dict(loop=['ar_bm2', 'ar_bm3', 'ar_bm4', 'ar_bml', 'ar_bmb', 'ar_cb_ins'],
-                              seed=U(0.72, -70), origin=('ar_cb_ins', 'ar_bm2'), insertion=('ar_bm4', 'ar_bml'), sp=6, group='brachialis'),
+    'brachialis_medial': dict(loop=['ar_bmb', 'ar_bmk', 'ar_bm4', 'ar_bml'],
+                              seed=U(0.85, -60), origin=('ar_bmb', 'ar_bmb'), insertion=('ar_bm4', 'ar_bml'), sp=6, group='brachialis'),
     'coracobrachialis': dict(loop=['ax_front', 'ar_bm2', 'ar_cb_ins', 'ar_ax_mid'],
                              seed=U(0.47, -85), origin=('ar_ax_mid', 'ax_front'), insertion=('ar_bm2', 'ar_cb_ins'), sp=5),
     'triceps_lateral': dict(loop=DB2 + ['ar_tl_b1', 'ar_tl_b2', 'ar_tt_c', 'ar_tt_l', 'ar_tlx', 'ar_tlf2', 'ar_tlf1'],

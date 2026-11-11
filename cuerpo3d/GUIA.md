@@ -613,6 +613,24 @@ difiere de la base menos de 1 mm. Comparaciones: `ejemplos/v5_frente_antes_ahora
 Herramientas de diagnóstico que sirvieron (no están en el repo, son cortas): cortes del brazo perpendiculares al eje
 coloreados por músculo, y perfil superior/inferior del brazo por tramos de x. No fiarse del ojo en montajes pequeños.
 
+**v6 (11-11-2026, mismo día), dueño: «esa línea en medio del bíceps no se ve natural, y se ve en punta; debe ser
+redondeado; imita forma y tamaño de las fotos». Pidió además NO renderizar animaciones todavía: solo imágenes fijas
+de frente y de espaldas hasta que apruebe la forma.**
+- Causa de la línea: en el atlas el bíceps acababa a −45/−52° (cara anterior) y el braquial medial ocupaba toda la
+  cara interna; en el doble bíceps de frente la cámara ve la cara interna, así que el «bíceps» visible era en realidad
+  braquial, con el borde entre los dos por el medio y el bíceps de canto arriba (la cresta en punta). Arreglo en
+  `ill/spec/arm.py` (copia `arm_v2.py.bak` solo en la carpeta de trabajo): el bíceps llega al surco medial (su borde
+  es el del tríceps medial, `ar_cb_ins` → `ar_bmb`) y el braquial medial queda como un triángulo pequeño sobre el codo
+  (`ar_bmb, ar_bmk, ar_bm4, ar_bml`). Atlas y mapas `maps_push` / `maps_pull` rehechos (mismos nombres e índices).
+- Bulto redondo (`elbowfix.py`, `BRAD=1`): la piel se mueve radialmente respecto al eje del brazo, con el máximo
+  entre el lado del antebrazo y la cara interna (`BMED=0.9`), lóbulo coseno (`BCP=1`), `BAMP=34 mm`, centro
+  `BS0=0.55`, anchos `BSA=0.15` / `BSB=0.12`; antebrazo `FAMP=11 mm`.
+- Pose: antebrazos más cerrados hacia la cabeza (`DBFX=0.65`, ~33°; codo a 66°), como en las fotos.
+- Resultado (pose final `w/DH30.blend`, cadena por defecto de `anim_db.sh`): `ejemplos/doble_biceps_v6_cerca.jpg`,
+  `doble_biceps_v6_cuerpo.jpg`, y los PNG transparentes `doble_biceps_v6_frente.png` (Push) / `_espalda.png` (Pull).
+- PENDIENTE hasta el visto bueno: regenerar las 31 poses (`PFX=DG`) y los tres vídeos; los de `app/` y
+  `ejemplos/doble_biceps*_en_la_app.mp4` siguen siendo la v4.
+
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
 - Lo que importa es cómo se ve **renderizado a distancia normal/lejana**, no de cerca.
