@@ -659,8 +659,19 @@ de frente y de espaldas hasta que apruebe la forma.**
   (`LTH`, ancho `LSG=35°`); se desvanece a lo largo del brazo (`LS1=0.45`, `LSW=0.38`); solo con el brazo levantado
   (`A0=35°`…`A1=85°`), así que el cuerpo en reposo y los demás ejercicios no cambian. Medido (semiancho a
   z=1.26/1.22/1.18 m): 234/215/194 → 251/233/209 mm; cintura igual (148).
-  Imágenes: `ejemplos/doble_biceps_v9_frente.png` (Push), `doble_biceps_v9_espalda.png` (Pull) y
+  Imágenes: `ejemplos/doble_biceps_v9_espalda.png` (Pull) y
   `doble_biceps_v9_dorsales_antes_despues.jpg` (arriba antes, abajo después). Las v8 de cuerpo entero se quitaron.
+- **v10 (11-11-2026), dueño: «ahora trabaja en el pectoral»**. Nuevo `pecfix.py` (último paso de `anim_db.sh`;
+  `PAMP=0` lo apaga). Causa: con el brazo arriba el borde externo del pectoral se quedaba en el pecho (bloque
+  cuadrado) y el pliegue delantero de la axila lo rellenaba piel del costado (etiqueta serrato, blanca) hasta el
+  brazo. Arreglo: la piel **se desliza sobre la superficie** (la forma no cambia): en la vista de frente cada
+  vértice se mueve en x `PAMP=45 mm` × A(altura) × k(x) y se recoloca sobre la superficie posada con un rayo en y
+  (conserva su profundidad detrás de la superficie visible, `PDP`, para que no se doblen triángulos). k: 0 en
+  `XIN`, 1 en el borde del pectoral `X0`, 0 en la unión con el brazo `XJ` (la franja blanca se comprime en el
+  surco); A: 0 bajo `Z0`, 1 en `Z1`, 0 en `ZT` (todo en metros desde la articulación del hombro). Solo con el brazo
+  levantado; no toca la espalda. `PCOR` (apagado) subiría además la esquina inferior externa.
+  Imágenes: `ejemplos/doble_biceps_v10_frente.png` (Push) y `doble_biceps_v10_pectoral_antes_despues.jpg`
+  (izquierda antes, derecha después). La de espalda sigue siendo `doble_biceps_v9_espalda.png` (no cambia).
 - PENDIENTE hasta el visto bueno: regenerar las 31 poses (`PFX=DG`) y los tres vídeos; los de `app/` y
   `ejemplos/doble_biceps*_en_la_app.mp4` siguen siendo la v4.
 
