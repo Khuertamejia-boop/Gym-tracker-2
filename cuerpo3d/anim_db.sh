@@ -18,4 +18,5 @@ $PY $S/capkeep.py ${PF}_s$T.blend ${PF}_a$T.blend $PF$T.blend >> r/log_${PF}$T.t
 [ "${KEEPPRE:-0}" != 0 ] && cp $PF$T.blend ${PF}_p$T.blend   # KEEPPRE=1: keep the pose before elbowfix (to tune the biceps)
 BAMP=${BAMP:-0.016} BS0=${BS0:-0.55} BSA=${BSA:-0.24} BSB=${BSB:-0.15} BPW=${BPW:-2.6} BCP=${BCP:-0.7} BSM=${BSM:-12} BMED=${BMED:-0.9} FAMP=${FAMP:-0.011} ESM=20 ER=0.065 EJR=0.045 $PY $S/elbowfix.py $PF$T.blend $PF$T.blend >> r/log_${PF}$T.txt 2>&1
 [ "${DAMP:-0.010}" != 0 ] && DAMP=${DAMP:-0.010} $PY $S/deltfix.py $PF$T.blend $PF$T.blend >> r/log_${PF}$T.txt 2>&1   # round deltoid dome (DAMP=0: off)
+[ "${LAMP:-0.028}" != 0 ] && LAMP=${LAMP:-0.028} $PY $S/latfix.py $PF$T.blend $PF$T.blend >> r/log_${PF}$T.txt 2>&1   # lat spread / V shape (LAMP=0: off)
 rm -f ${PF}_s$T.blend ${PF}_a$T.blend; echo done $T P=$P

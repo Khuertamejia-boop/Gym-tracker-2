@@ -642,13 +642,25 @@ de frente y de espaldas hasta que apruebe la forma.**
   centrado arriba que cubre también delante y detrás (`DCP=0.7`, `DCF=0.35`), solo con el brazo levantado
   (`A0=35°`…`A1=85°`), y un suavizado ligero de la zona (`DSMP=4`). Antes el hombro era una rampa recta del
   trapecio al bíceps (cima a 45–50 mm del centro de la articulación, igual o más baja que el bíceps).
-  Imágenes: `ejemplos/doble_biceps_v8_frente.png` (Push), `doble_biceps_v8_espalda.png` (Pull) y
+  Imagen:
   `doble_biceps_v8_hombro_antes_despues.jpg` (arriba antes, abajo después).
   Lo que falta frente a las fotos de referencia (análisis del 11-11, por orden de efecto): 1) dorsales más anchos
   bajo la axila («alas»); 2) pectoral que suba hacia el brazo en vez de bloque cuadrado, y limpiar las tiras
   blancas de la axila; 3) tríceps colgando en curva por debajo del brazo; 4) antebrazo más grueso cerca del codo;
   5) de espaldas, omóplatos juntos con relieve en el centro y deltoides posterior menos «bola»; 6) puño girado
   hacia la cabeza.
+- **v9 (11-11-2026), dueño: «trabaja en mejorar dorsales y la forma V»**. Nuevo `latfix.py` (último paso de
+  `anim_db.sh`, después de `deltfix.py`; `LAMP=0` lo apaga). Antes el tronco era una caja desde la axila hasta las
+  costillas bajas y luego entraba de golpe a la cintura; ahora el contorno baja en diagonal desde justo debajo de
+  la axila (lo más ancho) hasta la cintura, y de frente asoman las «alas» detrás del torso. La piel del costado
+  trasero se mueve hacia fuera (y un poco hacia atrás, `LBK=0.25`) `LAMP=28 mm` como máximo; altura relativa
+  t (0 = cabeza del hueso `spine`, 1 = articulación del hombro): nada por debajo de `LT0=0.22` (la cintura no
+  cambia), máximo en `LTP=0.74`, cero en `LT1=0.99`; lóbulo alrededor del tronco centrado 30° detrás del lateral
+  (`LTH`, ancho `LSG=35°`); se desvanece a lo largo del brazo (`LS1=0.45`, `LSW=0.38`); solo con el brazo levantado
+  (`A0=35°`…`A1=85°`), así que el cuerpo en reposo y los demás ejercicios no cambian. Medido (semiancho a
+  z=1.26/1.22/1.18 m): 234/215/194 → 251/233/209 mm; cintura igual (148).
+  Imágenes: `ejemplos/doble_biceps_v9_frente.png` (Push), `doble_biceps_v9_espalda.png` (Pull) y
+  `doble_biceps_v9_dorsales_antes_despues.jpg` (arriba antes, abajo después). Las v8 de cuerpo entero se quitaron.
 - PENDIENTE hasta el visto bueno: regenerar las 31 poses (`PFX=DG`) y los tres vídeos; los de `app/` y
   `ejemplos/doble_biceps*_en_la_app.mp4` siguen siendo la v4.
 
