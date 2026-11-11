@@ -236,7 +236,8 @@ if os.environ.get('SHADE')=='matcap':
         if E('EROUND',0)>0:
             # rounded (dome) profile instead of a straight ramp: light quickly away from the border, broad soft middle,
             # so a long muscle does not get a crest along its middle ("tent" look)
-            eg=MIX(E('EROUND',0),eg,M('SUBTRACT',1.0,M('POWER',M('SUBTRACT',1.0,eg),2.0)))
+            # EROUNDR: own value for the worked (red) muscles; lower = the gradient reaches the middle of the muscle
+            eg=MIX(M('ADD',E('EROUND',0),M('MULTIPLY',red,E('EROUNDR',E('EROUND',0))-E('EROUND',0)),True),eg,M('SUBTRACT',1.0,M('POWER',M('SUBTRACT',1.0,eg),2.0)))
         egs=SS(M('MINIMUM',M('DIVIDE',_tex16('ds16',64.0),E('ESW',6.0)),1.0),0.0,1.0,E('ESOFT',0.7),1.0)
         eg=M('MULTIPLY',eg,egs)
         emin=M('ADD',E('EMIN',0.35),M('MULTIPLY',tend,E('ETMIN',0.75)-E('EMIN',0.35)))   # tendons: same gradient, softer
@@ -250,7 +251,8 @@ if os.environ.get('SHADE')=='matcap':
         smin=M('ADD',E('SIDEMIN',1.0),M('MULTIPLY',red,E('SIDEMINR',1.0)-E('SIDEMIN',1.0)))   # weight kept on the lit side
         sidew=M('ADD',smin,M('MULTIPLY',sidew,M('SUBTRACT',1.0,smin)))
         ef=M('SUBTRACT',1.0,M('MULTIPLY',M('SUBTRACT',1.0,ef),sidew))
-        t=M('MULTIPLY',M('ADD',M('MULTIPLY',t,E('ELT',1.0)),1.0-E('ELT',1.0)),ef)   # ELT<1 = less light, more drawing
+        elt_=M('ADD',E('ELT',1.0),M('MULTIPLY',red,E('ELTR',E('ELT',1.0))-E('ELT',1.0)))   # ELTR: how much the light models the worked (red) muscles
+        t=M('MULTIPLY',M('ADD',M('MULTIPLY',t,elt_),M('SUBTRACT',1.0,elt_)),ef)   # ELT<1 = less light, more drawing
         if os.environ.get('MDEBUG')=='eg': outdbg=eg
     rp=N.new('ShaderNodeValToRGB'); el=rp.color_ramp.elements; rp.color_ramp.interpolation='EASE' if os.environ.get('RAMPI','')=='ease' else 'LINEAR'
     stops=[float(x) for x in os.environ.get('TSTOPS','0.0,0.30,0.55,0.80,1.0').split(',')]

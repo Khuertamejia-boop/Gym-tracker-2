@@ -685,6 +685,20 @@ de frente y de espaldas hasta que apruebe la forma.**
   lo que mueve bordes de color o la silueta, por eso el paso 4.
   Imágenes: `ejemplos/doble_biceps_v11_espalda.png` (Pull) y `doble_biceps_v11_espalda_antes_despues.jpg`
   (izquierda antes, derecha después). De frente sigue valiendo `doble_biceps_v10_frente.png`.
+- **v12 (11-11-2026), textura: degradado en los músculos trabajados** (dueño, con 5 ilustraciones de muestra: «los
+  músculos marcados tienen tipo un degradado, la nuestra no; mantén el color rojizo, no copies el naranja»).
+  Causa de que el rojo se viera plano: la luz solo pesaba un 45 % (`ELT`) y con `REDCON=2` casi todo el centro del
+  músculo caía en el último color de la rampa (saturaba); el degradado solo existía en una banda fina del borde.
+  Arreglo, SOLO para los músculos rojos (la piel blanca no cambia): dos parámetros nuevos en `ill/rendsculpt.py`
+  (`ELTR` = cuánto modela la luz los músculos rojos; `EROUNDR` = perfil del borde propio de los rojos; sin ellos
+  el resultado es idéntico al de antes; copia del anterior en `ill/rendsculpt_v7style.py`) y un archivo de estilo
+  que se añade DESPUÉS de `style_app.env`: `ill/style_app_grad.env` (`ELTR=0.75 EROUNDR=0.5 EWFR=1.1 ERMIN=0.32
+  REDCON=1.2 RPIV=0.35` y una rampa `RCOLS` del mismo rojo que va de granate en el borde a rosa claro en la
+  cresta). Uso: `env $(cat ill/style_app.env) $(cat ill/style_app_grad.env) ... rendsculpt.py`. De paso la espalda
+  gana el relieve que no se conseguía con geometría. Aún NO es el estilo por defecto: los demás ejercicios y
+  `render_app.sh` siguen con el estilo anterior hasta el visto bueno.
+  Imágenes: `ejemplos/doble_biceps_v12_frente.png`, `doble_biceps_v12_espalda.png` y
+  `doble_biceps_v12_textura_antes_despues.jpg` (arriba antes, abajo después).
 - PENDIENTE hasta el visto bueno: regenerar las 31 poses (`PFX=DG`) y los tres vídeos; los de `app/` y
   `ejemplos/doble_biceps*_en_la_app.mp4` siguen siendo la v4.
 
