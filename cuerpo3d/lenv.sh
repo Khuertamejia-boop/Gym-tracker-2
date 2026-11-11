@@ -1,0 +1,1 @@
+export MB=1.6 MW=1.25 CORE_T=0.97 CORE_S=0.95 MB_vmed=0.6 MW_vmed=1.3 MB_gast_l=0.9 MB_gast_m=0.9 MW_gast_l=1.3 MW_gast_m=1.3 MB_extdig=0.4 MB_peron=0.5 MW_peron=1.4 MW_tibant=1.4 KM=0.005 KM_S=0.009 HREF_S=0.007 FADEIT=60 DSM=2

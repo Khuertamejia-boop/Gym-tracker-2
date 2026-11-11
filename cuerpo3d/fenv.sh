@@ -1,0 +1,3 @@
+source ${GT3D:-/tmp/claude-0/-home-user-Gym-tracker-2/8036e25a-39fc-507e-8939-935aaa1c5ddc/scratchpad}/penv.sh
+export ONLY= CORE=0.97 BASE=0 MW_abs1=1.12 MB_abs1=1.5 MW_abs2=1.12 MB_abs2=1.5 MW_abs3=1.12 MB_abs3=1.5 MW_abs4=1.12 MB_abs4=1.4 QP_abs1=0.35 QP_abs2=0.35 QP_abs3=0.35 QP_abs4=0.35 MW_obliq=1.600 MB_obliq=1.920 MW_serr1=1.1 MB_serr1=0.4 MW_serr2=1.1 MB_serr2=0.5 MW_serr3=1.1 MB_serr3=0.5 MW_trap_up=1.600 MB_trap_up=1.200 MW_trap_mid=1.600 MB_trap_mid=1.800 MW_trap_low=1.600 MB_trap_low=2.040 MW_infra=1.600 MB_infra=1.680 MW_teres=2.240 MB_teres=1.920 MW_lats=1.600 MB_lats=1.680 MW_erector=1.600 MB_erector=2.280
+export PZ1A=1.47 PZ1B=1.56
