@@ -22,6 +22,7 @@ de esta guía y Claude seguirá desde aquí.
 | Animación de fondo de la app: doble bíceps de espaldas (rojo Push y rojo Pull) | v5 (11-11-2026): hombro con bola, bíceps con pico, axila limpia (sección 5r; `ejemplos/v5_espalda_antes_ahora.jpg`); antes v4 (sección 5q); antes v3 (mapas v2, puños cerrados, cara con sonrisa, `ejemplos/doble_biceps_v3_cerca.jpg`); antes v2 (hombro redondo, `ejemplos/doble_biceps_hombro_antes_ahora.jpg`); falta el visto bueno: `ejemplos/doble_biceps_pull_en_la_app.mp4`, `app/doble_biceps_pull_transparente.mov`, `app/doble_biceps_pull/` | `ejemplos/doble_biceps_en_la_app.mp4`, `.jpg`; para Xcode: `app/doble_biceps_transparente.mov`, `app/doble_biceps/` |
 | Animación de fondo de la app: doble bíceps **de frente** (rojo Push) | v5 (11-11-2026: hombro con bola, bíceps con pico, axila limpia, sección 5r; `ejemplos/v5_frente_antes_ahora.jpg`), falta el visto bueno | `ejemplos/doble_biceps_frente_en_la_app.mp4`, `.jpg`, `_cerca.jpg`; para Xcode: `app/doble_biceps_frente_transparente.mov`, `app/doble_biceps_frente/` |
 | **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v3 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v3_*.jpg` |
+| **Rostro y corte de cabello del hombre** (rostro fuerte, corte «skin fade», ojos con vida) | v14 (12-11-2026, sección 5s), falta el visto bueno; solo está posado de nuevo el doble bíceps (fotograma 30) | `ejemplos/rostro_v14_antes_despues.jpg`, `rostro_v14_vistas.jpg`, `doble_biceps_v14_en_fondo_app.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
@@ -68,7 +69,8 @@ cuerpo3d/
     anim_fp.sh      render final del face pull en 16:9 -> out/facepull.gif;  mkgif.py GIF ida y vuelta
     rest.npz uvtri.npz relief_mc.npz curves_base.npz   datos del cuerpo en reposo (no tocar)
   referencias/      imágenes que mandó el dueño (8ccf8362 = LA referencia de estilo, remo de espalda;
-                    697dfdbd cruce de poleas de frente: pecho y abdomen; 14cf49ef curl de frente; e5d5044e fondos)
+                    697dfdbd cruce de poleas de frente: pecho y abdomen; 14cf49ef curl de frente; e5d5044e fondos;
+                    a69a4162 y c11f54f8 = rostro y pelo del hombre (láminas), e764d820 = corte «skin fade» de perfil)
   ejemplos/         últimos resultados aprobados
 ```
 
@@ -709,10 +711,66 @@ de frente y de espaldas hasta que apruebe la forma.**
     estaban en `style_app_grad.env`, que desaparece). El estilo anterior queda en `ill/style_app_v7.env` y el
     sombreador anterior en `ill/rendsculpt_v7style.py`. Todo lo que use `style_app.env` (p. ej. `render_app.sh`)
     sale ya con degradado; los vídeos y GIF ya hechos NO se han vuelto a renderizar.
-  Imágenes: `ejemplos/doble_biceps_v13_frente.png`, `doble_biceps_v13_espalda.png` y
-  `doble_biceps_v13_antes_despues.jpg` (arriba v12, abajo v13). Las v10–v12 de cuerpo entero se quitaron.
+  Imagen: `ejemplos/doble_biceps_v13_antes_despues.jpg` (arriba v12, abajo v13). Las de cuerpo entero v10–v13 se
+  quitaron: las actuales son `doble_biceps_v14_frente.png` / `_espalda.png` (mismo cuerpo, cabeza nueva, sección 5s).
 - PENDIENTE hasta el visto bueno: regenerar las 31 poses (`PFX=DG`) y los tres vídeos; los de `app/` y
-  `ejemplos/doble_biceps*_en_la_app.mp4` siguen siendo la v4.
+  `ejemplos/doble_biceps*_en_la_app.mp4` siguen siendo la v4. Con la cabeza nueva (5s) hay que volver a posar también los
+  demás ejercicios antes de renderizarlos otra vez.
+
+## 5s. Rostro y corte de cabello del hombre (12-11-2026, v14)
+
+Pedido del dueño con 3 referencias (`referencias/a69a4162` y `c11f54f8`: dos láminas de anatomía de un hombre de
+rostro fuerte y pelo corto oscuro; `e764d820`: foto de un corte «skin fade» de perfil): «El cuerpo ya lo veo bien
+trabajado. Hazle un corte de cabello y tipo de rostro como el de las referencias. Dale vida al rostro, trabaja a
+detalle en ello y replícalo».
+
+**Construir la base:** `./rostro_hombre.sh <bundle.blend>` (lo llama `restaurar.sh`) -> `w/NB_mc_row3.blend`. La cara
+anterior (C + sonrisa de 4,5 mm, rapado gris liso) queda en `w/NB_mc_row3_caraC.blend`. Todo lo nuevo de
+`facebuild.py` y de `ill/rendsculpt.py` se activa por variable o por atributo: la mujer y la cara anterior salen
+IDÉNTICAS (comprobado con renders: diferencia 0), y `rostro_hombre.sh` reproduce la cabeza exacta (diferencia 0).
+
+- **Forma del rostro**: `manface.py` (`MANSHAPE=1`), cambios locales y suaves sobre la cabeza de Blender (en mm):
+  ángulo de la mandíbula hacia fuera y abajo (`MJ` 6), borde de la mandíbula marcado (`MJL` 3), masetero (`MM` 1,4),
+  mentón más adelantado (`MC` 3), más ancho (`MCW` 12 %) y cuadrado (`MCS` 3) con una hendidura leve (`MCL`), pómulos
+  (`MZ` 2,2) con hueco debajo (`MH` 3), arco de la ceja adelantado (`MB` 2,5; entrecejo `MG`) y ojos más hundidos
+  (`MO`), nariz un 10 % más estrecha (`MNW`) con la punta 1,5 mm más baja (`MNT`), surco nariz–boca muy leve (`MNL`),
+  relleno bajo el ojo (`MU`: sin él el sombreado dibujaba «ojeras»), sienes (`MT`) y párpado de arriba 6° más bajo
+  (`LIDA`: mirada firme). `MK` escala todo; cada valor a 0 apaga ese cambio. Orejas más pegadas (`EARPIN=0.28`).
+  Gesto neutro y serio como en las referencias: `SMILE=0.0015` (la sonrisa del 10-11 era 4,5 mm; se recupera con
+  `SMILE=0.0045 LIPDN=-0.0030 ./rostro_hombre.sh …`), cejas 3 mm más bajas y más oscuras (`BZB/BZT`, `BROWT=0.92`),
+  labios con algo más de tono (`LIPT=0.26`) y línea de pestañas más marcada (`LASHT=0.9`).
+- **Corte «skin fade»** (`HAIRSTYLE=fade`): frente recta con esquina en la sien (`HLZ`, `HTY`), borde nítido
+  (`HSOFT` 1,2 mm), sin entradas (`HREC=0`). Degradado: pelo denso arriba que baja hasta casi piel (`FMIN` 6 %) en
+  los lados y la nuca; la línea del degradado va de `FZT` (sien) a `FZE` (sobre la oreja) y `FZB` (nuca), con ancho
+  `FW` y curva `FP`. Volumen real solo arriba (`HVOL=3` + `HTOPV=4` mm), creciendo desde dentro del pelo (`HVR`):
+  si empezaba en la línea de la frente salía un escalón con halo. Pelo oscuro `HAIRT=1.0`.
+- **Ojos** (`EYEV2=1`): iris con aro oscuro en el borde (`LIMT`), más claro junto a la pupila (`IRISG`) y fibras
+  radiales (`IRISF`), pupila casi negra (`PUPT`), **punto de brillo** arriba a la izquierda (`GLX`, `GLZ`, `GLR`;
+  atributo `glint`) y blanco del ojo más luminoso (`EYEW`).
+- **Sombreado del rostro** (`ill/rendsculpt.py`; usa los atributos `face`, `hstip`, `hrest` que deja `FACEATTR=1`;
+  valores en la última línea de `ill/style_app.env`: `FELT=0.85 FAOP=1.0 FAOD=0.014 FCON=1.3 FPIV=0.6 HSTK=0.25`): en
+  la cara la luz modela más (`FELT`), hay más contraste (`FCON`, `FPIV`) y una sombra fina en los pliegues (ojos,
+  alas de la nariz, boca, bajo la mandíbula: `FAOP`, `FAOD`). El cuello del cuerpo toma ese sombreado poco a poco
+  (`FNR0`, `FNR1`); si no, la cabeza se veía más oscura que el cuello, como un «collar». Grano del pelo (`HSTK`,
+  `HSTS`, `HSTS2`): puntos finos y mechones suaves fijos a la cabeza (con más de 0,25 el pelo se aclaraba).
+  El estilo anterior queda en `ill/style_app_v13.env`.
+- **Unión cabeza–cuello**: de cerca se veía una línea en dientes de sierra (venía de antes). Causa: el mapa UV del
+  cuerpo tiene una costura alrededor del cuello 0–4 mm por encima del corte de la cabeza, y el relieve que se copiaba
+  a la cabeza terminaba ahí en un escalón irregular. Arreglo, solo con la cabeza nueva (`NEWHEAD` = la `Cabeza` tiene
+  el atributo `face`): la cabeza va lisa (`plainh`: sin rojo, líneas ni relieve copiados; `HEADTRAP=1` conserva el
+  dibujo del trapecio en la nuca), el relieve del cuerpo se apaga bajo la cabeza y junto a ella (`hfd`: `HFD0`,
+  `HFD`), el borde de la franja queda 0,6 mm sobre el cuello (`FACEOFF0`, `FACEMIN`) y las UV se copian por vértice
+  recortando las caras que cruzan una costura (`FACEUVV`). Probado y descartado: borde por dentro del cuello (se ve
+  un collar), fundido por distancia en el cuerpo (`PLAIN0/1`: sale a bloques) y pegado por rayos (`FACERAY`).
+  Para depurar: `MDEBUG=snap|plain|hb|h` y `HIDEBODY=1`.
+- De cerca aún: en la nuca, donde el trapecio toca el borde de la cabeza, quedan dos pliegues pequeños (a tamaño
+  normal no se ven). Sin barba, como las láminas (la foto lleva barba de pocos días: se podría pintar con `tint`).
+- **Cada ejercicio hay que volver a posarlo** con la base nueva para que salga esta cabeza. Solo está hecho el doble
+  bíceps, fotograma 30 (`PFX=DH ./anim_db.sh 30 30`). No se han vuelto a renderizar vídeos ni GIF. La mujer no cambia.
+- Vistas de la cabeza para revisar: el render de siempre con `TZ=1.555 OSC=0.36 PIT=2 RX=800 RY=800` y
+  `YAW=0` (frente), `35`, `90` (perfil) y `145` (nuca).
+- Imágenes: `ejemplos/rostro_v14_antes_despues.jpg` (arriba antes, abajo ahora), `rostro_v14_vistas.jpg` (4 vistas),
+  `doble_biceps_v14_frente.png` / `_espalda.png` (fondo transparente) y `doble_biceps_v14_en_fondo_app.jpg`.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
@@ -721,7 +779,7 @@ de frente y de espaldas hasta que apruebe la forma.**
   oscuros duros («robotizado» = mal). Centros no blancos puros. Cortes grises suaves (aclarados otra vez el 23-10).
 - Músculos más **redondeados** (por sombreado, no por tamaño). Espalda como grandes zonas, franja clara en la columna.
 - Rojo **con degradado, nunca naranja**; más profundo solo en la parte baja/sombra del músculo.
-- Short tan corto como en la referencia; cabeza CON rostro y pelo corto desde el 28-10-2026 (antes sin cara); sin suelo ni sombra (fondo blanco/transparente).
+- Short tan corto como en la referencia; cabeza CON rostro y pelo corto desde el 28-10-2026 (antes sin cara); desde el 12-11-2026 rostro fuerte y serio con corte «skin fade» (5s); sin suelo ni sombra (fondo blanco/transparente).
 - Máquinas como en las referencias: estructura gris clara, pila de pesas y patas negras.
 - Remo: espalda plana y bisagra marcada. Face pull: pulgares junto a los topes de la cuerda, codos altos.
 

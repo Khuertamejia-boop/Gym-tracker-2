@@ -31,6 +31,42 @@ for _s in 'LR':
     _f=np.clip((_u-E('TF0',0.55))/(E('TF1',0.85)-E('TF0',0.55)),0,1); _f=_f*_f*(3-2*_f)
     _tf=np.maximum(_tf,_f*(np.abs(np.linalg.norm(np.cross(_co-_h,_d/np.linalg.norm(_d)),axis=1))<0.07)*(_co[:,0]*_side>0))
 a=me.attributes.get('tfade') or me.attributes.new('tfade','FLOAT','POINT'); a.data.foreach_set('value',_tf.astype(np.float32)); have.add('tfade')
+_cab=bpy.data.objects.get('Cabeza')
+if _cab is not None and _cab.data.attributes.get('face') is not None and os.environ.get('FACE','1')=='1':
+    # head with face shading (facebuild.py FACEATTR=1): the neck of the body takes the same shading little by little
+    # (attribute 'face': 0 at the base of the neck -> 1 under the jaw, only around the neck), so head and neck are one piece
+    _zn=float(_rest['bh'][_bn.index('neck')][2])
+    _f=np.clip((_co[:,2]-(_zn-E('FNZ0',0.012)))/E('FNZH',0.070),0,1); _f=_f*_f*(3-2*_f)
+    _g=np.clip((E('FNR1',0.120)-np.hypot(_co[:,0],_co[:,1]+0.02))/(E('FNR1',0.120)-E('FNR0',0.080)),0,1); _g=_g*_g*(3-2*_g)
+    a=me.attributes.get('face') or me.attributes.new('face','FLOAT','POINT'); a.data.foreach_set('value',(_f*_g).astype(np.float32))
+NEWHEAD=_cab is not None and _cab.data.attributes.get('face') is not None and os.environ.get('FACE','1')=='1' and E('HEADPLAIN',1)>0
+if NEWHEAD:
+    # (12-11-2026) clean joint between the head and the neck. The body's UV map has a seam all round the neck 0-4 mm above
+    # the cut of the head, and the muscle maps stop there (the head island is plain skin): the copied drawing ended on
+    # the head band in a ragged ledge (the saw-tooth line that showed in the close-ups). Now the head is plain skin
+    # everywhere ('plainh' = 1: no map-driven relief, lines, fibres or red on it), so the drawing of the neck ends on
+    # the straight edge of the head; and the true displacement of the body fades out towards that edge ('hfd': 1 from
+    # HFD0 + HFD m away from the head, 0 under it), so the neck's relief cannot poke through the band glued over it.
+    from scipy.spatial import cKDTree as _KDh
+    _hv=np.array([v.co[:] for v in _cab.data.vertices])
+    _dh=_KDh(_hv).query(_co)[0]; _hf=np.clip((_dh-E('HFD0',0.0015))/E('HFD',0.006),0,1); _hf=_hf*_hf*(3-2*_hf)
+    a=me.attributes.get('hfd') or me.attributes.new('hfd','FLOAT','POINT'); a.data.foreach_set('value',_hf.astype(np.float32))
+    a=_cab.data.attributes.get('plainh') or _cab.data.attributes.new('plainh','FLOAT','POINT'); a.data.foreach_set('value',np.ones(len(_hv),np.float32))
+_abl=os.path.join(os.path.dirname(os.path.abspath(__file__)),'pv','bla.npz')     # muscle atlas (labels per body vertex)
+if E('PLAIN1',0)>0 and os.path.exists(_abl):
+    # the muscle drawing fades out where it reaches the head (attribute 'plain': 1 = plain skin, no map-driven relief,
+    # lines, fibres or red). The neck muscles (sternocleidomastoid) end in a ragged edge under the ear / jaw in the
+    # atlas; on the body that edge was hidden inside the head, but the head ('Cabeza') copies the drawing of the body
+    # skin under it and showed it as a saw-tooth line. Distance (rest pose) to the unlabelled skin of the head:
+    # 1 up to PLAIN0 m, 0 from PLAIN1 m on. The trapezius keeps its drawing up to the skull (clean border there).
+    from scipy.spatial import cKDTree as _KD
+    _ab=np.load(_abl,allow_pickle=True); _lab=np.array([str(x) for x in _ab['names']])[_ab['mid'].astype(int)]
+    _mn=np.array([str(x) for x in _rest['main']]); _seed=(_lab=='none')&(_mn=='head')
+    if len(_lab)==nv and _seed.any():
+        _dd=_KD(_co[_seed]).query(_co)[0]
+        _pl=1.0-np.clip((_dd-E('PLAIN0',0.003))/(E('PLAIN1',0)-E('PLAIN0',0.003)),0,1); _pl=_pl*_pl*(3-2*_pl)
+        _pl=_pl*(~np.char.startswith(_lab,'trap'))
+        a=me.attributes.get('plain') or me.attributes.new('plain','FLOAT','POINT'); a.data.foreach_set('value',_pl.astype(np.float32)); have.add('plain')
 if E('SHORTZ',0)>0:
     # shorter shorts: cut the existing shorts mask at a higher hem (rest-pose height), a little higher on the outside
     _sh=np.zeros(nv,np.float32); me.attributes['shorts'].data.foreach_get('value',_sh)
@@ -102,6 +138,9 @@ if E('SPINEW',0)>0 and 'restco' in have:
 # ---- pillow profile: 0 in the groove -> 1 inside the muscle   g = 1 - exp(-(d/W)^P)
 def pillow(dist,W,P):
     return M('SUBTRACT',1.0,M('EXPONENT',M('MULTIPLY',M('POWER',M('DIVIDE',dist,W),P),-1.0)))
+pln=M('MAXIMUM',F('plain'),A('plainh').outputs['Fac'])     # body attribute (PLAIN1, off by default) / head attribute (PLH1)
+red=M('MULTIPLY',red,M('SUBTRACT',1.0,pln))
+npl=M('SUBTRACT',1.0,pln)          # 0 where the skin is plain (head): no map-driven relief, lines or fibres
 gh=pillow(d,E('W',7.0),E('P',1.5)); gs=pillow(ds,E('WS',5.0),E('P',1.5))
 # fibres: phase field from the atlas, broken into bundles by noise (fixed to the body via its rest position)
 tc=A('restco').outputs['Vector'] if 'restco' in have else N.new('ShaderNodeTexCoord').outputs['Object']
@@ -147,19 +186,22 @@ else:
 h=M('ADD',h,M('MULTIPLY',fib,E('FIBH',0.12)))
 h=M('ADD',h,M('MULTIPLY',M('SUBTRACT',fine,0.5),E('SKINH',0.06)))
 h=M('MULTIPLY',h,M('SUBTRACT',1.0,SS(A('shorts').outputs['Fac'],0.3,0.6)))      # the shorts fabric stays smooth
+h=M('MULTIPLY',h,npl)
+if NEWHEAD: h=M('MULTIPLY',h,A('hfd').outputs['Fac'])      # no displacement on the head (no such attribute) nor on the neck right under it
 dn=N.new('ShaderNodeDisplacement'); dn.space='OBJECT'
 L.new(M('DIVIDE',h,1000.0),dn.inputs['Height']); dn.inputs['Midlevel'].default_value=0.0; dn.inputs['Scale'].default_value=E('DSC',1.0)
 L.new(dn.outputs['Displacement'],N['Material Output'].inputs['Displacement'])
 # ---- colour: white clay, slightly darker in the grooves; red with deeper red grooves and visible fibre streaks
-cav=M('MULTIPLY',M('SUBTRACT',1.0,gh),E('CAVK',0.35))
+cav=M('MULTIPLY',M('MULTIPLY',M('SUBTRACT',1.0,gh),E('CAVK',0.35)),npl)
 white=MIX(cav,G(E('SKC',0.88)),G(E('SKG',0.45)))
 wst=M('MULTIPLY',M('MULTIPLY',M('SUBTRACT',1.0,wave),SS(d,0.5,4.0)),M('SUBTRACT',1.0,tend))   # faint grey streaks on white muscles too
-white=MIX(M('MULTIPLY',wst,E('FIBW',0.06)),white,G(E('FIBWC',0.45)))
+white=MIX(M('MULTIPLY',M('MULTIPLY',wst,E('FIBW',0.06)),npl),white,G(E('FIBWC',0.45)))
 rc=C('REDC','0.86,0.26,0.15'); rg=C('REDG','0.42,0.06,0.03'); rl=C('REDL','1.0,0.62,0.48')
 redb=MIX(M('MULTIPLY',M('SUBTRACT',1.0,gh),E('CAVR',0.75)),rc,rg)
 redb=MIX(M('MULTIPLY',fib,E('FIBR',0.45)),redb,C('FIBRC','0.55,0.08,0.04'))
 redb=MIX(M('MULTIPLY',M('MULTIPLY',M('SUBTRACT',1.0,wave),bund),M('MULTIPLY',fmask_src,E('FIBL',0.25))),redb,rl)
 core=M('MULTIPLY',M('MULTIPLY',SS(d,E('LW0',0.3),E('LW1',1.4),1.0,0.0),E('LINEK',0.45)),M('SUBTRACT',1.0,M('MULTIPLY',F('tfade'),E('TFL',0.5))))      # thin dark core at the bottom of each groove
+core=M('MULTIPLY',core,npl)
 white=MIX(core,white,G(E('LINEC',0.30)))
 redb=MIX(core,redb,C('LINERC','0.30,0.04,0.02'))
 col=MIX(red,white,redb)
@@ -200,6 +242,7 @@ if os.environ.get('SHADE')=='matcap':
             hb=M('MULTIPLY',hb,M('SUBTRACT',1.0,SS(A('shorts').outputs['Fac'],0.3,0.6)))
             hb=M('MULTIPLY',hb,M('SUBTRACT',1.0,M('MULTIPLY',F('tfade'),E('TFB',0.75))))
             hb=M('MULTIPLY',hb,M('ADD',E('GBUMP',1.0),M('MULTIPLY',red,E('RBUMP',1.0)-E('GBUMP',1.0))))   # GBUMP / RBUMP: roundness of grey / red muscles
+            hb=M('MULTIPLY',hb,npl)
             L.new(hb,bp.inputs['Height'])
         elif os.path.exists(os.path.join(MAPS,'halfw.1001.png')) and os.environ.get('PROF','round')=='round':
             # round cross-section: each muscle bulges like a cylinder of its own local width
@@ -225,6 +268,7 @@ if os.environ.get('SHADE')=='matcap':
     dp=N.new('ShaderNodeVectorMath'); dp.operation='DOT_PRODUCT'; L.new(vt.outputs['Vector'],dp.inputs[0]); dp.inputs[1].default_value=(kx/kn,ky/kn,-kz/kn)    # camera space: surfaces facing the camera have normal z < 0
     lam=dp.outputs['Value']
     t=M('DIVIDE',M('ADD',lam,E('WRAP',0.6)),1.0+E('WRAP',0.6),True)
+    fc=A('face').outputs['Fac']        # 1 on the head and the eyes (facebuild.py FACEATTR=1), 0 on the body (no such attribute)
     if E('EDGEK',0)>0:
         # per-muscle shading like a drawn plate: every muscle is darker/more intense along its border and fades to
         # light towards its middle; the band width follows the muscle's own width so it reads at any distance
@@ -245,6 +289,7 @@ if os.environ.get('SHADE')=='matcap':
         ef=M('ADD',emin,M('MULTIPLY',eg,M('SUBTRACT',1.0,emin)))            # 1 in the middle, emin at the border
         ef=M('ADD',ef,M('MULTIPLY',SS(A('shorts').outputs['Fac'],0.3,0.6),M('SUBTRACT',1.0,ef)))   # not on the shorts
         ef=M('ADD',ef,M('MULTIPLY',M('MULTIPLY',F('tfade'),E('TFE',0.6)),M('SUBTRACT',1.0,ef)))       # lower forearm: tendons, lighter
+        ef=M('ADD',ef,M('MULTIPLY',pln,M('SUBTRACT',1.0,ef)))                                 # plain skin (head): no border shading
         # border darkening mostly on the shadow (lower) side of each muscle: lit borders stay light, like the plates
         tl_=t
         sidew=SS(tl_,E('SIDEHI',0.75),E('SIDELO',0.35),1.0,0.0)                    # 1 in shadow, 0 in light
@@ -252,8 +297,13 @@ if os.environ.get('SHADE')=='matcap':
         sidew=M('ADD',smin,M('MULTIPLY',sidew,M('SUBTRACT',1.0,smin)))
         ef=M('SUBTRACT',1.0,M('MULTIPLY',M('SUBTRACT',1.0,ef),sidew))
         elt_=M('ADD',E('ELT',1.0),M('MULTIPLY',red,E('ELTR',E('ELT',1.0))-E('ELT',1.0)))   # ELTR: how much the light models the worked (red) muscles
+        elt_=M('ADD',elt_,M('MULTIPLY',fc,E('FELT',E('ELT',1.0))-E('ELT',1.0)))             # FELT: the same for the face (planes of the face read)
         t=M('MULTIPLY',M('ADD',M('MULTIPLY',t,elt_),M('SUBTRACT',1.0,elt_)),ef)   # ELT<1 = less light, more drawing
         if os.environ.get('MDEBUG')=='eg': outdbg=eg
+    if E('FCON',1.0)!=1.0:
+        # face: more contrast between its light and dark planes (around FPIV), as in a drawn portrait
+        _tc=M('ADD',M('MULTIPLY',M('SUBTRACT',t,E('FPIV',0.6)),E('FCON',1.0)),E('FPIV',0.6),True)
+        t=M('ADD',t,M('MULTIPLY',fc,M('SUBTRACT',_tc,t)))
     rp=N.new('ShaderNodeValToRGB'); el=rp.color_ramp.elements; rp.color_ramp.interpolation='EASE' if os.environ.get('RAMPI','')=='ease' else 'LINEAR'
     stops=[float(x) for x in os.environ.get('TSTOPS','0.0,0.30,0.55,0.80,1.0').split(',')]
     tones=[float(x) for x in os.environ.get('TONES','0.30,0.48,0.72,0.92,1.0').split(',')]
@@ -270,6 +320,10 @@ if os.environ.get('SHADE')=='matcap':
     rimf=SS(M('MULTIPLY',sep.outputs['Z'],-1.0),E('MR0',0.0),E('MR1',0.30),E('MRC',0.55),1.0)
     shade=MIX(1.0,rp.outputs['Color'],G(rimf),'MULTIPLY')
     shade=MIX(1.0,shade,G(M('POWER',ao.outputs['AO'],E('MAOP',1.0))),'MULTIPLY')
+    if E('FAOP',0)>0:
+        # face: short-range occlusion (eye sockets, nostrils, under the lip, inside the ear, hairline step) -> depth
+        ao2=N.new('ShaderNodeAmbientOcclusion'); ao2.inputs['Distance'].default_value=E('FAOD',0.02); ao2.samples=16
+        shade=MIX(fc,shade,MIX(1.0,shade,G(M('POWER',ao2.outputs['AO'],E('FAOP',0))),'MULTIPLY'))
     albedo=MIX(1.0,col,G(1.0/max(E('SKC',0.88),1e-3)),'MULTIPLY')        # albedo normalised so white muscle = 1
     outc=MIX(1.0,albedo,shade,'MULTIPLY')
     if os.environ.get('REDRAMP','1')=='1':
@@ -308,7 +362,15 @@ if os.environ.get('SHADE')=='matcap':
         _nh2=N.new('ShaderNodeTexNoise'); _nh2.inputs['Scale'].default_value=E('HRNB',420.0)
         _hs=M('MULTIPLY',_hs,SS(_nh2.outputs['Fac'],0.35,0.6,0.45,1.0))           # strands of uneven brightness
         _tn=M('MULTIPLY',_tn,M('SUBTRACT',1.0,M('MULTIPLY',M('MULTIPLY',E('HAIRSTK',0.45),M('SUBTRACT',1.0,_hs)),SS(_hm,0.05,0.4))))
+    if E('HSTK',0)>0:
+        # short hair (skin fade): fine grain x soft clumps on the hair darkness, fixed to the head ('hrest' = rest position)
+        _hc=A('hrest').outputs['Vector']
+        _s1=N.new('ShaderNodeTexNoise'); L.new(_hc,_s1.inputs['Vector']); _s1.inputs['Scale'].default_value=E('HSTS',1400.0); _s1.inputs['Detail'].default_value=1.0
+        _s2=N.new('ShaderNodeTexNoise'); L.new(_hc,_s2.inputs['Vector']); _s2.inputs['Scale'].default_value=E('HSTS2',260.0); _s2.inputs['Detail'].default_value=2.0
+        _g=M('MULTIPLY',SS(_s1.outputs['Fac'],E('HST0',0.35),E('HST1',0.65)),SS(_s2.outputs['Fac'],0.25,0.75,E('HSTC',0.75),1.0))
+        _tn=M('MULTIPLY',_tn,M('SUBTRACT',1.0,M('MULTIPLY',M('MULTIPLY',A('hstip').outputs['Fac'],E('HSTK',0)),M('SUBTRACT',1.0,_g))))
     outc=MIX(_tn,outc,MIX(1.0,G(E('TINTV',0.05)),shade,'MULTIPLY'))   # TINTV is linear (0.05 ~ dark grey on screen)
+    outc=MIX(A('glint').outputs['Fac'],outc,G(1.0))                    # eyes: catchlight and brighter white (facebuild.py EYEV2=1)
     outc=MIX(1.0,outc,G(spec),'ADD')
     if os.environ.get('MDEBUG')=='n':
         mp=N.new('ShaderNodeVectorMath'); mp.operation='MULTIPLY_ADD'; L.new(vt.outputs['Vector'],mp.inputs[0]); mp.inputs[1].default_value=(0.5,0.5,0.5); mp.inputs[2].default_value=(0.5,0.5,0.5)
@@ -326,6 +388,11 @@ if os.environ.get('SHADE')=='matcap':
     if os.environ.get('MDEBUG')=='tm':
         cc=N.new('ShaderNodeCombineColor'); L.new(t,cc.inputs[0]); L.new(F('armmask'),cc.inputs[1]); L.new(red,cc.inputs[2]); outc=cc.outputs[0]
     if os.environ.get('MDEBUG')=='a': outc=albedo
+    if os.environ.get('MDEBUG')=='plain': outc=G(pln)
+    if os.environ.get('MDEBUG')=='hb': outc=G(M('MULTIPLY',hb,0.1))
+    if os.environ.get('MDEBUG')=='h': outc=G(M('ADD',M('MULTIPLY',h,0.2),0.5))
+    if os.environ.get('MDEBUG')=='snap':      # head band glued to the neck: red = band weight, green = head (hrest present), blue = plain
+        _cc=N.new('ShaderNodeCombineColor'); L.new(A('snapw').outputs['Fac'],_cc.inputs[0]); L.new(M('MINIMUM',M('MULTIPLY',M('ABSOLUTE',N.new('ShaderNodeSeparateXYZ').outputs[2]),0.0),1.0),_cc.inputs[1]); L.new(SS(A('hstip').outputs['Fac'],-1.0,1.0,0.3,1.0),_cc.inputs[2]); outc=_cc.outputs[0]
     em=N.new('ShaderNodeEmission'); L.new(outc,em.inputs['Color']); em.inputs['Strength'].default_value=1.0
     L.new(em.outputs[0],N['Material Output'].inputs['Surface'])
 rg_=MIX(sh,G(E('ROUGH',0.55)),G(0.42)); sp2=N.new('ShaderNodeSeparateColor'); L.new(rg_,sp2.inputs[0]); L.new(sp2.outputs[0],bs.inputs['Roughness'])
@@ -376,6 +443,31 @@ if _heads:
         a,b,c=_rco[_tv[t]]; v0=b-a; v1=c-a; v2=P-a
         d00=v0@v0; d01=v0@v1; d11=v1@v1; d20=v2@v0; d21=v2@v1; den=max(d00*d11-d01*d01,1e-18)
         v=(d11*d20-d01*d21)/den; w=(d00*d21-d01*d20)/den; return np.array((1-v-w,v,w))
+    def _clampbary(P,t):
+        """barycentric coordinates of the point of triangle t nearest to P (never outside the triangle)"""
+        a,b,c=_rco[_tv[t]]; ab=b-a; ac=c-a; ap=P-a; d1=ab@ap; d2=ac@ap
+        if d1<=0 and d2<=0: return np.array((1.0,0,0))
+        bp=P-b; d3=ab@bp; d4=ac@bp
+        if d3>=0 and d4<=d3: return np.array((0,1.0,0))
+        vc=d1*d4-d3*d2
+        if vc<=0 and d1>=0 and d3<=0: v=d1/(d1-d3); return np.array((1-v,v,0))
+        cp=P-c; d5=ab@cp; d6=ac@cp
+        if d6>=0 and d5<=d6: return np.array((0,0,1.0))
+        vb_=d5*d2-d1*d6
+        if vb_<=0 and d2>=0 and d6<=0: w=d2/(d2-d6); return np.array((1-w,0,w))
+        va=d3*d6-d5*d4
+        if va<=0 and (d4-d3)>=0 and (d5-d6)>=0: w=(d4-d3)/((d4-d3)+(d5-d6)); return np.array((0,1-w,w))
+        den=1.0/(va+vb_+vc); v=vb_*den; w=vc*den; return np.array((1-v-w,v,w))
+    _islc=[]
+    def _islands():
+        """UV island of every body triangle (triangles that share a vertex with the same UV belong together)"""
+        if not _islc:
+            from scipy.sparse import coo_matrix; from scipy.sparse.csgraph import connected_components
+            nt_=len(_tv); key=np.concatenate([_tv.reshape(-1,1).astype(np.float64),np.round(_tuv.reshape(-1,2),5)],1)
+            _,uid=np.unique(key,axis=0,return_inverse=True); uid=np.asarray(uid).ravel(); nu=int(uid.max())+1
+            rows=np.repeat(np.arange(nt_),3); g=coo_matrix((np.ones(len(rows)),(rows,nt_+uid)),shape=(nt_+nu,nt_+nu))
+            _islc.append(connected_components(g,directed=False)[1][:nt_])
+        return _islc[0]
     def _transfer(o):
         hm=o.data; n_=len(hm.vertices); rc=np.zeros(n_*3); hm.vertices.foreach_get('co',rc); rc=rc.reshape(-1,3)
         vt=np.zeros(n_,int); vb=np.zeros((n_,3))
@@ -390,11 +482,51 @@ if _heads:
             elif src.data_type=='FLOAT_VECTOR':
                 v=np.zeros(nv*3); src.data.foreach_get('vector',v); v=v.reshape(-1,3); val=(v[_tv[vt]]*vb[:,:,None]).sum(1)
                 a_=hm.attributes.get(k) or hm.attributes.new(k,'FLOAT_VECTOR','POINT'); a_.data.foreach_set('vector',val.astype(np.float32).ravel())
+        if NEWHEAD and os.path.exists(_abl) and E('HEADTRAP',1)>0:
+            # the trapezius keeps its drawing (and its red) on the head: it goes up the nape to the skull. 'plainh' is 1
+            # everywhere on the head except where the skin underneath is labelled trapezius (smooth 0.2..0.8 of the label)
+            _ab3=np.load(_abl,allow_pickle=True); _lb3=np.array([str(x) for x in _ab3['names']])[_ab3['mid'].astype(int)]
+            if len(_lb3)==nv:
+                _tr3=(np.char.startswith(_lb3,'trap').astype(float)[_tv[vt]]*vb).sum(1); _tr3=np.clip((_tr3-0.2)/0.6,0,1); _tr3=_tr3*_tr3*(3-2*_tr3)
+                a_=hm.attributes.get('plainh') or hm.attributes.new('plainh','FLOAT','POINT'); a_.data.foreach_set('value',(1.0-_tr3).astype(np.float32))
+        if E('PLH1',0)>0 and os.path.exists(_abl):
+            # 'plainh' (12-11-2026): on the head the copied neck drawing fades to plain skin before it reaches the
+            # unlabelled skin of the head. In the atlas the sternocleidomastoid ends under the ear / jaw in a ragged
+            # edge (raw label border along the body's coarse triangles); on the body it is hidden inside the head, but
+            # the head band showed it as a saw-tooth line. 1 up to PLH0 m from that skin, 0 from PLH1 m on; the
+            # trapezius keeps its drawing up to the skull.
+            from scipy.spatial import cKDTree as _KD2
+            _ab2=np.load(_abl,allow_pickle=True); _lb2=np.array([str(x) for x in _ab2['names']])[_ab2['mid'].astype(int)]
+            _mn2=np.array([str(x) for x in _rest['main']])
+            if len(_lb2)==nv:
+                _nn=(((_lb2=='none')&(_mn2=='head')).astype(float)[_tv[vt]]*vb).sum(1); _tr=(np.char.startswith(_lb2,'trap').astype(float)[_tv[vt]]*vb).sum(1)
+                _sd=_nn>0.5
+                if _sd.any():
+                    _dd=_KD2(rc[_sd]).query(rc)[0]
+                    _ph=1.0-np.clip((_dd-E('PLH0',0.0015))/(E('PLH1',0)-E('PLH0',0.0015)),0,1); _ph=_ph*_ph*(3-2*_ph)*(1-np.clip(_tr,0,1))
+                    a_=hm.attributes.get('plainh') or hm.attributes.new('plainh','FLOAT','POINT'); a_.data.foreach_set('value',_ph.astype(np.float32))
         if not hm.uv_layers: hm.uv_layers.new(name='UVMap')
         uvd=np.zeros((len(hm.loops),2)); lv=np.zeros(len(hm.loops),int); hm.loops.foreach_get('vertex_index',lv)
-        for p_ in hm.polygons:
-            ls=list(p_.loop_indices); cen=rc[lv[ls]].mean(0); _,_,t,_=_tbvh.find_nearest(_V(cen))
-            for li in ls: uvd[li]=_bary(rc[lv[li]],t)@_tuv[t]
+        # FACEUVV=1 (12-11-2026): UV per VERTEX (its own nearest body triangle), so the drawing is continuous from face to
+        # face. Before, every face took the UVs of ONE body triangle (extrapolated). The body's UV map has a seam all
+        # round the neck, 0-4 mm above the cut of the head (the head is its own UV island): the head band crosses it,
+        # the faces on either side took triangles of different islands and, the seam running along the body's coarse
+        # edges, the band showed a saw-tooth line. Now: a face whose vertices all land on one island uses their own UVs;
+        # a face that straddles the seam is kept on the island of its centre, and its vertices on the other island are
+        # clamped to the nearest point of that triangle (no extrapolation outside the island).
+        if E('FACEUVV',1 if NEWHEAD else 0)>0:
+            _isl=_islands(); _uvv=np.einsum('ij,ijk->ik',vb,_tuv[vt]); _iv=_isl[vt]; _nfb=0
+            for p_ in hm.polygons:
+                ls=list(p_.loop_indices); vs=lv[ls]; u_=_uvv[vs]
+                if (_iv[vs]==_iv[vs[0]]).all() and np.abs(u_-u_.mean(0)).max()<E('FACEUVJ',0.03): uvd[ls]=u_; continue
+                _nfb+=1; cen=rc[vs].mean(0); _,_,t,_=_tbvh.find_nearest(_V(cen))
+                for li,v_ in zip(ls,vs):
+                    uvd[li]=_uvv[v_] if (_iv[v_]==_isl[t] and np.abs(_uvv[v_]-_tuv[t].mean(0)).max()<E('FACEUVJ',0.03)) else _clampbary(rc[v_],t)@_tuv[t]
+            print('face UV per vertex: %d of %d faces straddle a UV seam (clamped to one island)'%(_nfb,len(hm.polygons)))
+        else:
+            for p_ in hm.polygons:
+                ls=list(p_.loop_indices); cen=rc[lv[ls]].mean(0); _,_,t,_=_tbvh.find_nearest(_V(cen))
+                for li in ls: uvd[li]=_bary(rc[lv[li]],t)@_tuv[t]
         hm.uv_layers[0].data.foreach_set('uv',uvd.ravel())
     # the lowest band of the head fades out (transparent) over the identical neck skin underneath: no visible edge
     _out=N['Material Output']; _lk=[l for l in nt.links if l.to_node==_out and l.to_socket.name=='Surface']
@@ -411,10 +543,28 @@ if _heads:
         n_=len(nm.vertices); hc=np.zeros(n_*3); nm.vertices.foreach_get('co',hc); hc=hc.reshape(-1,3)
         if 'snapw' in nm.attributes:
             w_=np.zeros(n_); nm.attributes['snapw'].data.foreach_get('value',w_)
+            # FACERAY=1 (12-11-2026): the neck skin under each band vertex is found with a ray along the head's own normal,
+            # from outside inwards (first hit = the OUTER skin of the neck). With the nearest point (before) a vertex
+            # could be pulled either to the neck skin or to the cap of the mannequin head that dives inside just above:
+            # neighbours alternated and the band came out as a saw-tooth line 3-6 mm above the edge of the head.
+            _hn=np.zeros(n_*3); nm.vertices.foreach_get('normal',_hn); _hn=_hn.reshape(-1,3); _ray=E('FACERAY',0)>0
+            from mathutils import Vector as _V2
             for i in np.where(w_>1e-3)[0]:
-                loc,nrm,_,_=_bvh.find_nearest(hc[i])
-                if loc is None: continue
-                q=np.array(loc)+np.array(nrm)*(E('FACEOFF',0.0006)*(1-w_[i])+E('FACEOFF0',0.0)*w_[i]); hc[i]=hc[i]+(q-hc[i])*w_[i]
+                loc=None
+                if _ray:
+                    _r=_bvh.ray_cast(_V2(hc[i]+_hn[i]*0.03),_V2(-_hn[i]),0.07)
+                    if _r[0] is not None: loc=np.array(_r[0]); nrm=_hn[i]
+                if loc is None:
+                    loc,nrm,_,_=_bvh.find_nearest(hc[i])
+                    if loc is None: continue
+                # new-style head (12-11-2026): the edge of the band stays FACEOFF0 = 0.6 mm over the neck (before 0: the edge lay
+                # exactly on the neck skin and the two skins interleaved along it), and no band vertex ends up lower than
+                # FACEMIN over the neck skin
+                q=np.array(loc)+np.array(nrm)*(E('FACEOFF',0.0006)*(1-w_[i])+E('FACEOFF0',0.0006 if NEWHEAD else 0.0)*w_[i]); hc[i]=hc[i]+(q-hc[i])*w_[i]
+                _fm=E('FACEMIN',0.0006 if NEWHEAD else -1.0)
+                if _fm>-1.0:
+                    _s=float((hc[i]-np.array(loc))@np.array(nrm))
+                    if _s<_fm: hc[i]=hc[i]+np.array(nrm)*(_fm-_s)
             nm.vertices.foreach_set('co',hc.ravel()); nm.update()
         if not (o.name=='Cabeza' and E('FACEUV',1)>0):
             if not nm.uv_layers: nm.uv_layers.new(name='UVMap')
@@ -426,4 +576,5 @@ if _heads:
             print('FACEDBG',o.name,'attrs',[a.name for a in nm.attributes],'uv range',_u.min().round(3),_u.max().round(3),'have',sorted(have))
         if o.name=='Cabeza' and E('FACESUB',1)>0:
             s_=o.modifiers.new('sub','SUBSURF'); s_.levels=s_.render_levels=int(E('FACESUB',1))
+if os.environ.get('HIDEBODY')=='1': ob.hide_render=True      # debug: head only
 sc.render.filepath=out+'.png'; bpy.ops.render.render(write_still=True)

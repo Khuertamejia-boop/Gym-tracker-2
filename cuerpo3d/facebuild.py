@@ -75,6 +75,14 @@ if FEM:
     # the face edits fade out before the band that is glued to the neck (1.2 cm): no crease at the joint
     hco,eyes=femface.deform(hco,hfaces,eyes,prot=ss_f((hco[:,2]-cutz(hco[:,1])-E('SNAPH',0.012))/0.02))
     hco=femface.neck_scale(hco,femface.neck_mask(hco))
+if E('MANSHAPE',0)>0:
+    # masculine athletic face (manface.py, 12-11-2026): squarer jaw and chin, cheekbones, brow ridge, deeper-set eyes
+    sys.path.insert(0,os.path.dirname(os.path.abspath(__file__))); import manface
+    hco,eyes=manface.deform(hco,hfaces,eyes,prot=manface.ss((hco[:,2]-cutz(hco[:,1])-E('SNAPH',0.012))/0.02))
+if E('EARPIN',0)>0:
+    # ears closer to the head: what sticks out beyond EARX0 from the midline is reduced by EARPIN (0..1)
+    _dx=np.maximum(np.abs(hco[:,0])-E('EARX0',0.072),0)*np.clip(hear,0,1)*E('EARPIN',0)
+    hco[:,0]-=np.sign(hco[:,0])*_dx; hco[:,1]+=0.35*_dx
 if E('SMILE',0)>0:
     # slight smile (owner 10-11-2026): the mouth corners rise SMILE m (and go a little back / out), with a smooth
     # gaussian falloff (SMX x SMZ) in the front plane; the cheek just above the corner lifts a little too (SMCH)
@@ -105,15 +113,33 @@ def sdist(px,py,poly):
         cr=((y0[i]>py)!=(y1[i]>py))&(px<(x1[i]-x0[i])*(py-y0[i])/np.where(y1[i]-y0[i]==0,1e-12,y1[i]-y0[i])+x0[i]); inside^=cr
     return np.where(inside,-dmin,dmin)
 ax0=np.abs(hco[:,0])
-rec=E('HREC',0.009)*ss_((ax0-0.018)/0.032)*(hco[:,1]<-0.10)          # temples recede a little (soft M shape)
+FADE=os.environ.get('HAIRSTYLE','')=='fade'
+rec=E('HREC',0.0 if FADE else 0.009)*ss_((ax0-0.018)/0.032)*(hco[:,1]<-0.10)          # temples recede a little (soft M shape)
 ZO=E('ZOFF',0.0)
 if os.environ.get('HAIRSTYLE','')=='bun':
     SKIN=np.array([(-0.30,1.30),(-0.30,1.641),(-0.114,1.641),(-0.106,1.630),(-0.097,1.613),(-0.089,1.596),(-0.082,1.582),
                    (-0.074,1.574),(-0.066,1.582),(-0.062,1.598),(-0.052,1.606),(-0.036,1.608),(-0.022,1.602),(-0.012,1.588),
                    (-0.006,1.565),(0.000,1.540),(0.010,1.520),(0.030,1.508),(0.20,1.504),(0.20,1.30)])
+if FADE:
+    # skin fade with a lined-up front (owner's photo, 12-11-2026): straight front hairline at HLZ with a squared temple
+    # corner (the temple edge is a vertical line at y = HTY in the side view), short sideburn, around the ear, nape
+    HLZ=E('HLZ',1.648); TY_=E('HTY',-0.091)
+    SKIN=np.array([(-0.30,1.30),(-0.30,HLZ),(TY_-0.004,HLZ),(TY_,HLZ-0.004),(TY_+0.001,1.615),(TY_+0.004,1.590),(-0.082,1.572),
+                   (-0.077,1.560),(-0.071,1.556),(-0.064,1.562),(-0.061,1.585),(-0.052,1.597),(-0.038,1.600),(-0.024,1.596),
+                   (-0.015,1.585),(-0.010,1.565),(-0.006,1.545),(0.002,1.525),(0.012,1.512),(0.030,1.506),(0.20,1.504),(0.20,1.30)])
 sd=sdist(hco[:,1],hco[:,2]-ZO-rec,SKIN)
 hair=ss_((sd+E('HSOFT',0.0035))/(2*E('HSOFT',0.0035)))
-hair=hair*(1.0-np.clip(hear*1.5,0,1))     # never on the ear itself
+dens=hair
+if FADE:
+    hs_=E('HSOFT',0.0012); hair=np.clip((sd+hs_)/(2*hs_),0,1)         # crisp line-up: linear ramp ~2.4 mm (wider than the mesh)
+    # the fade: hair darkness by height. Middle of the gradient at FZT over the temple, FZE over the ear, FZB at the
+    # back of the head; FW = half height of the gradient; FMIN = faint shadow of the shaved part (never bare 'skin')
+    yb_=hco[:,1]; u_=ss_((yb_+0.090)/0.050); v_=ss_((yb_+0.020)/0.070)
+    zf_=E('FZT',1.628)+(E('FZE',1.622)-E('FZT',1.628))*u_+(E('FZB',1.585)-E('FZE',1.622))*v_
+    fd_=ss_((hco[:,2]-ZO-zf_)/(2*E('FW',0.026))+0.5)**E('FP',1.3)
+    dens=hair*(E('FMIN',0.06)+(1-E('FMIN',0.06))*fd_)
+    densv=ss_(sd/E('HVR',0.014))*fd_*(1.0-np.clip(hear*1.5,0,1))       # for the volume: grows inside the hair, 0 at the hairline (no ledge)
+hair=hair*(1.0-np.clip(hear*1.5,0,1)); dens=dens*(1.0-np.clip(hear*1.5,0,1))     # never on the ear itself
 # eyebrows (owner's reference photo, 28-10-2026): thick, dense, almost straight, soft arch at the outer third, tail
 # thinning and dropping a little; the head (next to the nose) lighter and fuzzy with hairs pointing up.
 # 'bw' = coordinate across the hairs (mm) for the renderer's hair strokes; 'bmask' = brow amount
@@ -137,7 +163,7 @@ for sg in (1,-1):
     bw[xs>0]=w_[xs>0]; brow=np.maximum(brow,inn)
 a_=cab.data.attributes.new('bmask','FLOAT','POINT'); a_.data.foreach_set('value',brow.astype(np.float32))
 a_=cab.data.attributes.new('bw','FLOAT','POINT'); a_.data.foreach_set('value',bw.astype(np.float32))
-tint=np.maximum(hair*E('HAIRT',0.51),brow*E('BROWT',0.95))
+tint=np.maximum(dens*E('HAIRT',0.51),brow*E('BROWT',0.95))
 if (os.environ.get('HAIRSTYLE','')=='bun' and E('FEMFACE',1)>0) or E('MANFACE',0)>0:   # MANFACE=1: lips / mouth line / lashes on the man too
     ss1=lambda t: np.clip(t,0,1)**2*(3-2*np.clip(t,0,1))
     # lips: a little darker (natural lip colour in a grey plate), upper lip thinner than the lower one
@@ -161,7 +187,11 @@ if (os.environ.get('HAIRSTYLE','')=='bun' and E('FEMFACE',1)>0) or E('MANFACE',0
     tint=np.maximum.reduce([tint,lip*E('LIPT',0.36),mline*E('MLINE',0.55),lash])
     print('lips verts',int((lip>0.5).sum()),'lash verts',int((lash>0.5).sum()))
 # hair volume: pulled-back hair lies a few mm over the skull (fuller head, soft step at the hairline)
-if E('HVOL',0)>0:
+if FADE and E('HVOL',0)>0:
+    # short hair has thickness: HVOL mm where it is dark (0 on the shaved part), + HTOPV mm on the top of the head
+    hv=(E('HVOL',0)+E('HTOPV',0)*ss_((hco[:,2]-ZO-E('HTOPZ',1.628))/0.030))/1000.0*np.clip(densv,0,1)**0.8
+    hco=hco+hn*hv[:,None]; cab.data.vertices.foreach_set('co',hco.astype(np.float32).ravel()); cab.data.update()
+elif E('HVOL',0)>0:
     hv=E('HVOL',0)/1000.0*hair*(0.6+0.4*np.clip((hco[:,2]-hco[:,2].min())/(hco[:,2].max()-hco[:,2].min()),0,1))
     hco=hco+hn*hv[:,None]; cab.data.vertices.foreach_set('co',hco.astype(np.float32).ravel()); cab.data.update()
 # hair strands: across-strand coordinate 'hw' (mm) = angle around the axis head centre -> bun (strands run to the bun)
@@ -188,6 +218,13 @@ if os.environ.get('HAIRSTYLE','')=='bun':
     g=bun.vertex_groups.new(name='head'); g.add(list(range(len(bc))),1.0,'REPLACE')
     mb=bun.modifiers.new('Armature','ARMATURE'); mb.object=rig
 a=cab.data.attributes.new('tint','FLOAT','POINT'); a.data.foreach_set('value',tint.astype(np.float32))
+if E('FACEATTR',0)>0:
+    # 'face' = how much of the face shading (rendsculpt.py FELT / FAOP / FCON) applies: the same function of the rest
+    # height that the renderer gives to the neck of the body (0 at the base of the neck -> 1 under the jaw): no joint
+    zn_=float(rig.data.bones['neck'].head_local[2]); fa_=ss_((hco[:,2]-(zn_-E('FNZ0',0.012)))/E('FNZH',0.070))
+    a=cab.data.attributes.new('face','FLOAT','POINT'); a.data.foreach_set('value',fa_.astype(np.float32))
+    a=cab.data.attributes.new('hstip','FLOAT','POINT'); a.data.foreach_set('value',(hair if FADE else 0*hair).astype(np.float32))
+    a=cab.data.attributes.new('hrest','FLOAT_VECTOR','POINT'); a.data.foreach_set('vector',hco.astype(np.float32).ravel())
 print('hair verts',int((hair>0.5).sum()),'brow verts',int((brow>0.5).sum()))
 # weights: nearest body vertex of the ORIGINAL surface (neck band) / head bone for the face
 d,ii=kd.query(hco); src_ids=upid[ii]
@@ -211,6 +248,24 @@ for L,ec,ef in eyes:
     # iris (~11 mm wide on a 24 mm eye ~ 27 deg) and pupil (~10 deg): darkness for the renderer's 'tint'
     sm_=lambda a,b,x: np.clip((x-a)/(b-a),0,1)**2*(3-2*np.clip((x-a)/(b-a),0,1))
     t=0.45*(1-sm_(E('IRISA',27)-1.5,E('IRISA',27)+1.0,ang))+0.42*(1-sm_(E('PUPA',10)-1.0,E('PUPA',10)+1.0,ang))
+    if E('EYEV2',0)>0:
+        # (12-11-2026) living eye: iris darker towards its rim (limbal ring) and a little lighter around the pupil, black
+        # pupil, a small catchlight up and to the viewer's left (where the key light is), white of the eye a little brighter
+        ir_=E('IRISA',27); pu_=E('PUPA',10)
+        iris_=1-sm_(ir_-0.5,ir_+1.2,ang); rad_=np.clip((ang-pu_)/(ir_-pu_),0,1)
+        t=iris_*(E('IRIST',0.58)+E('LIMT',0.26)*sm_(0.55,1.0,rad_)+E('IRISG',0.08)*(1-sm_(0.0,0.5,rad_)))
+        # iris fibres: fine radial streaks (a smooth pseudo-random function of the angle around the eye axis)
+        az_=np.arctan2((ec-c)[:,2],(ec-c)[:,0])
+        fib_=0.5*np.sin(37*az_+1.3*np.sin(11*az_))+0.5*np.sin(23*az_+2.1+0.8*np.sin(5*az_))
+        t=t+E('IRISF',0.07)*fib_*iris_*sm_(0.08,0.30,rad_)*(1-sm_(0.80,1.0,rad_))
+        t=np.clip(np.maximum(t,(1-sm_(pu_-1.0,pu_+1.0,ang))*E('PUPT',0.97)),0,1)
+        gd_=np.array((E('GLX',-0.26),-1.0,E('GLZ',0.24))); gd_/=np.linalg.norm(gd_)
+        ga_=np.degrees(np.arccos(np.clip(((ec-c)@gd_)/np.maximum(np.linalg.norm(ec-c,axis=1),1e-9),-1,1)))
+        gl_=1-sm_(E('GLR',4.2)-1.0,E('GLR',4.2)+1.0,ga_)
+        gl_=np.maximum(gl_,E('EYEW',0.20)*(1-iris_)*(cosang>0.2))
+        t=t*(1-gl_*(gl_>0.5))
+        a=ob.data.attributes.new('glint','FLOAT','POINT'); a.data.foreach_set('value',gl_.astype(np.float32))
+        a=ob.data.attributes.new('face','FLOAT','POINT'); a.data.foreach_set('value',np.full(len(ec),E('EYEFACE',0.3),np.float32))
     a=ob.data.attributes.new('tint','FLOAT','POINT'); a.data.foreach_set('value',t.astype(np.float32))
     print('eye',L,'centre',np.round(c,3),'r %.4f'%r)
 # body cap pushed inside the new head: from 0.8 cm above the cut, up to CAPIN mm (smooth), only the head region
