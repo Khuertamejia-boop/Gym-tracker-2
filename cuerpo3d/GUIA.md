@@ -22,7 +22,7 @@ de esta guía y Claude seguirá desde aquí.
 | Animación de fondo de la app: doble bíceps de espaldas (rojo Push y rojo Pull) | v5 (11-11-2026): hombro con bola, bíceps con pico, axila limpia (sección 5r; `ejemplos/v5_espalda_antes_ahora.jpg`); antes v4 (sección 5q); antes v3 (mapas v2, puños cerrados, cara con sonrisa, `ejemplos/doble_biceps_v3_cerca.jpg`); antes v2 (hombro redondo, `ejemplos/doble_biceps_hombro_antes_ahora.jpg`); falta el visto bueno: `ejemplos/doble_biceps_pull_en_la_app.mp4`, `app/doble_biceps_pull_transparente.mov`, `app/doble_biceps_pull/` | `ejemplos/doble_biceps_en_la_app.mp4`, `.jpg`; para Xcode: `app/doble_biceps_transparente.mov`, `app/doble_biceps/` |
 | Animación de fondo de la app: doble bíceps **de frente** (rojo Push) | v5 (11-11-2026: hombro con bola, bíceps con pico, axila limpia, sección 5r; `ejemplos/v5_frente_antes_ahora.jpg`), falta el visto bueno | `ejemplos/doble_biceps_frente_en_la_app.mp4`, `.jpg`, `_cerca.jpg`; para Xcode: `app/doble_biceps_frente_transparente.mov`, `app/doble_biceps_frente/` |
 | **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v3 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v3_*.jpg` |
-| **Rostro y corte de cabello del hombre** (rostro fuerte, corte «skin fade», ojos con vida) | v14 (12-11-2026, sección 5s) + unión con el cuello sin línea y cuello que sube natural hasta la mandíbula v16 (13-11-2026, sección 5t), falta el visto bueno; solo está posado de nuevo el doble bíceps (fotograma 30) | `ejemplos/rostro_v14_antes_despues.jpg`, `cuello_v16_antes_despues.jpg`, `union_cuello_v16_antes_despues.jpg`, `rostro_v16_vistas.jpg`, `doble_biceps_v16_en_fondo_app.jpg` |
+| **Rostro y corte de cabello del hombre** (rostro fuerte, corte «skin fade», ojos con vida) | v14 (12-11-2026, sección 5s) + unión con el cuello sin línea, cuello que sube natural hasta la mandíbula (v16) y lado del cuello en una sola línea, sin bulto bajo las orejas (v17, 13-11-2026, sección 5t), falta el visto bueno; solo está posado de nuevo el doble bíceps (fotograma 30) | `ejemplos/rostro_v14_antes_despues.jpg`, `cuello_v17_antes_despues.jpg`, `union_cuello_v16_antes_despues.jpg`, `rostro_v17_vistas.jpg`, `doble_biceps_v17_en_fondo_app.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
@@ -712,7 +712,7 @@ de frente y de espaldas hasta que apruebe la forma.**
     sombreador anterior en `ill/rendsculpt_v7style.py`. Todo lo que use `style_app.env` (p. ej. `render_app.sh`)
     sale ya con degradado; los vídeos y GIF ya hechos NO se han vuelto a renderizar.
   Imagen: `ejemplos/doble_biceps_v13_antes_despues.jpg` (arriba v12, abajo v13). Las de cuerpo entero v10–v13 se
-  quitaron: las actuales son `doble_biceps_v16_frente.png` / `_espalda.png` (mismo cuerpo, cabeza nueva, secciones 5s y 5t).
+  quitaron: las actuales son `doble_biceps_v17_frente.png` / `_espalda.png` (mismo cuerpo, cabeza nueva, secciones 5s y 5t).
 - PENDIENTE hasta el visto bueno: regenerar las 31 poses (`PFX=DG`) y los tres vídeos; los de `app/` y
   `ejemplos/doble_biceps*_en_la_app.mp4` siguen siendo la v4. Con la cabeza nueva (5s) hay que volver a posar también los
   demás ejercicios antes de renderizarlos otra vez.
@@ -770,10 +770,10 @@ IDÉNTICAS (comprobado con renders: diferencia 0), y `rostro_hombre.sh` reproduc
 - Vistas de la cabeza para revisar: el render de siempre con `TZ=1.555 OSC=0.36 PIT=2 RX=800 RY=800` y
   `YAW=0` (frente), `35`, `90` (perfil) y `145` (nuca).
 - Imágenes: `ejemplos/rostro_v14_antes_despues.jpg` (arriba antes, abajo ahora; aún con la línea del cuello). Las 4
-  vistas y la pose se rehicieron con la unión nueva (5t): `rostro_v16_vistas.jpg`, `doble_biceps_v16_frente.png` /
-  `_espalda.png` (fondo transparente) y `doble_biceps_v16_en_fondo_app.jpg`.
+  vistas y la pose se rehicieron con la unión nueva (5t): `rostro_v17_vistas.jpg`, `doble_biceps_v17_frente.png` /
+  `_espalda.png` (fondo transparente) y `doble_biceps_v17_en_fondo_app.jpg`.
 
-## 5t. Unión cabeza–cuello sin línea (13-11-2026, v15 y v16)
+## 5t. Unión cabeza–cuello sin línea (13-11-2026, v15, v16 y v17)
 
 Pedido del dueño: «todavía se visualiza la unión del cuello y la cabeza, presenta una línea marcada, las texturas son
 distintas también». Ahora no se ve ni de frente, ni de perfil, ni por la nuca, en reposo y en la pose
@@ -855,6 +855,22 @@ cabeza, no la cabeza al cuello** (como en las láminas de referencia: cuello tan
   cabeza. `FACEG2` baja a 0,6 mm.
 - Cambia el cuerpo: la parte alta del cuello es más gruesa (columna en vez de cono). El resto del cuerpo, igual.
   Mujer y cabeza anterior: diferencia 0.
+
+**v17, mismo día. El dueño (vista de frente de la v16, con los dos lados marcados): «mejora esa parte donde sobresale,
+el cuello natural no debería tener esa protuberancia».** Medido en la silueta de frente: bajo cada oreja la pared de la
+mandíbula (radio ~65 mm) bajaba hasta 1,5 cm sobre el corte y allí se metía 5–6 mm en 15 mm hasta una cintura justo en
+la unión (~60 mm); debajo el trapecio vuelve a abrirse. Se veía como un lóbulo con un pellizco debajo
+(`ejemplos/cuello_v17_antes_despues.jpg`).
+- `NFP` (1 = todo; 0 = como la v16), último paso del ajuste en `facebuild.py`: por ángulo (`NFP0` 40° → lleno a 60°,
+  se apaga de `NFP1` 115° a 140°; nada bajo el mentón ni en la nuca) se mide con rayos el radio de la piel como UNA
+  superficie (cuello bajo el corte, cabeza encima) entre `NFPLO` −25 mm y `NFPHI` +40 mm, y se cambia por la cúbica que
+  sale de los dos extremos con su altura y su pendiente: el lóbulo entra (hasta 2,3 mm), la cintura sale (hasta 1,7 mm).
+  Cabeza y cuello se mueven lo mismo en el corte: la unión sigue cerrada. Silueta de frente: ahora baja sin bulto de la
+  mandíbula al trapecio.
+- `CAPT` (los últimos 6 mm del cuello visible girados al plano de la cabeza) tomaba el plano de UN triángulo de la
+  cabeza por vértice: de perfil, una fila de bultitos a lo largo de la unión. Ahora ese movimiento se promedia con el de
+  los vecinos (`CAPTSM` 4 pasadas) antes de aplicarlo.
+- La v16 queda en `w/NB_mc_row3_v16.blend` y `w/DH30_v16.blend`.
 
 **Cómo se revisa:** primeros planos del cuello con el render de siempre y `TZ=1.47 OSC=0.26 PIT=2 RX=700 RY=700 SMP=16`,
 `YAW=0`, `90`, `150`, `180` (0,37 mm por píxel), en reposo (`w/NB_mc_row3.blend`) y en la pose (`w/DH30.blend`).

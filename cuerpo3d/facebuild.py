@@ -251,6 +251,54 @@ if E('NECKFIT',0)>0:
     e2_=np.interp(t2_,tl2_[ok2_][o2_],er_[ok2_][o2_],period=2*math.pi)*(1.0-_ssn(np.maximum(h0_[sl2_],0.0)/E('NFE',0.006)))
     hco[sl2_]=hco[sl2_]-dir_(t2_)*e2_[:,None]
     print('neck fit: edge of the head was %.2f..%.2f mm off the neck skin after the fit, now on it'%(np.nanmin(er_)*1000,np.nanmax(er_)*1000))
+    if E('NFP',1.0)>0:
+        # (13-11-2026, owner, front view of v16: «mejora esa parte donde sobresale, el cuello natural no debería tener esa
+        # protuberancia») Seen from the front, under each ear the side of the neck still made a lobe: the wall of the jaw
+        # (radius ~65 mm) came down to 1.5 cm above the cut and then turned in, 5-6 mm within 15 mm, to a waist right at
+        # the joint (~60 mm), and the trapezius opened out again below it. A real neck goes up from the trapezius to the
+        # jaw in one line. Now, per angle round the neck (NFP0..NFP1 deg off the front, both sides), the radius of the skin
+        # (neck below the cut, head above it, one surface) between NFPLO under the cut and NFPHI over it is replaced by
+        # the cubic that leaves both ends with their own height and slope: the lobe goes in, the waist comes out, no
+        # corner anywhere. Head and neck move by the same amount at the cut, so the joint stays closed.
+        _bh=_BVn.FromPolygons([tuple(v) for v in hco],[tuple(f) for f in hfaces])
+        hl_=E('NFPLO',-0.025); hu_=E('NFPHI',0.040); hg_=np.arange(hl_-0.010,hu_+0.0105,0.001); thg_=(np.arange(NB_)+0.5)/NB_*2*math.pi-math.pi
+        eg_=dir_(thg_); Rg_=np.full((NB_,len(hg_)),np.nan); R0_=0.13
+        for b_ in range(NB_):
+            for j_,hv_ in enumerate(hg_):
+                o_=np.array([0.0,yc_,cutz(yc_)+hv_])+eg_[b_]*R0_
+                hit_=(_bb if hv_<0 else _bh).ray_cast(Vector(o_),Vector(-eg_[b_]),R0_-0.02)
+                if hit_[0] is not None: Rg_[b_,j_]=R0_-hit_[3]
+        for b_ in range(NB_):
+            k_=np.isfinite(Rg_[b_])
+            if k_.sum()>5: Rg_[b_,~k_]=np.interp(hg_[~k_],hg_[k_],Rg_[b_,k_])
+        Rg_=0.5*(Rg_+Rg_[::-1])                                         # symmetric (bin b <-> NB-1-b)
+        Rs_=Rg_.copy()
+        for _ in range(2): Rs_[:,1:-1]=0.25*Rs_[:,:-2]+0.5*Rs_[:,1:-1]+0.25*Rs_[:,2:]
+        at_=lambda arr_,hv_: np.array([np.interp(hv_,hg_,arr_[b_]) for b_ in range(NB_)])
+        r0_=at_(Rs_,hl_); r1_=at_(Rs_,hu_); L_=hu_-hl_
+        m0_=(at_(Rs_,hl_+0.004)-at_(Rs_,hl_-0.004))/0.008*L_; m1_=(at_(Rs_,hu_+0.004)-at_(Rs_,hu_-0.004))/0.008*L_
+        t_=np.clip((hg_-hl_)/L_,0,1)[None,:]
+        T_=(2*t_**3-3*t_**2+1)*r0_[:,None]+(t_**3-2*t_**2+t_)*m0_[:,None]+(3*t_**2-2*t_**3)*r1_[:,None]+(t_**3-t_**2)*m1_[:,None]
+        win_=_ssn((hg_-hl_)/0.006)*_ssn((hu_-hg_)/0.006)
+        dg_=np.abs(np.degrees(thg_)); shp_=E('NFP',1.0)*_ssn((dg_-E('NFP0',40.0))/20.0)*(1-_ssn((dg_-E('NFP1',115.0))/25.0))
+        Dg_=(T_-Rg_)*win_[None,:]*shp_[:,None]
+        for _ in range(3): Dg_=0.25*np.roll(Dg_,1,0)+0.5*Dg_+0.25*np.roll(Dg_,-1,0)
+        for _ in range(2): Dg_[:,1:-1]=0.25*Dg_[:,:-2]+0.5*Dg_[:,1:-1]+0.25*Dg_[:,2:]
+        def _apply(P):
+            th_p=ang_(P); h_p=P[:,2]-cutz(P[:,1]); r_p=np.linalg.norm(np.stack([P[:,0],P[:,1]-yc_,_cs*(P[:,1]-yc_)],1),axis=1)
+            k_=np.where((h_p>hl_)&(h_p<hu_)&(r_p<0.11))[0]
+            if len(k_)==0: return P,0,0.0
+            ab_=(th_p[k_]+math.pi)/(2*math.pi)*NB_-0.5; i_=np.floor(ab_).astype(int); f_=ab_-i_
+            jf_=(h_p[k_]-hg_[0])/0.001; j_=np.clip(np.floor(jf_).astype(int),0,len(hg_)-2); g_=np.clip(jf_-j_,0,1)
+            bil_=lambda A_: (A_[i_%NB_,j_]*(1-f_)+A_[(i_+1)%NB_,j_]*f_)*(1-g_)+(A_[i_%NB_,j_+1]*(1-f_)+A_[(i_+1)%NB_,j_+1]*f_)*g_
+            d_=bil_(Dg_)*(1-_ssn((np.abs(r_p[k_]-bil_(Rg_))-0.006)/0.006))   # only the outer skin (and what lies just under it)
+            P=P.copy(); P[k_]+=dir_(th_p[k_])*d_[:,None]; return P,int((np.abs(d_)>1e-4).sum()),float(np.abs(d_).max())
+        hco,nh_,mh_=_apply(hco); bco,nb_,mb_=_apply(bco)
+        print('neck fit: side of the neck made one line from the trapezius to the jaw, out %.1f / in %.1f mm (%d head, %d body verts)'%(
+            max(Dg_.max(),0)*1000,max(-Dg_.min(),0)*1000,nh_,nb_))
+        if os.environ.get('NFDBG'):
+            for b_ in range(NB_//2+6,NB_,3):
+                print('  side: ang %4.0f  '%((b_+0.5)/NB_*360-180)+' '.join('%+5.1f'%(Dg_[b_,j_]*1000) for j_ in range(0,len(hg_),5)))
     print('neck fit: outside the neck at the cut %.1f..%.1f mm (mean %.1f), slope %.2f..%.2f (tangent %.2f..%.2f), max move %.1f mm, %d verts, %d samples'%(
         aL_.min()*1000,aL_.max()*1000,aL_.mean()*1000,B_.min(),B_.max(),Bt_.min(),Bt_.max(),np.abs(dl_).max()*1000,len(sel_),int(ok_.sum())))
     if os.environ.get('NFDBG'):
@@ -482,12 +530,17 @@ if E('NECKFIT',0)>0 and not FEM:
     # towards the plane of the head skin at the edge above it (all the way at the cut, nothing CAPT lower). The neck was
     # already brought to the head (NFW) but only as well as two slopes can be measured: where it came in a few degrees
     # off, the joint was a fine ridge that caught the light. Now neck and head are one line across the joint.
-    tng_=0; D_=E('CAPT',0.006)
+    tng_=0; D_=E('CAPT',0.006); dsp_=np.zeros_like(bco); inb_=np.zeros(len(bco),bool)
     for i in np.where((hh>-D_)&(hh<=0.0003)&(np.hypot(bco[:,0],bco[:,1]-E('NFYC',-0.03))<0.11))[0]:
         loc,nrm,_,dist=_bv.find_nearest(Vector(bco[i]))
         if loc is None or dist>0.010: continue
         v_=min(max(1+hh[i]/D_,0.0),1.0); v_=v_*v_*(3-2*v_); d_=float((bco[i]-np.array(loc))@np.array(nrm))
-        bco[i]=bco[i]-np.array(nrm)*d_*v_; tng_+=1
+        dsp_[i]=-np.array(nrm)*d_*v_; inb_[i]=True; tng_+=1
+    # (13-11-2026) each vertex took the plane of the ONE head triangle nearest to it: seen from the side, a row of tiny
+    # bumps along the joint. The move is now averaged with the neighbours' along the skin (CAPTSM passes) first.
+    if E('CAPTSM',4)>0 and E('NFSM',10)>0:
+        for _ in range(int(E('CAPTSM',4))): dsp_=np.where(inb_[:,None],(_Am@dsp_+dsp_)/(_dg[:,None]+1),0.0)
+    bco=bco+dsp_
     print('neck fit: top of the visible neck turned onto the line of the head, %d verts'%tng_)
 bme.vertices.foreach_set('co',bco.ravel()); bme.update()
 print('cap verts pushed',int((push>0.01).sum()))

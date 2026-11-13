@@ -10,6 +10,8 @@
 # joint cannot be seen (GUIA.md section 5t). NECKFIT=0 = the head as it was on 12-11-2026.
 # The same day, v16: the top of the mannequin's NECK is brought out to the head (NFW=1; it was a cone 4-13 mm narrower
 # than this head: two lumps under the ears) and the squarer jaw runs down into it. NFW=0 = only the head moves (v15).
+# v17: per angle at the sides the skin (neck + head as one surface) from 25 mm under the cut to 40 mm over it becomes
+# one smooth line from the trapezius to the jaw (NFP=1; a lobe under each ear, front view). NFP=0 = v16.
 set -e
 cd "${GT3D:?set GT3D}"; B=${1:?bundle .blend}; O=${2:-w/NB_mc_row3.blend}
 MANFACE=1 LIPZ=1.5073 LIPT=0.26 MLINE=0.45 LASHT=0.9 LASHB=0.22 BROWT=0.92 BZB=1.5865 BZT=1.5950 \
