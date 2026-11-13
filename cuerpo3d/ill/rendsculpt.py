@@ -577,7 +577,7 @@ if _heads:
                 # towards the neck skin + wedge: a vertex that is too LOW is lifted with the full weight of the band; one
                 # that is too HIGH is brought down only on the lowest FACEG2 m (the edge must touch the skin; higher up
                 # the head keeps its own line and does not follow the hidden skin where that bends in under it)
-                _c=_o0+_k*_hh[i]; _s=float((hc[i]-loc)@nrm); _u=min(max(1-_hh[i]/E('FACEG2',0.0015),0.0),1.0); _u=_u*_u*(3-2*_u)
+                _c=_o0+_k*_hh[i]; _s=float((hc[i]-loc)@nrm); _u=min(max(1-_hh[i]/E('FACEG2',0.0006),0.0),1.0); _u=_u*_u*(3-2*_u)
                 if float(np.linalg.norm(hc[i]-loc))<0.004: hc[i]=hc[i]+nrm*((_c-_s)*(_wg[i] if _s<_c else _u))
                 _s=float((hc[i]-loc)@nrm); _fm=_o0+0.5*_k*min(_hh[i],E('FACEGH',0.008))
                 if _s<_fm and float(np.linalg.norm(hc[i]-loc))<0.002: hc[i]=hc[i]+nrm*(_fm-_s)
@@ -611,6 +611,32 @@ if _heads:
                 _a0=np.abs(np.degrees(np.arctan2(hc[_i0][:,0]-hc[_i0][:,0].mean(),-(hc[_i0][:,1]-hc[_i0][:,1].mean()))))
                 for a0,a1 in ((0,30),(30,60),(60,90),(90,120),(120,150),(150,181)):
                     print('JOINTDBG before the glue: ang %3d-%3d  head over neck skin (mm)  '%(a0,a1)+'  '.join('h %g-%g: %+.2f..%+.2f'%(h0,h1,_s0[(_a0>=a0)&(_a0<a1)&(_hh0[_i0]>=h0)&(_hh0[_i0]<h1)].min(),_s0[(_a0>=a0)&(_a0<a1)&(_hh0[_i0]>=h0)&(_hh0[_i0]<h1)].max()) for h0,h1 in ((0,1),(1,3),(3,6),(6,8)) if ((_a0>=a0)&(_a0<a1)&(_hh0[_i0]>=h0)&(_hh0[_i0]<h1)).any()))
+            if o.name=='Cabeza' and _nfk>0 and E('JOINTBODY',1)>0:
+                # (13-11-2026) the same two touches facebuild.py gives the neck at rest, again on the POSED body: a pose
+                # moves the neck skin with the shoulders and leaves it a few degrees off the line of the head (a fine
+                # crease along the joint in the close-ups). The last JBT m of visible neck under the cut turn onto the
+                # plane of the head skin above them (all the way at the cut, nothing JBT lower), and the hidden skin of
+                # the lowest JBS m over the cut goes half the wedge under the head. Only body vertices within 6 mm of the
+                # head; at rest they hardly move.
+                _pl=[tuple(p_.vertices) for p_ in nm.polygons]; _hb=BVHTree.FromPolygons([tuple(v) for v in hc],_pl)
+                _bc=np.zeros(nv*3); me.vertices.foreach_get('co',_bc); _bc=_bc.reshape(-1,3); _b0=_bc.copy()
+                _hdr=_co[:,2]-(_cz+_cs*(_co[:,1]+0.08)); _D=E('JBT',0.006); _Sj=E('JBS',0.005); _dj=np.zeros((nv,3)); _vis=np.zeros(nv,bool)
+                for i in np.where((_hdr>-_D)&(_hdr<=_Sj)&(np.hypot(_co[:,0],_co[:,1]+0.03)<0.11))[0]:
+                    loc,nrm,fi_,dist=_hb.find_nearest(_bc[i])
+                    if loc is None or dist>0.006: continue
+                    loc=np.array(loc); vs_=list(_pl[fi_])               # smooth normal of the head skin there (not the flat face: no facets)
+                    wv_=1.0/np.maximum(np.linalg.norm(hc[vs_]-loc,axis=1),1e-5); nrm=(_hn[vs_]*wv_[:,None]).sum(0); nrm=nrm/max(np.linalg.norm(nrm),1e-12)
+                    d_=float((_bc[i]-loc)@nrm)
+                    if _hdr[i]<=0.0003: v_=min(max(1+_hdr[i]/_D,0.0),1.0); _dj[i]=-nrm*d_*v_*v_*(3-2*v_); _vis[i]=True
+                    else: t_=min(_hdr[i]/0.003,1.0); _dj[i]=-nrm*(d_+E('JBD',0.0003)*t_*t_*(3-2*t_)+0.5*_nfk*_hdr[i])      # hidden: up to JBD under the band, from 3 mm over the cut (clear of it once both are subdivided)
+                _ed=np.zeros(len(me.edges)*2,int); me.edges.foreach_get('vertices',_ed); _ed=_ed.reshape(-1,2); _ed=_ed[_vis[_ed[:,0]]&_vis[_ed[:,1]]]
+                for _ in range(int(E('JBSM',2))):                         # the turn of the visible neck, smoothed along the skin
+                    _ac=_dj.copy(); _cn=np.ones(nv); np.add.at(_ac,_ed[:,0],_dj[_ed[:,1]]); np.add.at(_ac,_ed[:,1],_dj[_ed[:,0]]); np.add.at(_cn,_ed[:,0],1); np.add.at(_cn,_ed[:,1],1)
+                    _dj[_vis]=(_ac/_cn[:,None])[_vis]
+                _bc=_bc+_dj
+                me.vertices.foreach_set('co',_bc.ravel()); me.update(); bpy.context.view_layer.update(); _dg=bpy.context.evaluated_depsgraph_get(); _dg.update()
+                _bvh=BVHTree.FromObject(ob,_dg)
+                print('joint: neck skin turned onto the line of the posed head, max move %.2f mm'%(np.linalg.norm(_bc-_b0,axis=1).max()*1000))
             _glue(hc,_hn,w_)
             nm.vertices.foreach_set('co',hc.ravel()); nm.update()
         if not (o.name=='Cabeza' and E('FACEUV',1)>0):

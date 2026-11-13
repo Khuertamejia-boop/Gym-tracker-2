@@ -8,12 +8,14 @@
 # The previous face (C + slight smile, buzz cut) is the commented command in restaurar.sh.
 # 13-11-2026: NECKFIT=1, the stump of the head is fitted onto the neck of the mannequin (same place, same slope) so the
 # joint cannot be seen (GUIA.md section 5t). NECKFIT=0 = the head as it was on 12-11-2026.
+# The same day, v16: the top of the mannequin's NECK is brought out to the head (NFW=1; it was a cone 4-13 mm narrower
+# than this head: two lumps under the ears) and the squarer jaw runs down into it. NFW=0 = only the head moves (v15).
 set -e
 cd "${GT3D:?set GT3D}"; B=${1:?bundle .blend}; O=${2:-w/NB_mc_row3.blend}
 MANFACE=1 LIPZ=1.5073 LIPT=0.26 MLINE=0.45 LASHT=0.9 LASHB=0.22 BROWT=0.92 BZB=1.5865 BZT=1.5950 \
   SMILE=${SMILE:-0.0015} SMX=0.013 SMZ=0.010 SMCH=0.0008 LIPDN=${LIPDN:--0.0008} \
   NECKFIT=${NECKFIT:-1} MANSHAPE=1 EARPIN=0.28 HAIRSTYLE=fade HAIRT=${HAIRT:-1.0} HVOL=3 HTOPV=4 FACEATTR=1 EYEV2=1 IRIST=0.80 LIMT=0.18 EYEW=0.40 \
-  venv/bin/python -I facebuild.py "$B" w/NB_mc_row2.blend w/NB_mc_row3_pre_aw.blend | grep -E "manface|neck fit|hair verts|cap verts|Traceback|Error" || true
+  venv/bin/python -I facebuild.py "$B" w/NB_mc_row2.blend w/NB_mc_row3_pre_aw.blend | grep -E "manface|neck fit|  neck|hair verts|cap verts|Traceback|Error" || true
 # armpit skin weights (11-11-2026): the flank no longer follows the arm, the inner arm no longer follows the torso
 venv/bin/python -I armpitweights.py w/NB_mc_row3_pre_aw.blend "$O" > /dev/null
 echo "base: $O"
