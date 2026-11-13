@@ -22,7 +22,7 @@ de esta guía y Claude seguirá desde aquí.
 | Animación de fondo de la app: doble bíceps de espaldas (rojo Push y rojo Pull) | v5 (11-11-2026): hombro con bola, bíceps con pico, axila limpia (sección 5r; `ejemplos/v5_espalda_antes_ahora.jpg`); antes v4 (sección 5q); antes v3 (mapas v2, puños cerrados, cara con sonrisa, `ejemplos/doble_biceps_v3_cerca.jpg`); antes v2 (hombro redondo, `ejemplos/doble_biceps_hombro_antes_ahora.jpg`); falta el visto bueno: `ejemplos/doble_biceps_pull_en_la_app.mp4`, `app/doble_biceps_pull_transparente.mov`, `app/doble_biceps_pull/` | `ejemplos/doble_biceps_en_la_app.mp4`, `.jpg`; para Xcode: `app/doble_biceps_transparente.mov`, `app/doble_biceps/` |
 | Animación de fondo de la app: doble bíceps **de frente** (rojo Push) | v5 (11-11-2026: hombro con bola, bíceps con pico, axila limpia, sección 5r; `ejemplos/v5_frente_antes_ahora.jpg`), falta el visto bueno | `ejemplos/doble_biceps_frente_en_la_app.mp4`, `.jpg`, `_cerca.jpg`; para Xcode: `app/doble_biceps_frente_transparente.mov`, `app/doble_biceps_frente/` |
 | **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v3 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v3_*.jpg` |
-| **Rostro y corte de cabello del hombre** (rostro fuerte, corte «skin fade», ojos con vida) | v14 (12-11-2026, sección 5s), falta el visto bueno; solo está posado de nuevo el doble bíceps (fotograma 30) | `ejemplos/rostro_v14_antes_despues.jpg`, `rostro_v14_vistas.jpg`, `doble_biceps_v14_en_fondo_app.jpg` |
+| **Rostro y corte de cabello del hombre** (rostro fuerte, corte «skin fade», ojos con vida) | v14 (12-11-2026, sección 5s) + unión con el cuello sin línea v15 (13-11-2026, sección 5t), falta el visto bueno; solo está posado de nuevo el doble bíceps (fotograma 30) | `ejemplos/rostro_v14_antes_despues.jpg`, `union_cuello_v15_antes_despues.jpg`, `rostro_v15_vistas.jpg`, `doble_biceps_v15_en_fondo_app.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
@@ -712,7 +712,7 @@ de frente y de espaldas hasta que apruebe la forma.**
     sombreador anterior en `ill/rendsculpt_v7style.py`. Todo lo que use `style_app.env` (p. ej. `render_app.sh`)
     sale ya con degradado; los vídeos y GIF ya hechos NO se han vuelto a renderizar.
   Imagen: `ejemplos/doble_biceps_v13_antes_despues.jpg` (arriba v12, abajo v13). Las de cuerpo entero v10–v13 se
-  quitaron: las actuales son `doble_biceps_v14_frente.png` / `_espalda.png` (mismo cuerpo, cabeza nueva, sección 5s).
+  quitaron: las actuales son `doble_biceps_v15_frente.png` / `_espalda.png` (mismo cuerpo, cabeza nueva, secciones 5s y 5t).
 - PENDIENTE hasta el visto bueno: regenerar las 31 poses (`PFX=DG`) y los tres vídeos; los de `app/` y
   `ejemplos/doble_biceps*_en_la_app.mp4` siguen siendo la v4. Con la cabeza nueva (5s) hay que volver a posar también los
   demás ejercicios antes de renderizarlos otra vez.
@@ -762,15 +762,77 @@ IDÉNTICAS (comprobado con renders: diferencia 0), y `rostro_hombre.sh` reproduc
   `HFD`), el borde de la franja queda 0,6 mm sobre el cuello (`FACEOFF0`, `FACEMIN`) y las UV se copian por vértice
   recortando las caras que cruzan una costura (`FACEUVV`). Probado y descartado: borde por dentro del cuello (se ve
   un collar), fundido por distancia en el cuerpo (`PLAIN0/1`: sale a bloques) y pegado por rayos (`FACERAY`).
-  Para depurar: `MDEBUG=snap|plain|hb|h` y `HIDEBODY=1`.
-- De cerca aún: en la nuca, donde el trapecio toca el borde de la cabeza, quedan dos pliegues pequeños (a tamaño
-  normal no se ven). Sin barba, como las láminas (la foto lleva barba de pocos días: se podría pintar con `tint`).
+  Para depurar: `MDEBUG=snap|plain|hb|h` y `HIDEBODY=1`. **Sustituido el 13-11-2026 por la sección 5t** (la unión
+  ya no se ve): `HEADTRAP` queda apagado y el borde ya no va 0,6 mm por encima.
+- Sin barba, como las láminas (la foto lleva barba de pocos días: se podría pintar con `tint`).
 - **Cada ejercicio hay que volver a posarlo** con la base nueva para que salga esta cabeza. Solo está hecho el doble
   bíceps, fotograma 30 (`PFX=DH ./anim_db.sh 30 30`). No se han vuelto a renderizar vídeos ni GIF. La mujer no cambia.
 - Vistas de la cabeza para revisar: el render de siempre con `TZ=1.555 OSC=0.36 PIT=2 RX=800 RY=800` y
   `YAW=0` (frente), `35`, `90` (perfil) y `145` (nuca).
-- Imágenes: `ejemplos/rostro_v14_antes_despues.jpg` (arriba antes, abajo ahora), `rostro_v14_vistas.jpg` (4 vistas),
-  `doble_biceps_v14_frente.png` / `_espalda.png` (fondo transparente) y `doble_biceps_v14_en_fondo_app.jpg`.
+- Imágenes: `ejemplos/rostro_v14_antes_despues.jpg` (arriba antes, abajo ahora; aún con la línea del cuello). Las 4
+  vistas y la pose se rehicieron con la unión nueva (5t): `rostro_v15_vistas.jpg`, `doble_biceps_v15_frente.png` /
+  `_espalda.png` (fondo transparente) y `doble_biceps_v15_en_fondo_app.jpg`.
+
+## 5t. Unión cabeza–cuello sin línea (13-11-2026, v15)
+
+Pedido del dueño: «todavía se visualiza la unión del cuello y la cabeza, presenta una línea marcada, las texturas son
+distintas también». Ahora no se ve ni de frente, ni de perfil, ni por la nuca, en reposo y en la pose
+(`ejemplos/union_cuello_v15_antes_despues.jpg`: arriba antes, abajo ahora). La cara y el corte NO cambian.
+
+**Qué se veía y por qué (medido, no supuesto):**
+1. *Las texturas distintas*: el dibujo de músculos del cuello (líneas, fibras, relieve, rojo) terminaba de golpe contra
+   la cabeza lisa.
+2. *El «cuello de camisa»*: el muñón de la cabeza era 3–13 mm más ancho que el cuello del maniquí en todo el contorno
+   y además salía con otro ángulo (25° bajo el mentón, 20° a los lados, 45° en la nuca). El render lo pegaba al cuello
+   en 12 mm: un escalón con su pliegue y su sombra.
+3. *La línea fina*: el borde iba 0,6 mm por encima del cuello y ese escaloncito arrojaba una línea de sombra de
+   oclusión (con 0,15 mm seguía; hasta con 0,05 mm donde el borde recto cruza un hueco de la nuca).
+4. El propio cuello del maniquí tiene un pequeño escalón a esa altura a los lados de la nuca (su perfil gira 35° en
+   1 mm): era uno de los «dos pliegues pequeños de la nuca».
+5. El labio inferior del mentón VIEJO del maniquí (baja por debajo de donde empieza la tapa oculta) asomaba bajo el
+   mentón nuevo: un punto oscuro de frente, un pico de perfil.
+
+**Arreglo en la base** (`facebuild.py`, `NECKFIT=1`, ya puesto en `rostro_hombre.sh`; `NECKFIT=0` = cabeza del 12-11):
+- La piel del cuello se alisa en un anillo de ±9 mm alrededor del corte (`NFSM` pasadas, sin encoger; mueve como mucho
+  0,6 mm): quita el escalón (4).
+- El muñón de la cabeza se ajusta al cuello EN REPOSO. Todo se mide y se mueve en la dirección radial inclinada de modo
+  que la altura `h` sobre el plano de corte no cambia. Desde cada vértice bajo de la cabeza (`NFS` 13 mm) un rayo mide
+  cuánto sobresale de la piel ORIGINAL del cuello; por ángulo alrededor del cuello (72 sectores, simétrico, suavizado):
+  `A` = cuánto sobresale justo en el corte (exacto, tomado de los vértices del borde, no por sectores), y dos pendientes:
+  contra la piel vieja tal como sigue por encima del corte (`B`, `C`: recta o parábola que se queda en su máximo) y
+  contra la TANGENTE del cuello en el corte (`Bt`, solo los 3,6 mm más bajos, `NFST`). La cabeza toma la que la deja más
+  AFUERA: de frente y a los lados la tangente (la piel vieja se mete hacia la mandíbula vieja: seguirla y luego abrirse
+  hacia la mandíbula nueva hacía una S, una franja clara sobre otra oscura); en la nuca (desde `NFT0`–`NFT1` =
+  105–125°) la piel vieja. Movimiento = `(sobresale − NFK·h)·w(h)`, `w` = 1 en el corte → 0 a `NFH` (26 mm; `NFHB` 45 mm
+  en la nuca), sin pendiente en los extremos. Resultado: en el corte la cabeza está SOBRE la piel del cuello y sigue
+  con SU MISMA pendiente, separándose como una cuña finísima (`NFK` 0,06 mm por mm), y recupera su forma poco a poco
+  (bajo la mandíbula, tras la oreja, en la base del cráneo). Tope `NFMAX` 16 mm.
+- La piel del mentón viejo que mira hacia abajo entre 1 y 8 mm sobre el corte también se mete 3 mm dentro de la cabeza
+  nueva (`CAPL`, `CAPNZ`, `CAPTH`): quita (5).
+- La cabeza guarda `cutz`, `cutsl`, `snaph` y `nfk` para el render.
+
+**Arreglo en el render** (`ill/rendsculpt.py`, solo cabeza nueva `NEWHEAD`; la mujer y la cabeza anterior salen
+IDÉNTICAS, comprobado con renders: diferencia 0):
+- *Dibujo que se funde* (1): atributo `hd` = altura en reposo de cada punto del cuerpo sobre el plano de corte; el
+  dibujo pasa a piel lisa desde `NECKFADE` (30 mm) por debajo del corte hasta `NECKFADE0` (4 mm). Por eso el rojo del
+  trapecio se apaga unos 2,5 cm antes de la cabeza (`HEADTRAP` apagado).
+- *Pegado fino* (`_glue`, cuando la cabeza trae `nfk`): en los 8 mm más bajos (`FACEGH`) la franja va a la piel del cuello
+  posado + `FACEOFF0` + `FACEK`·h. `FACEOFF0` es NEGATIVO (−0,02 mm): el borde queda bajo la piel y la cabeza sale de
+  ella 0,3 mm más arriba, a 3°: no hay escalón, no hay línea de sombra (3). Un vértice bajo se sube con todo el peso;
+  uno alto solo se baja en los 1,5 mm del borde (`FACEG2`), para que la cabeza no siga la piel oculta donde esta se
+  mete. Segunda pasada tras subdividir la cabeza (`FACEGLUE2`), porque la subdivisión despega el borde unas décimas.
+- *Misma luz en el borde* (`FACENRM`): el borde de la cabeza toma la normal de la piel VISIBLE del cuello justo debajo
+  (anillo 0–2 mm bajo el corte, `FACENR`) y pasa a sus normales propias en `FACENH` (6 mm). Con el sombreado de rostro
+  (`FELT`, `FCON`) 1° de diferencia son ~4 niveles de gris en el lado en sombra, y una pose siempre deja 1–2°.
+- **No tocar el atributo `face` del cuello junto a la unión**: cabeza y cuello usan la misma función de la altura en
+  reposo y por eso coinciden en el borde. Subirlo a 1 en el cuello (se probó) deja un salto de tono de 15–18 niveles.
+- Para depurar: `JOINTDBG=salida.npz` (tabla de separación cabeza–piel por sector y altura, antes y después del
+  pegado), `HIDEHEAD=1` (solo cuerpo), `HIDEBODY=1` (solo cabeza), `MDEBUG=fc|n|t|s`.
+
+**Cómo se revisa:** primeros planos del cuello con el render de siempre y `TZ=1.47 OSC=0.26 PIT=2 RX=700 RY=700 SMP=16`,
+`YAW=0`, `90`, `150`, `180` (0,37 mm por píxel), en reposo (`w/NB_mc_row3.blend`) y en la pose (`w/DH30.blend`).
+Lección: mirar el perfil de grises a través del borde (debe ser continuo) y, si hay salto, sacar `MDEBUG=fc` y
+`MDEBUG=n` antes de tocar la geometría.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 

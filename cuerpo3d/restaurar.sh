@@ -17,6 +17,7 @@ HBM=$DST/hbm; mkdir -p $HBM
 # face and haircut of 12-11-2026 (owner's references: strong face, skin-fade haircut, living eyes; GUIA.md section 5s):
 # rostro_hombre.sh = facebuild.py (+ manface.py) -> w/NB_mc_row3_pre_aw.blend, then the armpit skin weights of 11-11-2026
 # (the flank no longer follows the arm, the inner arm no longer follows the torso) -> w/NB_mc_row3.blend
+# 13-11-2026: rostro_hombre.sh also fits the stump of the head onto the neck (NECKFIT=1, GUIA.md section 5t): no visible joint
 ./rostro_hombre.sh $HBM/human_base_meshes_bundle.blend w/NB_mc_row3.blend > /dev/null
 # previous face (C with a slight smile, buzz cut, 10-11-2026), kept as w/NB_mc_row3_caraC.blend to compare / go back:
 MANFACE=1 LIPZ=1.5073 LIPT=0.16 MLINE=0.45 LASHT=0.65 LASHB=0.20 BROWT=0.80 BZB=1.5897 BZT=1.5977 \

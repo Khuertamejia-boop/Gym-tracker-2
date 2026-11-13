@@ -52,6 +52,13 @@ if NEWHEAD:
     _dh=_KDh(_hv).query(_co)[0]; _hf=np.clip((_dh-E('HFD0',0.0015))/E('HFD',0.006),0,1); _hf=_hf*_hf*(3-2*_hf)
     a=me.attributes.get('hfd') or me.attributes.new('hfd','FLOAT','POINT'); a.data.foreach_set('value',_hf.astype(np.float32))
     a=_cab.data.attributes.get('plainh') or _cab.data.attributes.new('plainh','FLOAT','POINT'); a.data.foreach_set('value',np.ones(len(_hv),np.float32))
+    # (13-11-2026, owner: «todavía se ve la unión del cuello y la cabeza, una línea marcada, las texturas son distintas»)
+    # The muscle drawing of the neck stopped dead on the plain head. Now it FADES OUT before it gets there: 'hd' = rest
+    # height of every body vertex over the cut plane of the head (linear in the rest position, so it is exact inside
+    # every face); the shader turns it into plain skin from NECKFADE m below the cut (drawing whole) to NECKFADE0 m below
+    # it (plain, like the head). Lines, fibres, relief, border shading and red all fade together.
+    _cz=float(_cab.get('cutz',1.44)); _cs=float(_cab.get('cutsl',0.32))
+    a=me.attributes.get('hd') or me.attributes.new('hd','FLOAT','POINT'); a.data.foreach_set('value',(_co[:,2]-(_cz+_cs*(_co[:,1]+0.08))).astype(np.float32))
 _abl=os.path.join(os.path.dirname(os.path.abspath(__file__)),'pv','bla.npz')     # muscle atlas (labels per body vertex)
 if E('PLAIN1',0)>0 and os.path.exists(_abl):
     # the muscle drawing fades out where it reaches the head (attribute 'plain': 1 = plain skin, no map-driven relief,
@@ -139,6 +146,8 @@ if E('SPINEW',0)>0 and 'restco' in have:
 def pillow(dist,W,P):
     return M('SUBTRACT',1.0,M('EXPONENT',M('MULTIPLY',M('POWER',M('DIVIDE',dist,W),P),-1.0)))
 pln=M('MAXIMUM',F('plain'),A('plainh').outputs['Fac'])     # body attribute (PLAIN1, off by default) / head attribute (PLH1)
+if NEWHEAD and E('NECKFADE',0.030)>0:      # the neck drawing fades to plain skin towards the head (the head has no 'hd': 0 -> plain)
+    pln=M('MAXIMUM',pln,SS(A('hd').outputs['Fac'],-E('NECKFADE',0.030),-E('NECKFADE0',0.004)))
 red=M('MULTIPLY',red,M('SUBTRACT',1.0,pln))
 npl=M('SUBTRACT',1.0,pln)          # 0 where the skin is plain (head): no map-driven relief, lines or fibres
 gh=pillow(d,E('W',7.0),E('P',1.5)); gs=pillow(ds,E('WS',5.0),E('P',1.5))
@@ -376,6 +385,7 @@ if os.environ.get('SHADE')=='matcap':
         mp=N.new('ShaderNodeVectorMath'); mp.operation='MULTIPLY_ADD'; L.new(vt.outputs['Vector'],mp.inputs[0]); mp.inputs[1].default_value=(0.5,0.5,0.5); mp.inputs[2].default_value=(0.5,0.5,0.5)
         outc=mp.outputs['Vector']
     if os.environ.get('MDEBUG')=='t': outc=G(t)
+    if os.environ.get('MDEBUG')=='fc': outc=G(fc)
     if os.environ.get('MDEBUG')=='eg': outc=G(outdbg)
     if os.environ.get('MDEBUG')=='red': outc=G(red)
     if os.environ.get('MDEBUG')=='lstr': outc=G(lstr) if not isinstance(lstr,float) else G(1.0)
@@ -482,7 +492,7 @@ if _heads:
             elif src.data_type=='FLOAT_VECTOR':
                 v=np.zeros(nv*3); src.data.foreach_get('vector',v); v=v.reshape(-1,3); val=(v[_tv[vt]]*vb[:,:,None]).sum(1)
                 a_=hm.attributes.get(k) or hm.attributes.new(k,'FLOAT_VECTOR','POINT'); a_.data.foreach_set('vector',val.astype(np.float32).ravel())
-        if NEWHEAD and os.path.exists(_abl) and E('HEADTRAP',1)>0:
+        if NEWHEAD and os.path.exists(_abl) and E('HEADTRAP',0)>0:      # off since 13-11-2026: the neck drawing fades out before the head (NECKFADE)
             # the trapezius keeps its drawing (and its red) on the head: it goes up the nape to the skull. 'plainh' is 1
             # everywhere on the head except where the skin underneath is labelled trapezius (smooth 0.2..0.8 of the label)
             _ab3=np.load(_abl,allow_pickle=True); _lb3=np.array([str(x) for x in _ab3['names']])[_ab3['mid'].astype(int)]
@@ -535,6 +545,52 @@ if _heads:
         _tr=N.new('ShaderNodeBsdfTransparent'); _mx=N.new('ShaderNodeMixShader')
         _fa=SS(A('snapw').outputs['Fac'],E('FADE0',0.25),E('FADE1',0.85))
         L.new(_fa,_mx.inputs[0]); L.new(_srcs,_mx.inputs[1]); L.new(_tr.outputs[0],_mx.inputs[2]); L.new(_mx.outputs[0],_out.inputs['Surface'])
+    from mathutils import Vector as _V2
+    _snaph=float(_cab.get('snaph',0.012)) if _cab is not None else 0.012
+    _nfk=float(_cab.get('nfk',0.0)) if (_cab is not None and NEWHEAD) else 0.0     # > 0: head built with the neck fit (facebuild.py NECKFIT)
+    def _resth(w_):
+        """rest height over the cut of the head (m) from 'snapw' (inverse of its smoothstep)"""
+        return _snaph*(0.5+np.sin(np.arcsin(np.clip(1-2*w_,-1,1))/3))
+    def _glue(hc,_hn,w_):
+        """glue the lowest band of the head (weights 'snapw') onto the posed neck skin; hc is changed in place"""
+        _ray=E('FACERAY',0)>0
+        if _nfk>0:
+            # (13-11-2026) head built with the neck fit: its stump already lies on the neck skin with the same slope,
+            # lifting off it like a thin wedge (NFK mm per mm of height). The glue only keeps that true on the posed,
+            # subdivided body: over the lowest FACEGH m the band goes to FACEOFF0 + FACEK.h over the neck skin (weight
+            # 1 at the edge -> 0 at FACEGH, where the hidden cap of the mannequin head starts to dive inside), and
+            # nowhere lower than half of that. FACEOFF0 is NEGATIVE: the very edge of the head is 0.02 mm UNDER the neck
+            # skin and the head comes out of it 0.3 mm higher, at 3 deg. There is no step at all (any step, even 0.05 mm
+            # where the straight edge bridged a hollow of the nape, cast a hair-thin line of occlusion shadow), and a few
+            # mm higher the two skins are far enough apart not to interleave.
+            _hh=_resth(w_); _wg=np.clip(1-_hh/E('FACEGH',0.008),0,1); _wg=_wg*_wg*(3-2*_wg); _k=E('FACEK',_nfk); _o0=E('FACEOFF0',-0.00002)
+        for i in np.where(w_>1e-3)[0]:
+            loc=None
+            if _ray:
+                _r=_bvh.ray_cast(_V2(hc[i]+_hn[i]*0.03),_V2(-_hn[i]),0.07)
+                if _r[0] is not None: loc=np.array(_r[0]); nrm=_hn[i]
+            if loc is None:
+                loc,nrm,_,_=_bvh.find_nearest(hc[i])
+                if loc is None: continue
+            loc=np.array(loc); nrm=np.array(nrm)
+            if _nfk>0:
+                # towards the neck skin + wedge: a vertex that is too LOW is lifted with the full weight of the band; one
+                # that is too HIGH is brought down only on the lowest FACEG2 m (the edge must touch the skin; higher up
+                # the head keeps its own line and does not follow the hidden skin where that bends in under it)
+                _c=_o0+_k*_hh[i]; _s=float((hc[i]-loc)@nrm); _u=min(max(1-_hh[i]/E('FACEG2',0.0015),0.0),1.0); _u=_u*_u*(3-2*_u)
+                if float(np.linalg.norm(hc[i]-loc))<0.004: hc[i]=hc[i]+nrm*((_c-_s)*(_wg[i] if _s<_c else _u))
+                _s=float((hc[i]-loc)@nrm); _fm=_o0+0.5*_k*min(_hh[i],E('FACEGH',0.008))
+                if _s<_fm and float(np.linalg.norm(hc[i]-loc))<0.002: hc[i]=hc[i]+nrm*(_fm-_s)
+                continue
+            # new-style head: the edge of the band stays FACEOFF0 over the neck and no band vertex ends up lower than
+            # FACEMIN over the neck skin. 13-11-2026: 0.03 mm (with 0.6 mm, and still with 0.15, that little step cast a thin
+            # line of ambient-occlusion shadow on the neck all along the edge; now both skins look the same there -
+            # plain, same normals - so it no longer matters if they interleave a little)
+            q=loc+nrm*(E('FACEOFF',0.0006)*(1-w_[i])+E('FACEOFF0',0.00003 if NEWHEAD else 0.0)*w_[i]); hc[i]=hc[i]+(q-hc[i])*w_[i]
+            _fm=E('FACEMIN',0.00003 if NEWHEAD else -1.0)
+            if _fm>-1.0:
+                _s=float((hc[i]-loc)@nrm)
+                if _s<_fm: hc[i]=hc[i]+nrm*(_fm-_s)
     for o in _heads:
         if o.name=='Cabeza' and E('FACEUV',1)>0:
             _transfer(o); o.data.update(); bpy.context.view_layer.update(); _dg=bpy.context.evaluated_depsgraph_get(); _dg.update()
@@ -547,24 +603,15 @@ if _heads:
             # from outside inwards (first hit = the OUTER skin of the neck). With the nearest point (before) a vertex
             # could be pulled either to the neck skin or to the cap of the mannequin head that dives inside just above:
             # neighbours alternated and the band came out as a saw-tooth line 3-6 mm above the edge of the head.
-            _hn=np.zeros(n_*3); nm.vertices.foreach_get('normal',_hn); _hn=_hn.reshape(-1,3); _ray=E('FACERAY',0)>0
-            from mathutils import Vector as _V2
-            for i in np.where(w_>1e-3)[0]:
-                loc=None
-                if _ray:
-                    _r=_bvh.ray_cast(_V2(hc[i]+_hn[i]*0.03),_V2(-_hn[i]),0.07)
-                    if _r[0] is not None: loc=np.array(_r[0]); nrm=_hn[i]
-                if loc is None:
-                    loc,nrm,_,_=_bvh.find_nearest(hc[i])
-                    if loc is None: continue
-                # new-style head (12-11-2026): the edge of the band stays FACEOFF0 = 0.6 mm over the neck (before 0: the edge lay
-                # exactly on the neck skin and the two skins interleaved along it), and no band vertex ends up lower than
-                # FACEMIN over the neck skin
-                q=np.array(loc)+np.array(nrm)*(E('FACEOFF',0.0006)*(1-w_[i])+E('FACEOFF0',0.0006 if NEWHEAD else 0.0)*w_[i]); hc[i]=hc[i]+(q-hc[i])*w_[i]
-                _fm=E('FACEMIN',0.0006 if NEWHEAD else -1.0)
-                if _fm>-1.0:
-                    _s=float((hc[i]-np.array(loc))@np.array(nrm))
-                    if _s<_fm: hc[i]=hc[i]+np.array(nrm)*(_fm-_s)
+            _hn=np.zeros(n_*3); nm.vertices.foreach_get('normal',_hn); _hn=_hn.reshape(-1,3)
+            if os.environ.get('JOINTDBG') and o.name=='Cabeza':
+                _hh0=_resth(w_)*1000; _i0=np.where(w_>1e-3)[0]; _s0=np.zeros(len(_i0))
+                for k_,i in enumerate(_i0):
+                    loc,nrm,_,_=_bvh.find_nearest(hc[i]); _s0[k_]=float((hc[i]-np.array(loc))@np.array(nrm))*1000
+                _a0=np.abs(np.degrees(np.arctan2(hc[_i0][:,0]-hc[_i0][:,0].mean(),-(hc[_i0][:,1]-hc[_i0][:,1].mean()))))
+                for a0,a1 in ((0,30),(30,60),(60,90),(90,120),(120,150),(150,181)):
+                    print('JOINTDBG before the glue: ang %3d-%3d  head over neck skin (mm)  '%(a0,a1)+'  '.join('h %g-%g: %+.2f..%+.2f'%(h0,h1,_s0[(_a0>=a0)&(_a0<a1)&(_hh0[_i0]>=h0)&(_hh0[_i0]<h1)].min(),_s0[(_a0>=a0)&(_a0<a1)&(_hh0[_i0]>=h0)&(_hh0[_i0]<h1)].max()) for h0,h1 in ((0,1),(1,3),(3,6),(6,8)) if ((_a0>=a0)&(_a0<a1)&(_hh0[_i0]>=h0)&(_hh0[_i0]<h1)).any()))
+            _glue(hc,_hn,w_)
             nm.vertices.foreach_set('co',hc.ravel()); nm.update()
         if not (o.name=='Cabeza' and E('FACEUV',1)>0):
             if not nm.uv_layers: nm.uv_layers.new(name='UVMap')
@@ -576,5 +623,64 @@ if _heads:
             print('FACEDBG',o.name,'attrs',[a.name for a in nm.attributes],'uv range',_u.min().round(3),_u.max().round(3),'have',sorted(have))
         if o.name=='Cabeza' and E('FACESUB',1)>0:
             s_=o.modifiers.new('sub','SUBSURF'); s_.levels=s_.render_levels=int(E('FACESUB',1))
+            if NEWHEAD and E('FACENRM',1)>0 and 'snapw' in nm.attributes:
+                # (13-11-2026) along the joint the head takes the NORMALS of the neck skin under it (weight from 'snapw': all
+                # on the lowest ~7 mm, none 1.2 cm higher): the light falls the same on both sides of the edge, so no tone step.
+                # The subdivision is applied first, so the rest of the head keeps exactly its own normals.
+                bpy.context.view_layer.update(); _dg2=bpy.context.evaluated_depsgraph_get(); _dg2.update()
+                nm2=bpy.data.meshes.new_from_object(o.evaluated_get(_dg2),preserve_all_data_layers=True,depsgraph=_dg2)
+                o.modifiers.clear(); o.data=nm2; n2=len(nm2.vertices)
+                c2=np.zeros(n2*3); nm2.vertices.foreach_get('co',c2); c2=c2.reshape(-1,3)
+                vn2=np.zeros(n2*3); nm2.vertices.foreach_get('normal',vn2); vn2=vn2.reshape(-1,3)
+                w2=np.zeros(n2); nm2.attributes['snapw'].data.foreach_get('value',w2); _bi=np.where(w2>1e-3)[0]
+                if _nfk>0 and E('FACEGLUE2',1)>0:
+                    # second pass of the glue on the subdivided head: the subdivision rounds the band off the neck skin
+                    # by up to a few tenths of mm (edge included); this puts every new vertex back at its exact height
+                    _glue(c2,vn2,w2); nm2.vertices.foreach_set('co',c2.ravel()); nm2.update(); nm2.vertices.foreach_get('normal',vn2.reshape(-1))
+                _em=ob.evaluated_get(_dg2).data; ne_=len(_em.vertices)
+                _ev=np.zeros(ne_*3); _em.vertices.foreach_get('co',_ev); _ev=_ev.reshape(-1,3)
+                _lo=c2[_bi].min(0)-0.02; _hi=c2[_bi].max(0)+0.02; _sel=np.where(np.all((_ev>_lo)&(_ev<_hi),1))[0]
+                _en=np.zeros(ne_*3); _em.vertices.foreach_get('normal',_en); _en=_en.reshape(-1,3)[_sel]
+                from scipy.spatial import cKDTree as _KDn
+                _dd,_ii=_KDn(_ev[_sel]).query(c2[_bi],k=4); _wk=1.0/np.maximum(_dd,1e-5)**2
+                _nb=(_en[_ii]*_wk[:,:,None]).sum(1); _nb/=np.maximum(np.linalg.norm(_nb,axis=1,keepdims=True),1e-12)
+                _wn=np.clip(w2[_bi]*E('FACENRMK',3.0),0,1)[:,None]      # all neck normal on the lowest ~7 mm, none 1.2 cm up
+                if _nfk>0:
+                    # fitted head: the reference is the VISIBLE neck skin just under the edge of the head (the ring of body
+                    # skin 0-2 mm below the cut), not the hidden skin under the band (that one bends in towards the old jaw:
+                    # its normals gave a light fringe along the joint). The edge of the head takes exactly the normal of the
+                    # neck next to it and turns into its own normals little by little up to FACENH above. With the face
+                    # shading (FELT, FCON) 1 deg of difference is ~4 grey levels on the shadow side, and a pose always
+                    # leaves 1-2 deg between the two skins: this is what makes the joint hold in any pose.
+                    _hda=_em.attributes.get('hd')
+                    if _hda is not None:
+                        _hdv=np.zeros(ne_); _hda.data.foreach_get('value',_hdv); _rg=np.where((_hdv[_sel]>-E('FACENR',0.002))&(_hdv[_sel]<0.0003))[0]
+                        if len(_rg)>50:
+                            _dd,_ii=_KDn(_ev[_sel][_rg]).query(c2[_bi],k=4); _wk=1.0/np.maximum(_dd,1e-5)**2
+                            _nb=(_en[_rg][_ii]*_wk[:,:,None]).sum(1); _nb/=np.maximum(np.linalg.norm(_nb,axis=1,keepdims=True),1e-12)
+                    _wn=np.clip(1-_resth(w2[_bi])/E('FACENH',0.006),0,1); _wn=(_wn*_wn*(3-2*_wn))[:,None]
+                _nn=vn2[_bi]*(1-_wn)+_nb*_wn; vn2[_bi]=_nn/np.maximum(np.linalg.norm(_nn,axis=1,keepdims=True),1e-12)
+                nm2.normals_split_custom_set_from_vertices([tuple(float(x) for x in v) for v in vn2]); nm2.update()
+                print('joint normals: %d band vertices, mean turn %.1f deg'%(len(_bi),float(np.degrees(np.arccos(np.clip((_nb*vn2[_bi]).sum(1),-1,1))).mean())))
+                if os.environ.get('JOINTDBG'):
+                    # diagnostic: clearance of the band over the neck skin (mm) and angle between the two skins, by sector and height
+                    _h2=_resth(w2[_bi])*1000
+                    _gn=np.zeros(n2*3); nm2.vertices.foreach_get('normal',_gn); _gn=_gn.reshape(-1,3)[_bi]
+                    _s2=np.zeros(len(_bi)); _a2=np.zeros(len(_bi))
+                    for k_,i in enumerate(_bi):
+                        loc,nrm,_,_=_bvh.find_nearest(c2[i]); _s2[k_]=float((c2[i]-np.array(loc))@np.array(nrm))*1000
+                        _a2[k_]=math.degrees(math.acos(max(-1,min(1,float(_gn[k_]@np.array(nrm))))))
+                    _cx=c2[_bi][:,0].mean(); _cy=c2[_bi][:,1].mean(); _an=np.abs(np.degrees(np.arctan2(c2[_bi][:,0]-_cx,-(c2[_bi][:,1]-_cy))))
+                    print('JOINTDBG centre %.3f %.3f  band verts %d'%(_cx,_cy,len(_bi)))
+                    for a0,a1 in ((0,20),(20,60),(60,110),(110,155),(155,181)):
+                        for h0,h1 in ((0,0.5),(0.5,2),(2,4),(4,8),(8,12.1)):
+                            q_=(_an>=a0)&(_an<a1)&(_h2>=h0)&(_h2<h1)
+                            if q_.sum()==0: continue
+                            print('JOINTDBG ang %3d-%3d h %4.1f-%4.1f n %4d  clear min %6.3f med %6.3f max %6.3f mm  below %3d%%  angle med %5.1f max %5.1f'%(a0,a1,h0,h1,q_.sum(),_s2[q_].min(),np.median(_s2[q_]),_s2[q_].max(),100*(_s2[q_]<0).mean(),np.median(_a2[q_]),_a2[q_].max()))
+                    _he=np.zeros(len(nm2.edges)*2,int); nm2.edges.foreach_get('vertices',_he); _be=np.zeros(len(_em.edges)*2,int); _em.edges.foreach_get('vertices',_be); _be=_be.reshape(-1,2)
+                    _zk=(_ev[:,2]>c2[_bi][:,2].min()-0.06)&(_ev[:,2]<c2[_bi][:,2].max()+0.06); _be=_be[_zk[_be[:,0]]&_zk[_be[:,1]]]
+                    np.savez(os.environ['JOINTDBG'],c=c2[_bi],s=_s2,a=_a2,h=_h2,an=_an,x=c2[_bi][:,0]-_cx,hv=c2,he=_he.reshape(-1,2),hw=w2,bv=_ev,be=_be)
 if os.environ.get('HIDEBODY')=='1': ob.hide_render=True      # debug: head only
+if os.environ.get('HIDEHEAD')=='1':                          # debug: body only (the hidden skin under the head band shows)
+    for o in _heads: o.hide_render=True
 sc.render.filepath=out+'.png'; bpy.ops.render.render(write_still=True)

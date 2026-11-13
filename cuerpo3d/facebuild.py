@@ -94,7 +94,100 @@ if E('SMILE',0)>0:
         gc_=np.exp(-((hco[:,0]-sg_*(xc_+0.008))/0.014)**2-((hco[:,2]-zm_-0.016)/0.012)**2)*front_
         hco=hco+np.stack([0*gc_, -E('SMCH',0.0012)*gc_, 0.4*E('SMCH',0.0012)*gc_],1)
     print('smile: corners up %.1f mm'%(E('SMILE',0)*1000))
+HREL=None
+if E('NECKFIT',0)>0:
+    # (13-11-2026, owner: «todavía se ve la unión del cuello y la cabeza: una línea marcada») The stump of this head is
+    # 3-13 mm wider than the neck of the mannequin all round the cut AND leaves it at another angle (measured: under the
+    # chin it opens 25 deg away from the line of the throat, at the sides 20 deg, on the nape 45 deg). The renderer had to
+    # pull its lowest 12 mm onto the neck: a step like the collar of a shirt and, once that was gone, a sharp fold along
+    # the joint. Now the stump is fitted onto the neck in the rest pose. Everything is measured and moved along the
+    # horizontal-radial direction tilted so that the height h over the (tilted) cut plane never changes:
+    #   off(angle, h) = how far the head skin is outside the ORIGINAL neck skin of the mannequin (ray from each head
+    #       vertex of the lowest NFS m), fitted per angle round the neck (72 bins, mirrored, smoothed) with a line, or
+    #       a parabola when it levels off (nape, sides); above the fitted heights the line goes on straight (under the
+    #       chin: the line of the throat, not the old chin of the mannequin) and the parabola stays at its top;
+    #   move = (off - NFK.h).w(h),  w = 1 at the cut -> 0 at NFH (NFHB on the nape), no slope at either end.
+    # So at the cut the head lies ON the neck skin and goes on with the SAME slope (no step, no fold), lifting off it by
+    # NFK (0.06 mm per mm, a 3 deg wedge: the two skins never interleave), and it turns little by little into its own
+    # shape up to NFH higher (under the jaw, behind the ear, at the base of the skull).
+    from mathutils.bvhtree import BVHTree as _BVn
+    _ssn=lambda t: np.clip(t,0,1)**2*(3-2*np.clip(t,0,1))
+    if E('NFSM',10)>0:
+        # the neck skin of the mannequin itself has a small ledge at this very height on both sides of the nape (its
+        # profile turns 35 deg within 1 mm): under the old head it was one of the «two small folds of the nape», now it
+        # showed as a hair-thin line right along the joint. The skin of the neck is smoothed (no shrinking: Taubin)
+        # in a ring NFSMH above and below the cut plane, full at the cut -> nothing at the borders of the ring.
+        from scipy.sparse import coo_matrix as _coo
+        _ed=np.zeros(len(bme.edges)*2,int); bme.edges.foreach_get('vertices',_ed); _ed=_ed.reshape(-1,2)
+        _Am=_coo((np.ones(len(_ed)*2),(np.r_[_ed[:,0],_ed[:,1]],np.r_[_ed[:,1],_ed[:,0]])),shape=(nv,nv)).tocsr(); _dg=np.maximum(np.asarray(_Am.sum(1)).ravel(),1)
+        _wsm=_ssn(1-np.abs(bco[:,2]-cutz(bco[:,1]))/E('NFSMH',0.009))*_ssn((0.10-np.hypot(bco[:,0],bco[:,1]-E('NFYC',-0.03)))/0.02)
+        _b0=bco.copy()
+        for _ in range(int(E('NFSM',10))):
+            for lam_ in (0.5,-0.53): bco=bco+((_Am@bco)/_dg[:,None]-bco)*(lam_*_wsm[:,None])
+        print('neck fit: neck skin smoothed round the cut, %d verts, max move %.2f mm'%(int((_wsm>0).sum()),np.linalg.norm(bco-_b0,axis=1).max()*1000))
+    bme.calc_loop_triangles(); _bt=np.array([t.vertices[:] for t in bme.loop_triangles])
+    _bb=_BVn.FromPolygons([tuple(v) for v in bco],[tuple(int(i) for i in t) for t in _bt])
+    h0_=hco[:,2]-cutz(hco[:,1]); HREL=h0_.copy(); NFH=E('NFH',0.026); yc_=E('NFYC',-0.03); NB_=72; _cs=E('CUTSL',0.32)
+    ang_=lambda P: np.arctan2(P[:,0],-(P[:,1]-yc_))                    # 0 = front, +-pi/2 = sides, pi = nape
+    def dir_(th):                                                      # unit direction "outwards at constant h"
+        e_=np.stack([np.sin(th),-np.cos(th),-_cs*np.cos(th)],1); return e_/np.linalg.norm(e_,axis=1,keepdims=True)
+    ids_=np.where(h0_<E('NFS',0.013))[0]; th0_=ang_(hco[ids_]); e0_=dir_(th0_); off_=np.full(len(ids_),np.nan)
+    for k_,i_ in enumerate(ids_):
+        hit_=_bb.ray_cast(Vector(hco[i_]+e0_[k_]*0.03),Vector(-e0_[k_]),0.06)
+        if hit_[0] is None or float(np.array(hit_[1])@e0_[k_])<0.5 or abs(hit_[3]-0.03)>0.02: continue   # outer neck skin only
+        off_[k_]=hit_[3]-0.03
+    # in front the old chin of the mannequin starts ~8 mm above the cut: only the throat below it counts there
+    hs_=h0_[ids_]; dg_=np.abs(np.degrees(th0_)); ok_=np.isfinite(off_)&(hs_<np.where(dg_<E('NFFR',55.0),E('NFSF',0.007),1.0))
+    bin_=np.floor((th0_+math.pi)/(2*math.pi)*NB_).astype(int)%NB_
+    # two lines per angle: B,C = the head against the neck skin as it goes on above the cut (the old neck of the
+    # mannequin), Bt = against the TANGENT of the neck skin at the cut (samples of the lowest NFST m only). Above the cut
+    # the old skin bends in towards the old jaw at the front and sides: a head that follows that bend and then opens out
+    # to its own jaw makes an S (a light fringe over a dark one along the joint, on the shadow side); on the nape the
+    # old skin bends out and must be followed. The head takes whichever keeps it further OUT: min(tangent, old skin).
+    B_=np.zeros(NB_); C_=np.zeros(NB_); Bt_=np.zeros(NB_); has_=np.zeros(NB_,bool); hast_=np.zeros(NB_,bool)
+    for b_ in range(NB_):
+        d_=(bin_-b_+NB_//2)%NB_-NB_//2; m_=ok_&(np.abs(d_)<=2)
+        if m_.sum()>=8 and np.ptp(hs_[m_])>=0.004:
+            wt_=np.array([1.0,0.6,0.3])[np.abs(d_[m_])]; x_=hs_[m_]; y_=off_[m_]; sw_=np.sqrt(wt_)
+            q_=np.linalg.lstsq(np.stack([np.ones(len(x_)),x_,x_*x_],1)*sw_[:,None],y_*sw_,rcond=None)[0]
+            if q_[2]<0 and np.ptp(x_)>0.008: B_[b_],C_[b_]=q_[1],q_[2]
+            else: B_[b_]=np.linalg.lstsq(np.stack([np.ones(len(x_)),x_],1)*sw_[:,None],y_*sw_,rcond=None)[0][1]; C_[b_]=0.0
+            has_[b_]=True
+        m_=m_&(hs_<E('NFST',0.0036))
+        if m_.sum()>=6 and np.ptp(hs_[m_])>=0.0015:
+            wt_=np.array([1.0,0.6,0.3])[np.abs(d_[m_])]; x_=hs_[m_]; y_=off_[m_]; sw_=np.sqrt(wt_)
+            Bt_[b_]=np.linalg.lstsq(np.stack([np.ones(len(x_)),x_],1)*sw_[:,None],y_*sw_,rcond=None)[0][1]; hast_[b_]=True
+    assert has_.sum()>NB_*0.8 and hast_.sum()>NB_*0.8, 'neck fit: too few samples round the cut'
+    for arr_,hz_ in ((B_,has_),(C_,has_),(Bt_,hast_)): arr_[~hz_]=np.interp(np.where(~hz_)[0],np.where(hz_)[0],arr_[hz_],period=NB_)
+    mir_=lambda a_: 0.5*(a_+a_[::-1])                                  # bins are symmetric about x = 0 (bin b <-> NB-1-b)
+    def _smc(a_,n_=2):                                                 # circular smoothing
+        for _ in range(n_): a_=0.25*np.roll(a_,1,0)+0.5*a_+0.25*np.roll(a_,-1,0)
+        return a_
+    B_=_smc(mir_(B_)); C_=np.minimum(_smc(mir_(C_)),0.0); Bt_=_smc(mir_(Bt_))
+    # A = how far the head is outside the neck AT the cut: not per bin (the smoothing left the edge up to 1.3 mm off
+    # the skin where it changes fast, e.g. the groove of the nape) but from the edge vertices themselves, by angle
+    lp_=np.where(np.isfinite(off_)&(hs_<0.0004))[0]; lp_=lp_[np.argsort(th0_[lp_])]; thL_=th0_[lp_]; aL_=off_[lp_]
+    aL_=0.25*np.roll(aL_,1)+0.5*aL_+0.25*np.roll(aL_,-1)
+    Af_=lambda th: np.interp(th,thL_,aL_,period=2*math.pi)
+    # the fit is longer on the nape (NFHB: there is room up to the base of the skull) than in front and at the sides
+    # (NFH: the chin and the angle of the jaw are close)
+    NFHB=E('NFHB',0.045); sel_=np.where(h0_<max(NFH,NFHB))[0]; th_=ang_(hco[sel_])
+    Hs_=NFH+(NFHB-NFH)*_ssn((np.abs(np.degrees(th_))-E('NFB0',80.0))/(E('NFB1',150.0)-E('NFB0',80.0)))
+    a_=(th_+math.pi)/(2*math.pi)*NB_-0.5; i0_=np.floor(a_).astype(int); f_=a_-i0_
+    lerp_=lambda arr_: arr_[i0_%NB_]*(1-f_)+arr_[(i0_+1)%NB_]*f_
+    hh_=np.maximum(h0_[sel_],0.0); w_=1.0-_ssn(hh_/Hs_); a2_=Af_(th_); b2_=lerp_(B_); c2_=lerp_(C_); bt_=lerp_(Bt_)
+    hv_=np.where(c2_<-1e-9,np.clip(-b2_/np.minimum(2*c2_,-1e-9),0.0,None),1e9); hq_=np.minimum(hh_,hv_)   # parabola: held at its top
+    bt_=bt_+_ssn((np.abs(np.degrees(th_))-E('NFT0',105.0))/(E('NFT1',125.0)-E('NFT0',105.0)))     # nape: the old skin only (the tangent never wins)
+    g_=np.clip(a2_+np.minimum(b2_*hq_+c2_*hq_*hq_,bt_*hh_),-E('NFMAX',0.016),E('NFMAX',0.016))
+    dl_=(g_-E('NFK',0.06)*hh_)*w_*E('NECKFIT',0)
+    hco[sel_]=hco[sel_]-dir_(th_)*dl_[:,None]
+    print('neck fit: outside the neck at the cut %.1f..%.1f mm (mean %.1f), slope %.2f..%.2f (tangent %.2f..%.2f), max move %.1f mm, %d verts, %d samples'%(
+        aL_.min()*1000,aL_.max()*1000,aL_.mean()*1000,B_.min(),B_.max(),Bt_.min(),Bt_.max(),np.abs(dl_).max()*1000,len(sel_),int(ok_.sum())))
+    if os.environ.get('NFDBG'):
+        for b_ in range(NB_//2,NB_,4): print('  bin %2d ang %4.0f  A %5.1f mm  B %5.2f  C %7.1f  Bt %5.2f'%(b_,(b_+0.5)/NB_*360-180,float(Af_(np.array([(b_+0.5)/NB_*2*math.pi-math.pi]))[0])*1000,B_[b_],C_[b_],Bt_[b_]))
 cab=make('Cabeza',hco,hfaces)
+cab['cutz']=E('CUTZ',1.44); cab['cutsl']=E('CUTSL',0.32)          # the cut plane (rest pose), for the renderer
+cab['snaph']=E('SNAPH',0.012); cab['nfk']=E('NFK',0.06) if E('NECKFIT',0)>0 else 0.0   # height of the 'snapw' band; wedge of the neck fit (0 = no fit)
 # ---- hair (short, buzz cut) and eyebrows: darkness 'tint' for the renderer
 ss_=lambda t: np.clip(t,0,1)**2*(3-2*np.clip(t,0,1))
 hn=np.zeros(len(hco)*3); cab.data.vertices.foreach_get('normal',hn); hn=hn.reshape(-1,3)
@@ -234,7 +327,8 @@ for vi,bi in enumerate(src_ids):
         g=grp.get(n) or cab.vertex_groups.new(name=n); grp[n]=g; g.add([vi],wv,'REPLACE')
 am=cab.modifiers.new('Armature','ARMATURE'); am.object=rig
 # snap band: 1 at the cut edge -> 0 at 1.2 cm above it
-h=hco[:,2]-cutz(hco[:,1]); snapw=np.clip(1-h/E('SNAPH',0.012),0,1); snapw=snapw*snapw*(3-2*snapw)
+h=HREL if HREL is not None else hco[:,2]-cutz(hco[:,1])      # NECKFIT: height above the cut BEFORE the taper
+snapw=np.clip(1-h/E('SNAPH',0.012),0,1); snapw=snapw*snapw*(3-2*snapw)
 a=cab.data.attributes.new('snapw','FLOAT','POINT'); a.data.foreach_set('value',snapw.astype(np.float32))
 for L,ec,ef in eyes:
     ob=make('Ojo.'+L,ec,ef)
@@ -284,6 +378,17 @@ for i in np.where(hb&(hh>E('CAP0',0.008)))[0]:
     sdist_=(bco[i]-np.array(loc))@np.array(nrm)
     if sdist_>-E('CAPMIN',3)/1000.0: bco[i]=np.array(loc)-np.array(nrm)*E('CAPMIN',3)/1000.0; moved_+=1
 print('cap verts clamped inside',moved_)
+if E('NECKFIT',0)>0 and not FEM:
+    # with the neck fit the new head follows the line of the throat higher up, and the lowest lip of the OLD chin of the
+    # mannequin (it dips below CAP0, so the cap above did not take it) stuck out under the new chin: a small dark spot
+    # in front, a tiny spike in profile. The skin of the old head that faces down (old chin and jaw, not the neck skin,
+    # which the head band lies on) between CAPL and CAP0 above the cut goes CAPMIN inside the new head too.
+    _th=np.abs(np.degrees(np.arctan2(bco[:,0],-(bco[:,1]-E('NFYC',-0.03))))); lip_=0
+    for i in np.where(hb&(hh>E('CAPL',0.001))&(hh<=E('CAP0',0.008))&(bno[:,2]<-E('CAPNZ',0.5))&(_th<E('CAPTH',110.0)))[0]:
+        loc,nrm,_,dist=_bv.find_nearest(Vector(bco[i]))
+        if loc is None: continue
+        if (bco[i]-np.array(loc))@np.array(nrm)>-E('CAPMIN',3)/1000.0: bco[i]=np.array(loc)-np.array(nrm)*E('CAPMIN',3)/1000.0; lip_+=1
+    print('neck fit: old chin lip, %d verts put inside the head'%lip_)
 bme.vertices.foreach_set('co',bco.ravel()); bme.update()
 print('cap verts pushed',int((push>0.01).sum()))
 bpy.ops.wm.save_as_mainfile(filepath=out)
