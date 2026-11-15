@@ -878,7 +878,7 @@ la unión (~60 mm); debajo el trapecio vuelve a abrirse. Se veía como un lóbul
 Lección: mirar el perfil de grises a través del borde (debe ser continuo) y, si hay salto, sacar `MDEBUG=fc` y
 `MDEBUG=n` antes de tocar la geometría.
 
-## 5u. Dominadas de espaldas (15-11-2026, v1)
+## 5u. Dominadas de espaldas (15-11-2026, v1: `ejemplos/dominadas_v1.mp4`, `.gif`, `dominadas_v1_posiciones.jpg`)
 
 Pedido del dueño: «Haz una animación de dominadas enfocado desde la espalda». Se reutiliza la cinemática de dominada
 aprobada el 21-10 (`pullup6.py`: brazo anatómico, agarre ancho en prono de `agarre_final.env`, escápulas arriba colgado y
