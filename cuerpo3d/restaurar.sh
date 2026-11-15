@@ -35,4 +35,5 @@ NONEFIX=1 ill/mapas.sh maps_pd3 "latissimus_dorsi:1,teres_major:1,rhomboid_major
 NONEFIX=1 ill/mapas.sh maps_tri "triceps:1,anconeus:0.30"
 NONEFIX=1 ill/mapas.sh maps_pull "latissimus_dorsi:1,trapezius:1,rhomboid_major:1,teres_major:1,infraspinatus:1,teres_minor:1,deltoid_posterior:0.30,biceps_brachii:0.30,brachialis:0.30,brachioradialis:0.30"
 NONEFIX=1 ill/mapas.sh maps_push "pec_clavicular:1,pec_sternal:1,deltoid_anterior:1,deltoid_lateral:1,triceps:1,anconeus:0.30"
+NONEFIX=1 ill/mapas.sh maps_dom "latissimus_dorsi:1,teres_major:1,rhomboid_major:0.30,trap_middle:0.30,trap_lower:0.30,deltoid_posterior:0.30,biceps_brachii:0.30,brachialis:0.30,brachioradialis:0.30"   # dominadas (5u)
 echo "Listo. En cada terminal nueva:  export GT3D=$DST"

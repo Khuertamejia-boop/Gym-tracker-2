@@ -23,6 +23,7 @@ de esta guía y Claude seguirá desde aquí.
 | Animación de fondo de la app: doble bíceps **de frente** (rojo Push) | v5 (11-11-2026: hombro con bola, bíceps con pico, axila limpia, sección 5r; `ejemplos/v5_frente_antes_ahora.jpg`), falta el visto bueno | `ejemplos/doble_biceps_frente_en_la_app.mp4`, `.jpg`, `_cerca.jpg`; para Xcode: `app/doble_biceps_frente_transparente.mov`, `app/doble_biceps_frente/` |
 | **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v3 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v3_*.jpg` |
 | **Rostro y corte de cabello del hombre** (rostro fuerte, corte «skin fade», ojos con vida) | v14 (12-11-2026, sección 5s) + unión con el cuello sin línea, cuello que sube natural hasta la mandíbula (v16) y lado del cuello en una sola línea, sin bulto bajo las orejas (v17, 13-11-2026, sección 5t), falta el visto bueno; solo está posado de nuevo el doble bíceps (fotograma 30) | `ejemplos/rostro_v14_antes_despues.jpg`, `cuello_v17_antes_despues.jpg`, `union_cuello_v16_antes_despues.jpg`, `rostro_v17_vistas.jpg`, `doble_biceps_v17_en_fondo_app.jpg` |
+| **Dominadas** (agarre ancho, de espaldas, con el rostro y el cuello v17) | v1 (15-11-2026, sección 5u), falta el visto bueno | `ejemplos/dominadas_v1.mp4`, `.gif`, `dominadas_v1_posiciones.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
@@ -876,6 +877,29 @@ la unión (~60 mm); debajo el trapecio vuelve a abrirse. Se veía como un lóbul
 `YAW=0`, `90`, `150`, `180` (0,37 mm por píxel), en reposo (`w/NB_mc_row3.blend`) y en la pose (`w/DH30.blend`).
 Lección: mirar el perfil de grises a través del borde (debe ser continuo) y, si hay salto, sacar `MDEBUG=fc` y
 `MDEBUG=n` antes de tocar la geometría.
+
+## 5u. Dominadas de espaldas (15-11-2026, v1)
+
+Pedido del dueño: «Haz una animación de dominadas enfocado desde la espalda». Se reutiliza la cinemática de dominada
+aprobada el 21-10 (`pullup6.py`: brazo anatómico, agarre ancho en prono de `agarre_final.env`, escápulas arriba colgado y
+abajo-atrás arriba, barbilla sobre la barra, cabeza algo atrás) sobre la base ACTUAL del hombre (`w/NB_mc_row3.blend`:
+rostro v14, cuello v17).
+```bash
+export GT3D=~/cuerpo3d-trabajo; cd $GT3D
+NONEFIX=1 ill/mapas.sh maps_dom "latissimus_dorsi:1,teres_major:1,rhomboid_major:0.30,trap_middle:0.30,trap_lower:0.30,deltoid_posterior:0.30,biceps_brachii:0.30,brachialis:0.30,brachioradialis:0.30"
+export PFX=DMf; for g in $(seq 0 3 30); do for f in $(seq $g $((g+2))); do [ $f -le 30 ] && ./anim_dominadas.sh $f 60 & done; wait; done
+STYLE=style_app YAW=180 PIT=4 TX=0 TY=0 TZ=1.30 OSC=4.2 ill/render31.sh DMf maps_dom dominadas
+```
+- `anim_dominadas.sh` = `pullup6.py` + `arap2.py` (piel del hombro) + `dominadas_geo.py` (nuevo): estación de dominadas
+  con dos postes claros (como las demás máquinas), pies oscuros, abrazaderas oscuras y la barra entre los postes
+  (1,24 m; la barra larga de la base se cambia por una de ese largo, mismo grosor y sitio). `DGW` mitad del ancho,
+  `DGH` alto de los postes (salen por arriba del encuadre).
+- Rojo como el jalón (sección 5k): dorsal ancho y redondo mayor a 1; romboides, trapecio medio e inferior, deltoides
+  posterior, bíceps, braquial y braquiorradial a 0,30.
+- Estilo: `style_app` (el de las animaciones de la app, con degradado), 1920×1080, ritmo aprobado (subida rápida,
+  bajada lenta, pausas): `out/dominadas.mp4` y `.gif`.
+- Cámara: de espaldas, recta (`YAW=180`), centrada en 1,30 m y 4,2 m de ancho: entran los pies colgado y la cabeza
+  sobre la barra arriba.
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
