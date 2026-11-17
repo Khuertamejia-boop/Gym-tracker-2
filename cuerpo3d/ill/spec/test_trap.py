@@ -1,0 +1,9 @@
+LM={
+ 'occ':('B',0.0,1.555),'c7':('B',0.0,1.45),'t6':('B',0.0,1.28),'t12':('B',0.0,1.10),
+ 'nk_lat':('L',0.025,1.50),'clav':('T',0.15,-0.015),'acr':('T',0.195,0.0),
+ 'sps_lat':('B',0.175,1.365),'sps_med':('B',0.075,1.325),
+}
+MUSCLES={
+ 'trapezius':dict(loop=['t12','t6','c7','occ','nk_lat','clav','acr','sps_lat','sps_med'],seed=('B',0.05,1.33),
+                  origin=('t12','occ'),insertion=('clav','sps_med'),sp=6),
+}
