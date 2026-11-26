@@ -83,6 +83,24 @@ if E('SHORTZ',0)>0:
     if E('SHLIN',1)>0: _t=np.clip((_co[:,2]-_zh)/E('SHBANDL',0.012)+0.5,0,1)   # linear ramp: the 0.5 cut is a clean line
     else: _t=_t*_t*(3-2*_t)
     me.attributes['shorts'].data.foreach_set('value',(_sh*_t).astype(np.float32))
+if E('SHUP1',0)>0 and 'shorts' in _rest.files and len(_rest['shorts'])==nv:
+    # (26-11-2026, owner: «súbele un poco el short negro, sobre todo en la espalda que cubra más») higher waistband: the
+    # top edge of the shorts (measured per angle round the waist, rest pose) goes up SHUP0 m in front and SHUP1 m at the
+    # back (smooth in between, from SHA0 to SHA1 deg off the front), with the same clean linear edge as the hem.
+    _sh=np.zeros(nv,np.float32); me.attributes['shorts'].data.foreach_get('value',_sh)
+    _mn=np.array([str(x) for x in _rest['main']]); _tor=np.isin(_mn,['hips','spine','thigh.L','thigh.R'])&(np.abs(_co[:,0])<0.2)
+    _th=np.degrees(np.arctan2(_co[:,0],-_co[:,1])); _bins=np.arange(-180,181,5.0); _top=np.full(len(_bins),np.nan)
+    _r0=np.asarray(_rest['shorts'])
+    for _i,_b in enumerate(_bins):
+        _k=_tor&(_r0>0.5)&(np.abs(((_th-_b+180)%360)-180)<5)&(_co[:,2]>0.85)
+        if _k.any(): _top[_i]=_co[_k,2].max()
+    _ok=np.isfinite(_top); _top=np.interp(_bins,_bins[_ok],_top[_ok])
+    _top=np.convolve(np.r_[_top[-3:-1],_top,_top[1:3]],np.ones(5)/5,'valid')          # smooth round the waist
+    _up=lambda a: E('SHUP0',0.015)+(E('SHUP1',0)-E('SHUP0',0.015))*(lambda t: t*t*(3-2*t))(np.clip((np.abs(a)-E('SHA0',60.0))/(E('SHA1',150.0)-E('SHA0',60.0)),0,1))
+    _z0=np.interp(_th,_bins,_top); _zt=_z0+_up(_th)
+    _t=np.clip((_zt-_co[:,2])/E('SHBANDL',0.012)+0.5,0,1)*_tor*(_co[:,2]>_z0-0.03)      # only from just under the old edge up
+    me.attributes['shorts'].data.foreach_set('value',np.maximum(_sh,_t).astype(np.float32))
+    print('shorts: waistband up %.0f mm in front, %.0f mm at the back'%(E('SHUP0',0.015)*1000,E('SHUP1',0)*1000))
 sub=ob.modifiers.new('sub','SUBSURF'); sub.levels=int(E('SUBD',2)); sub.render_levels=int(E('SUBD',2)); sub.uv_smooth='PRESERVE_BOUNDARIES'
 m=bpy.data.materials.new('sculpt'); nt=m.node_tree; N=nt.nodes; L=nt.links
 m.displacement_method=os.environ.get('DISPM','BOTH')
