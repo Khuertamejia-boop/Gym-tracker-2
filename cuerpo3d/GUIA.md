@@ -23,7 +23,7 @@ de esta guía y Claude seguirá desde aquí.
 | Animación de fondo de la app: doble bíceps **de frente** (rojo Push) | v5 (11-11-2026: hombro con bola, bíceps con pico, axila limpia, sección 5r; `ejemplos/v5_frente_antes_ahora.jpg`), falta el visto bueno | `ejemplos/doble_biceps_frente_en_la_app.mp4`, `.jpg`, `_cerca.jpg`; para Xcode: `app/doble_biceps_frente_transparente.mov`, `app/doble_biceps_frente/` |
 | **Versión mujer** (cuerpo, rostro, moño, top deportivo) | v3 (28-10-2026), falta el visto bueno | `ejemplos/mujer_v3_*.jpg` |
 | **Rostro y corte de cabello del hombre** (rostro fuerte, corte «skin fade», ojos con vida) | v14 (12-11-2026, sección 5s) + unión con el cuello sin línea, cuello que sube natural hasta la mandíbula (v16) y lado del cuello en una sola línea, sin bulto bajo las orejas (v17, 13-11-2026, sección 5t), falta el visto bueno; solo está posado de nuevo el doble bíceps (fotograma 30) | `ejemplos/rostro_v14_antes_despues.jpg`, `cuello_v17_antes_despues.jpg`, `union_cuello_v16_antes_despues.jpg`, `rostro_v17_vistas.jpg`, `doble_biceps_v17_en_fondo_app.jpg` |
-| **Dominadas** (agarre ancho, de espaldas, con el rostro y el cuello v17) | v1 (15-11-2026, sección 5u), falta el visto bueno | `ejemplos/dominadas_v1.mp4`, `.gif`, `dominadas_v1_posiciones.jpg` |
+| **Dominadas** (agarre ancho, de espaldas, con el rostro y el cuello v17) | v2 (26-11-2026: short más alto, sobre todo detrás; sección 5u), falta el visto bueno | `ejemplos/dominadas_v2.mp4`, `.gif`, `dominadas_v2_posiciones.jpg`, `short_antes_ahora.jpg` |
 | Peso muerto con barra (convencional) | aprobado (v2, 23-10-2026): barra sin atravesar las piernas, subida rápida y bajada lenta | `ejemplos/pesomuerto_v2.gif`, `.mp4` |
 | Curl de bíceps a un brazo con mancuerna (de pie) | v2 (28-10-2026): estilo v10 y cuerpo v2; falta el visto bueno | `ejemplos/curl_un_brazo_v2.mp4`, `.gif` |
 | Mapa de músculos: espalda, brazos, piernas | hecho | |
@@ -900,6 +900,11 @@ STYLE=style_app YAW=180 PIT=4 TX=0 TY=0 TZ=1.30 OSC=4.2 ill/render31.sh DMf maps
   bajada lenta, pausas): `out/dominadas.mp4` y `.gif`.
 - Cámara: de espaldas, recta (`YAW=180`), centrada en 1,30 m y 4,2 m de ancho: entran los pies colgado y la cabeza
   sobre la barra arriba.
+- v2 (26-11-2026, dueño: «súbele un poco el short negro, sobre todo en la espalda que cubra más»): la cintura del
+  short sube 1,5 cm delante y 4 cm detrás (suave entre medias, de 60° a 150° desde el frente). Es una opción del render
+  (`SHUP0`, `SHUP1`, `SHA0`, `SHA1` en `rendsculpt.py`: mide el borde de arriba del short por ángulo en la postura de
+  reposo y lo sube con el mismo borde limpio del bajo) y ya va en `ill/style_app.env`, así que todo lo que se renderice
+  con ese estilo sale con el short más alto. `ejemplos/short_antes_ahora.jpg` (colgado y arriba).
 
 ## 6. Decisiones de estilo del dueño (no deshacer)
 
@@ -908,7 +913,7 @@ STYLE=style_app YAW=180 PIT=4 TX=0 TY=0 TZ=1.30 OSC=4.2 ill/render31.sh DMf maps
   oscuros duros («robotizado» = mal). Centros no blancos puros. Cortes grises suaves (aclarados otra vez el 23-10).
 - Músculos más **redondeados** (por sombreado, no por tamaño). Espalda como grandes zonas, franja clara en la columna.
 - Rojo **con degradado, nunca naranja**; más profundo solo en la parte baja/sombra del músculo.
-- Short tan corto como en la referencia; cabeza CON rostro y pelo corto desde el 28-10-2026 (antes sin cara); desde el 12-11-2026 rostro fuerte y serio con corte «skin fade» (5s); sin suelo ni sombra (fondo blanco/transparente).
+- Short tan corto como en la referencia, con la cintura algo más alta (26-11-2026, sobre todo detrás: `SHUP0/SHUP1`); cabeza CON rostro y pelo corto desde el 28-10-2026 (antes sin cara); desde el 12-11-2026 rostro fuerte y serio con corte «skin fade» (5s); sin suelo ni sombra (fondo blanco/transparente).
 - Máquinas como en las referencias: estructura gris clara, pila de pesas y patas negras.
 - Remo: espalda plana y bisagra marcada. Face pull: pulgares junto a los topes de la cuerda, codos altos.
 
